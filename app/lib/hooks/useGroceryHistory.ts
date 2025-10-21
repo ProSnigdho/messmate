@@ -1,0 +1,125 @@
+import { useState, useEffect } from "react";
+import { db } from "../firebase";
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+  Timestamp,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { useAuth } from "../auth-context";
+import { message } from "antd";
+
+export interface GroceryPurchase {
+  id: string;
+  messId: string;
+  items: string;
+  totalCost: number;
+  date: Timestamp;
+  boughtBy: string;
+  boughtById: string;
+}
+
+export const useGroceryHistory = () => {
+  const { user, isManager } = useAuth();
+  const [history, setHistory] = useState<GroceryPurchase[]>([]);
+  const [loading, setLoading] = useState(true);
+  const messId = user?.messId;
+  const isMember = !isManager;
+
+  useEffect(() => {
+    if (!messId) {
+      setLoading(false);
+      setHistory([]);
+      return;
+    }
+
+    setLoading(true);
+    const historyRef = collection(db, "grocery");
+    const historyQuery = query(
+      historyRef,
+      where("messId", "==", messId),
+      orderBy("date", "desc"),
+      limit(30)
+    );
+
+    const unsubscribe = onSnapshot(
+      historyQuery,
+      (snapshot) => {
+        const fetchedHistory: GroceryPurchase[] = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...(doc.data() as Omit<GroceryPurchase, "id">),
+            } as GroceryPurchase)
+        );
+        setHistory(fetchedHistory);
+        setLoading(false);
+      },
+      (error) => {
+        console.error("Error fetching grocery history:", error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [messId]);
+
+  const recordNewPurchase = async (
+    items: string,
+    totalCost: number,
+    date: Date
+  ) => {
+    if (!messId || !user || totalCost <= 0 || !items.trim()) {
+      message.error("Invalid input or session error. Please login again.");
+      return false;
+    }
+
+    try {
+      const expenseData = {
+        messId: messId,
+        title: items.trim().substring(0, 50),
+        amount: totalCost,
+        description: `Grocery: ${items.trim()}`,
+        paidBy: user.uid,
+        paidByName: user.displayName || "Unknown User",
+        date: Timestamp.fromDate(date),
+        category: "grocery",
+      };
+
+      await addDoc(collection(db, "expenses"), expenseData);
+
+      const groceryData: Omit<GroceryPurchase, "id"> = {
+        messId: messId,
+        items: items.trim(),
+        totalCost: totalCost,
+        date: Timestamp.fromDate(date),
+        boughtBy: user.displayName || "Unknown User",
+        boughtById: user.uid,
+      };
+      await addDoc(collection(db, "grocery"), groceryData);
+
+      message.success(
+        `Meal Expense of ৳${totalCost} recorded for ${new Date(
+          date
+        ).toLocaleDateString()}.`
+      );
+      return true;
+    } catch (error) {
+      console.error("Error recording grocery purchase:", error);
+      message.error("Failed to record expense. Check console.");
+      return false;
+    }
+  };
+
+  return {
+    history,
+    loading,
+    recordNewPurchase,
+    isManager,
+    isMember,
+  };
+};
