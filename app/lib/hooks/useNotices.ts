@@ -1,5 +1,3 @@
-// app/lib/hooks/useNotices.ts
-
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
@@ -13,7 +11,6 @@ import {
 } from "firebase/firestore";
 import { useAuth } from "../auth-context";
 
-// ডেটা টাইপ ডিফাইন করা হলো
 export interface Notice {
   id: string;
   messId: string;
@@ -67,7 +64,6 @@ export const useNotices = () => {
     return () => unsubscribe();
   }, [messId]);
 
-  // নতুন নোটিশ পোস্ট করার ফাংশন
   const addNotice = async (title: string, content: string) => {
     if (!messId || !user || !isManager) {
       console.error("Access denied or Mess ID missing.");

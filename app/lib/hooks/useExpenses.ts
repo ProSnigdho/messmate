@@ -15,24 +15,19 @@ import { useAuth } from "../auth-context";
 import type { Expense, WithoutId } from "../types";
 import { message } from "antd";
 
-// --- Data Structures ---
 interface ExpenseData extends Expense {
   id: string;
 }
 type ExpensePayload = WithoutId<Expense>;
 
-// --- Hook ---
 export const useExpenses = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
   const [loading, setLoading] = useState(true);
   const messId = user?.messId;
   const paidByName = user?.displayName || user?.email || "Unknown User";
-
-  // ✅ FIX: Define the category we want to fetch/save here
   const EXPENSE_CATEGORY_TO_MANAGE = "utility";
 
-  // --- A. Data Fetching Logic (Only fetch 'utility' expenses) ---
   useEffect(() => {
     if (!messId) {
       setLoading(false);
@@ -41,16 +36,12 @@ export const useExpenses = () => {
 
     setLoading(true);
 
-    // 🔥 FIX 1: Filter the expenses by the category
     const expensesQuery = query(
       collection(db, "expenses"),
       where("messId", "==", messId),
-      where("category", "==", EXPENSE_CATEGORY_TO_MANAGE), // ✅ Only fetch utility/overhead
+      where("category", "==", EXPENSE_CATEGORY_TO_MANAGE),
       orderBy("date", "desc")
     );
-
-    // NOTE: This new query will require a composite index if you haven't created one:
-    // Index: messId (asc), category (asc), date (desc)
 
     const unsubscribe = onSnapshot(
       expensesQuery,
@@ -65,7 +56,7 @@ export const useExpenses = () => {
       },
       (error) => {
         console.error("Error fetching expenses: ", error);
-        // If you get a FirebaseError here, you need to create the new index.
+
         message.error(
           "Failed to load expenses. Check console for index requirements."
         );
@@ -76,11 +67,10 @@ export const useExpenses = () => {
     return () => unsubscribe();
   }, [messId]);
 
-  // --- B. Add Expense Functionality (Saves with 'utility' category) ---
   const addExpense = async (
     title: string,
     amount: number,
-    category: Expense["category"] = EXPENSE_CATEGORY_TO_MANAGE as any, // ✅ Use the defined category
+    category: Expense["category"] = EXPENSE_CATEGORY_TO_MANAGE as any,
     description: string = ""
   ) => {
     if (!messId || !user) {

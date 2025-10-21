@@ -83,7 +83,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onFinish, loading }) => (
       </Button>
     </Form.Item>
 
-    {/* Forgot Password Link */}
     <Text
       type="secondary"
       style={{ textAlign: "center", marginTop: 15, display: "block" }}

@@ -24,7 +24,6 @@ import moment from "moment";
 const { Title, Text } = Typography;
 const { Column } = Table;
 
-// Simple form component for adding expenses
 const AddExpenseForm: React.FC<{
   addExpense: (title: string, amount: number) => Promise<boolean>;
 }> = ({ addExpense }) => {
@@ -116,11 +115,10 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
         etc.).
       </p>
       <Row gutter={[16, 16]}>
-        {/* Form Column */}
         <Col xs={24} lg={8}>
           <AddExpenseForm addExpense={addExpense} />
         </Col>
-        {/* Table Column */}
+
         <Col xs={24} lg={16}>
           <Card
             title={<Title level={4}>Monthly Overhead History</Title>}
@@ -145,7 +143,6 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 dataIndex="date"
                 key="date"
                 render={(date: any) =>
-                  // Assumes date is a Firestore Timestamp
                   date && date.toDate
                     ? moment(date.toDate()).format("MMM DD, h:mm a")
                     : "N/A"

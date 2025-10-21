@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Card, Table, Typography, Checkbox, message, Alert, Spin } from "antd";
 import { useAuth } from "../../lib/auth-context";
 import { useMealTracking } from "../../lib/hooks/useMealTracking";
-import { updateMeal } from "../../lib/database"; // Assuming this utility exists
+import { updateMeal } from "../../lib/database";
 import type { Meal, UserProfile } from "../../lib/types";
 
 import { doc, setDoc, collection, Timestamp } from "firebase/firestore";
@@ -19,7 +19,6 @@ const MealTracker: React.FC = () => {
 
   const currentUser = user as UserProfile | null;
 
-  // Set a default state for the current date's display (e.g., Nov 17, 2025)
   const formattedDate = new Date(currentDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -37,15 +36,13 @@ const MealTracker: React.FC = () => {
       />
     );
 
-  // 🔥 CORE LOGIC: Toggling a meal status
   const handleMealToggle = async (
-    record: any, // UserMealData record
+    record: any,
     mealType: "breakfast" | "lunch" | "dinner",
     checked: boolean
   ) => {
     if (isUpdating) return;
 
-    // Restriction check
     if (!isManager && record.user.uid !== currentUser.uid) {
       message.error("You can only update your own meals.");
       return;
@@ -59,20 +56,18 @@ const MealTracker: React.FC = () => {
       const userName = record.user.displayName || "Unknown User";
 
       if (existingMealId) {
-        // 1. If a meal record already exists, just update it
         await updateMeal(existingMealId, {
           [mealType]: checked,
         } as Partial<Meal>);
         message.success(`${userName}'s ${mealType} updated!`);
       } else {
-        // 2. If no meal record exists, create a new one
         const docRef = doc(collection(db, "meals"));
 
         await setDoc(docRef, {
           messId: messId,
           userId: userId,
           userName: userName,
-          date: currentDate, // ISO String (e.g., "2025-10-21")
+          date: currentDate,
           breakfast: mealType === "breakfast" ? checked : false,
           lunch: mealType === "lunch" ? checked : false,
           dinner: mealType === "dinner" ? checked : false,
@@ -89,7 +84,6 @@ const MealTracker: React.FC = () => {
     }
   };
 
-  // Function to determine if a checkbox should be disabled
   const getDisabledState = (record: any) =>
     isUpdating || (!isManager && record.user.uid !== currentUser.uid);
 
@@ -98,7 +92,6 @@ const MealTracker: React.FC = () => {
       title: "Member",
       dataIndex: ["user", "displayName"],
       key: "displayName",
-      // Highlight the current user
       render: (_: string, record: any) => (
         <Text strong={record.user.uid === currentUser.uid}>
           {record.user.displayName}{" "}
@@ -170,14 +163,12 @@ const MealTracker: React.FC = () => {
         );
       },
     },
-    // ✅ Monthly Total Column
     {
       title: "Monthly Total",
       dataIndex: "monthlyTotalMeals",
       key: "monthlyTotalMeals",
       align: "center" as const,
       render: (value: number, record: any) => {
-        // Show total if the user is a manager OR if it's the current user's row
         if (isManager || record.user.uid === currentUser.uid) {
           return (
             <Text strong type="success">
@@ -185,7 +176,6 @@ const MealTracker: React.FC = () => {
             </Text>
           );
         }
-        // Hide total for other members if the current user is not a manager
         return <Text type="secondary">N/A</Text>;
       },
     },

@@ -24,19 +24,14 @@ interface UserMealData {
 }
 
 // --- Date Helpers (Uses ISO String for consistent query) ---
-
-// Helper to get start date string of the current month (e.g., "2025-10-01")
 const getMonthStartString = (): string => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  // YYYY-MM-DD format
   return startOfMonth.toISOString().split("T")[0];
 };
 
-// Helper to get end date string of the current month (e.g., "2025-10-31")
 const getMonthEndString = (): string => {
   const now = new Date();
-  // Get the last day of the month
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   return endOfMonth.toISOString().split("T")[0];
 };
@@ -45,7 +40,6 @@ const getCurrentDateString = (): string =>
   new Date().toISOString().split("T")[0];
 
 // --- Hook Definition ---
-
 export const useMealTracking = () => {
   const { user } = useAuth();
   const [userMealData, setUserMealData] = useState<UserMealData[]>([]);
@@ -70,7 +64,6 @@ export const useMealTracking = () => {
     const monthStartString = getMonthStartString();
     const monthEndString = getMonthEndString();
 
-    // Helper to count meals for a user across the month
     const calculateMonthlyTotal = (userId: string): number => {
       return monthlyMeals
         .filter((meal) => meal.userId === userId)
@@ -86,8 +79,6 @@ export const useMealTracking = () => {
 
     const combineData = () => {
       if (currentMembers.length === 0) {
-        // Wait for member list to populate
-        // If loading is false and no members exist, show empty state
         if (!loading) setUserMealData([]);
         return;
       }
@@ -120,7 +111,6 @@ export const useMealTracking = () => {
         };
       });
 
-      // Sort by Manager first, then Display Name
       combinedList.sort((a, b) => {
         if (a.user.role === "manager" && b.user.role !== "manager") return -1;
         if (a.user.role !== "manager" && b.user.role === "manager") return 1;
@@ -131,7 +121,6 @@ export const useMealTracking = () => {
       setLoading(false);
     };
 
-    // 1. Members Listener (Real-time)
     const membersQuery = query(
       collection(db, "users"),
       where("messId", "==", messId)
@@ -145,7 +134,6 @@ export const useMealTracking = () => {
       })
     );
 
-    // 2. Daily Meals Listener (Real-time - for today's checkboxes)
     const dailyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
@@ -160,11 +148,9 @@ export const useMealTracking = () => {
       })
     );
 
-    // 3. Monthly Meals Listener (FIXED: Uses ISO Strings for range query)
     const monthlyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
-      // FIX: Using ISO string range query
       where("date", ">=", monthStartString),
       where("date", "<=", monthEndString)
     );
@@ -183,7 +169,6 @@ export const useMealTracking = () => {
       )
     );
 
-    // Cleanup function
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId, currentDate]);
 

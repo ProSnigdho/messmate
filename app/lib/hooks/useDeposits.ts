@@ -16,13 +16,11 @@ import { useAuth } from "../auth-context";
 import type { Deposit, UserProfile, WithoutId } from "../types";
 import { message } from "antd";
 
-// Data structures
 interface DepositData extends Deposit {
   id: string;
 }
 type DepositPayload = WithoutId<Deposit>;
 
-// সাধারণ লেনদেনের ক্যাটাগরি
 const TRANSACTION_CATEGORIES = {
   DEPOSIT: "Personal Contribution",
   RENT: "Rent",
@@ -39,7 +37,6 @@ export const useDeposits = () => {
   const [loading, setLoading] = useState(true);
   const messId = user?.messId;
 
-  // --- A. Real-time Data Fetching Logic ---
   useEffect(() => {
     if (!messId) {
       setLoading(false);
@@ -51,7 +48,6 @@ export const useDeposits = () => {
     setLoading(true);
     const unsubscribes: (() => void)[] = [];
 
-    // 1. Transactions Listener
     const depositsRef = collection(db, "deposits");
     const depositsQuery = query(
       depositsRef,
@@ -79,7 +75,6 @@ export const useDeposits = () => {
       )
     );
 
-    // 2. Members Listener (for dropdown)
     const membersQ = query(
       collection(db, "users"),
       where("messId", "==", messId)
@@ -105,14 +100,12 @@ export const useDeposits = () => {
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId]);
 
-  // --- B. Single Transaction Functionality (For Manager only) ---
   const addTransaction = async (
-    category: string, // 'Personal Contribution', 'Rent', 'Gas Bill', etc.
+    category: string,
     amount: number,
-    involvedUid: string, // যিনি টাকা দিয়েছেন বা যার জন্য খরচ হয়েছে
+    involvedUid: string,
     description: string = ""
   ) => {
-    // Permission Check
     if (!isManager) {
       message.error(
         "Permission denied. Only Mess Managers can record transactions."
@@ -128,7 +121,6 @@ export const useDeposits = () => {
     }
 
     try {
-      // Personal Contribution (Deposit) or General Expense (Credit to member)
       const isDeposit = category === TRANSACTION_CATEGORIES.DEPOSIT;
 
       const newTransaction: DepositPayload = {
@@ -138,7 +130,7 @@ export const useDeposits = () => {
           description ||
           (isDeposit ? "Contribution received" : `${category} payment`),
         amount: amount,
-        userId: involvedUid, // The amount is linked to this person
+        userId: involvedUid,
         userName: involvedMember.displayName || "Unknown User",
         date: Timestamp.fromDate(new Date()),
       };
@@ -164,7 +156,7 @@ export const useDeposits = () => {
     deposits,
     members,
     loading,
-    addTransaction, // ✅ Only one function exposed now
+    addTransaction,
     isManager,
   };
 };

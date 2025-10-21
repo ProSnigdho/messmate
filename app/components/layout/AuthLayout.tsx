@@ -28,7 +28,6 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               textAlign: "center",
             }}
           >
-            {/* Logo/Branding Header */}
             <div style={{ marginBottom: 30, paddingTop: 10 }}>
               <HomeOutlined style={{ fontSize: 40, color: "#004d40" }} />
               <Title
@@ -39,13 +38,11 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               </Title>
             </div>
 
-            {/* Form Content */}
             {children}
           </Card>
         </Col>
       </Row>
 
-      {/* Global Style Overrides */}
       <style jsx global>{`
         .ant-form-item {
           margin-bottom: 10px !important;

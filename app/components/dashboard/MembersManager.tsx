@@ -1,5 +1,3 @@
-// components/dashboard/MembersManager.tsx
-
 "use client";
 
 import React from "react";
@@ -13,24 +11,15 @@ import {
   message,
   Tag,
   Modal,
-  Popconfirm,
   Select,
 } from "antd";
-import {
-  TeamOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-  UserSwitchOutlined,
-} from "@ant-design/icons";
-// ✅ ইমপোর্ট পাথ আপনার প্রজেক্টের কাঠামো অনুযায়ী ঠিক করে নিন
+import { TeamOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
 import { useMembers } from "../../lib/hooks/useMembers";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
 const { Option } = Select;
 
-// --- Main Members Component ---
 interface MembersManagerProps {
   messId: string;
 }
@@ -39,8 +28,6 @@ export default function MembersManager({ messId }: MembersManagerProps) {
   const { members, loading, updateMemberRole, removeMember, isManager } =
     useMembers();
 
-  // যদি ইউজার ম্যানেজার না হয়, DashboardPage থেকেই এটি ব্লক করা উচিত।
-  // তবুও এখানে একটি অতিরিক্ত নিরাপত্তা চেক রাখা হলো।
   if (!isManager) {
     return (
       <Alert
@@ -55,8 +42,6 @@ export default function MembersManager({ messId }: MembersManagerProps) {
   if (loading) {
     return <Spin tip="Loading Mess Members..." style={{ margin: "50px 0" }} />;
   }
-
-  // --- হ্যান্ডলার ফাংশন ---
 
   const handleRoleChange = async (
     uid: string,
@@ -95,7 +80,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
   return (
     <Card className="shadow-lg">
       <Title level={2} style={{ margin: 0 }}>
-        <TeamOutlined /> **Mess Member Management**
+        <TeamOutlined /> Mess Member Management
       </Title>
       <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
         Total Members: <Text strong>{members.length}</Text> | Mess ID:{" "}
@@ -141,25 +126,23 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           key="action"
           render={(_, record: any) => (
             <div style={{ display: "flex", gap: 8 }}>
-              {/* Change Role Button/Select */}
               <Select
                 value={record.role}
                 onChange={(value: "manager" | "member") =>
                   handleRoleChange(record.uid, value)
                 }
                 style={{ width: 120 }}
-                disabled={record.uid === messId} // Manager cannot change their own role (optional)
+                disabled={record.uid === messId}
               >
                 <Option value="manager">Manager</Option>
                 <Option value="member">Member</Option>
               </Select>
 
-              {/* Remove Button (Manager only, cannot remove self) */}
               <Button
                 danger
                 icon={<DeleteOutlined />}
                 onClick={() => handleRemoveMember(record)}
-                disabled={record.uid === messId} // Manager cannot remove themselves
+                disabled={record.uid === messId}
               >
                 Remove
               </Button>

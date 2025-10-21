@@ -27,8 +27,6 @@ import {
 
 import { useAuth } from "../lib/auth-context";
 import { useRouter } from "next/navigation";
-
-// --- Existing Component Imports ---
 import Overview from "../components/dashboard/Overview";
 import MealTracker from "../components/dashboard/MealTracker";
 import ExpenseManager from "../components/dashboard/ExpenseManager";
@@ -51,7 +49,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
-  // --- Auth Redirect Logic ---
   useEffect(() => {
     if (loading || redirecting) return;
 
@@ -68,7 +65,6 @@ export default function DashboardPage() {
     }
   }, [loading, user, redirecting, router]);
 
-  // --- Logout Handler ---
   const handleLogout = async () => {
     setRedirecting(true);
     try {
@@ -81,7 +77,6 @@ export default function DashboardPage() {
     }
   };
 
-  // Show loading while checking auth or redirecting
   if (loading || redirecting || !user || !user.messId) {
     return (
       <div
@@ -106,14 +101,12 @@ export default function DashboardPage() {
   const messId = user.messId;
   const userRole = user.role;
 
-  // Manager-only menu items
   const managerMenuItems: MenuItem[] = [
     { key: "3", icon: <DollarOutlined />, label: "Expense Manager" },
     { key: "8", icon: <DollarOutlined />, label: "Balance Sheet" },
     { key: "4", icon: <TeamOutlined />, label: "Members" },
   ];
 
-  // ✅ Sidebar order changed
   const sharedMenuItems: MenuItem[] = [
     { key: "1", icon: <DashboardOutlined />, label: "Overview" },
     { key: "6", icon: <BellOutlined />, label: "Notices" }, // 🔼 Moved up
@@ -123,12 +116,10 @@ export default function DashboardPage() {
     { key: "7", icon: <SettingOutlined />, label: "Settings" }, // 🔽 Stays at bottom
   ];
 
-  // Combine menu items based on role
   const menuItems: MenuItem[] = isManager
     ? [...sharedMenuItems, ...managerMenuItems]
     : sharedMenuItems;
 
-  // User Dropdown Menu Items
   const userMenuItems: MenuProps["items"] = [
     {
       key: "3",

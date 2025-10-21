@@ -12,7 +12,6 @@ import { useAuth } from "../auth-context";
 import { message } from "antd";
 import type { Expense as ExpenseType, Deposit as DepositType } from "../types";
 
-// --- Data Interfaces ---
 export interface Member {
   uid: string;
   displayName: string;
@@ -21,13 +20,13 @@ export interface Member {
 
 export interface MemberDetailedData {
   member: Member;
-  totalMeals: number; // Total count of meals consumed
-  totalPaidAmount: number; // Total of Deposits made by this member ONLY
-  deposits: DepositType[]; // List of Deposit records
-  expensesPaid: ExpenseType[]; // All Expenses paid by this member (Kept for overall view)
-  groceryExpensesPaid: ExpenseType[]; // Grocery Expenses paid by this member (for table)
-  utilityExpensesPaid: ExpenseType[]; // Utility Expenses paid by this member (for manager table)
-  totalMealCost: number; // Total Meals * Current Meal Rate (Replaces Net Balance box)
+  totalMeals: number;
+  totalPaidAmount: number;
+  deposits: DepositType[];
+  expensesPaid: ExpenseType[];
+  groceryExpensesPaid: ExpenseType[];
+  utilityExpensesPaid: ExpenseType[];
+  totalMealCost: number;
   mealRate: number;
 }
 
@@ -36,8 +35,6 @@ export interface OverviewStats {
   allMembersData: MemberDetailedData[];
   globalMealRate: number;
 }
-
-// --- Date Helpers ---
 
 const getCurrentMonthTimestamps = () => {
   const now = new Date();
@@ -68,7 +65,6 @@ const getCurrentMonthDateStrings = () => {
   };
 };
 
-// --- Hook Definition ---
 export const useBalanceSheetData = () => {
   const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<OverviewStats | null>(null);
@@ -93,7 +89,6 @@ export const useBalanceSheetData = () => {
           year: "numeric",
         });
 
-        // --- 1. Fetch Member List ---
         const membersQuery = query(
           collection(db, "users"),
           where("messId", "==", messId)
@@ -105,13 +100,9 @@ export const useBalanceSheetData = () => {
           role: doc.data().role || "member",
         }));
 
-        // --- 2. Fetch ALL Monthly Data (Expenses, Meals, Deposits) ---
-
-        // Function to fetch data using Timestamp (Crucial for correct date range)
         const fetchTimestampData = async (
           collectionName: string
         ): Promise<DocumentData[]> => {
-          // Note: Firestore recommends using the date field for querying
           const q = query(
             collection(db, collectionName),
             where("messId", "==", messId),
@@ -122,7 +113,6 @@ export const useBalanceSheetData = () => {
           return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         };
 
-        // Function to fetch data using Date String (for Meals)
         const fetchStringDateData = async (
           collectionName: string
         ): Promise<DocumentData[]> => {
@@ -146,10 +136,6 @@ export const useBalanceSheetData = () => {
         const allMeals = mealsData as DocumentData[];
         const allDeposits: DepositType[] = depositsData as DepositType[];
 
-        // --- 3. Global Meal Rate Calculation ---
-
-        // 🔥 FIX: Filter expenses to include ONLY 'grocery' or 'meal' costs
-        // This ensures the rate is calculated using only food-related expenses.
         const mealExpensesForRate = allExpenses.filter(
           (exp) => exp.category === "grocery" || exp.category === "meal"
         );
@@ -171,7 +157,6 @@ export const useBalanceSheetData = () => {
         const globalMealRate =
           totalMealsCount > 0 ? totalMealCostForRate / totalMealsCount : 0;
 
-        // --- 4. Aggregate Data by Member ---
         const allMembersData: MemberDetailedData[] = members.map((member) => {
           const memberMeals = allMeals.filter((m) => m.userId === member.uid);
           const memberTotalMeals = memberMeals.reduce(
@@ -183,12 +168,10 @@ export const useBalanceSheetData = () => {
             0
           );
 
-          // All expenses paid by the member
           const expensesPaid = allExpenses.filter(
             (exp) => exp.paidBy === member.uid
           );
 
-          // Separate expenses by category for tables
           const groceryExpensesPaid = expensesPaid.filter(
             (exp) => exp.category === "grocery" || exp.category === "meal"
           );
@@ -196,12 +179,10 @@ export const useBalanceSheetData = () => {
             (exp) => exp.category === "utility"
           );
 
-          // Deposits made FOR this member (where userId is the beneficiary)
           const deposits = allDeposits.filter(
             (dep) => dep.userId === member.uid
           );
 
-          // 🔥 FIX: totalPaidAmount is NOW ONLY the total deposits for this member
           const totalPaidAmount = deposits.reduce(
             (sum, dep) => sum + dep.amount,
             0
@@ -222,7 +203,6 @@ export const useBalanceSheetData = () => {
           };
         });
 
-        // --- 5. Set Final Stats ---
         setStats({
           currentMonth: currentMonthString,
           allMembersData,
@@ -241,11 +221,8 @@ export const useBalanceSheetData = () => {
       }
     };
 
-    // Note: For debugging real-time issues, ensure the component that saves the expense
-    // triggers a state change in a parent component, forcing this hook to run again,
-    // OR implement a real-time listener (onSnapshot), which is more complex.
     calculateOverview();
-  }, [messId, authLoading]); // Dependencies
+  }, [messId, authLoading]);
 
   return { stats, loading };
 };

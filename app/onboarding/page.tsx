@@ -1,43 +1,31 @@
-// app/onboarding/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
 import { Button, Card, Col, Row, Typography, Space, message, Spin } from "antd";
 import { PlusOutlined, UsergroupAddOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
-import { useAuth } from "../lib/auth-context"; // এই পাথটি আপনার lib ফোল্ডারের জন্য সঠিক কিনা নিশ্চিত করুন।
+import { useAuth } from "../lib/auth-context";
 
 const { Title, Text } = Typography;
 
 const OnboardingPage: React.FC = () => {
   const router = useRouter();
-
-  // AuthContext থেকে user, loading, createMess, joinMess ফাংশন নেওয়া হলো
-  // user.messId চেক করার জন্য user-কে প্রয়োজন
   const { user, loading, createMess, joinMess } = useAuth();
 
   const [isJoining, setIsJoining] = useState(false);
   const [joinCode, setJoinCode] = useState("");
 
-  // 1. রিডাইরেক্ট লজিক (অনবোর্ডিং বাইপাস)
   useEffect(() => {
-    // Auth context loading শেষ না হওয়া পর্যন্ত অপেক্ষা করুন
     if (loading) return;
-
-    // 🔥 FIX: user?.messId ব্যবহার করা হয়েছে
-    // যদি ইউজার লগইন থাকে এবং তার messId সেট করা থাকে, তবে ড্যাশবোর্ডে রিডাইরেক্ট করুন
     if (user && user.messId) {
       message.info("You've already joined a mess. Redirecting to dashboard.");
       router.replace("/dashboard");
     }
-    // যদি ইউজার লগইন না থাকে, তবে লগইন পেজে পাঠান (সুরক্ষার জন্য)
     if (!user) {
       router.replace("/auth");
     }
   }, [user, loading, router]);
 
-  // লোডিং অবস্থায় বা রিডাইরেক্ট হওয়ার সময়
-  // যদি user থাকে but messId না থাকে, তবেই ফর্ম দেখানো হবে।
   if (loading || (user && user.messId) || !user) {
     return (
       <div
@@ -53,10 +41,8 @@ const OnboardingPage: React.FC = () => {
     );
   }
 
-  // Create Mess হ্যান্ডলার
   const handleCreateMess = async () => {
     try {
-      // createMess ফাংশন কল করা হলো
       const messId = await createMess();
       message.success(
         `Mess created successfully! Code: ${messId}. Redirecting...`
@@ -68,14 +54,12 @@ const OnboardingPage: React.FC = () => {
     }
   };
 
-  // Join Mess হ্যান্ডলার
   const handleJoinMess = async () => {
     if (joinCode.length !== 6) {
       message.error("Please enter a valid 6-digit code.");
       return;
     }
     try {
-      // joinMess ফাংশন কল করা হলো
       await joinMess(joinCode);
       message.success("Joined mess successfully! Redirecting to dashboard.");
       router.replace("/dashboard");
@@ -100,7 +84,6 @@ const OnboardingPage: React.FC = () => {
       </Text>
 
       <Row gutter={24}>
-        {/* Left Side: Create Mess */}
         <Col span={12}>
           <Card
             hoverable
@@ -121,7 +104,6 @@ const OnboardingPage: React.FC = () => {
           </Card>
         </Col>
 
-        {/* Right Side: Join Mess */}
         <Col span={12}>
           <Card
             hoverable

@@ -1,5 +1,3 @@
-// components/dashboard/SettingsPage.tsx
-
 "use client";
 
 import React, { useState } from "react";
@@ -23,24 +21,19 @@ import {
 
 const { Title, Text } = Typography;
 
-// --- A. User Profile Form (সবার জন্য) ---
 const UserProfileForm: React.FC<{
   user: any;
   updateProfile: (updates: Partial<UserProfileUpdate>) => Promise<boolean>;
 }> = ({ user, updateProfile }) => {
   const [submitting, setSubmitting] = useState(false);
 
-  // Form Initial Values নিশ্চিত করা
   const initialValues = {
     displayName: user.displayName || "",
-    // user.phoneNumber সরাসরি Auth Context থেকে নাও আসতে পারে,
-    // কিন্তু useSettings localUserProfile থেকে আসবে
     phoneNumber: user.phoneNumber || "",
   };
 
   const onFinish = async (values: UserProfileUpdate) => {
     setSubmitting(true);
-    // ✅ এখানে updates এ displayName এবং phoneNumber উভয়ই থাকবে
     await updateProfile(values);
     setSubmitting(false);
   };
@@ -50,7 +43,7 @@ const UserProfileForm: React.FC<{
       <Form
         layout="vertical"
         onFinish={onFinish}
-        initialValues={initialValues} // আপডেট করা ইনিশিয়াল ভ্যালু
+        initialValues={initialValues}
         style={{ maxWidth: 400 }}
       >
         <Form.Item label="Email (Read-Only)">
@@ -65,7 +58,6 @@ const UserProfileForm: React.FC<{
         >
           <Input placeholder="Your Name" />
         </Form.Item>
-        {/* ✅ Phone Number Field */}
         <Form.Item
           name="phoneNumber"
           label="Phone Number"
@@ -90,7 +82,6 @@ const UserProfileForm: React.FC<{
   );
 };
 
-// --- B. Mess Settings Form (শুধুমাত্র ম্যানেজার) ---
 const MessSettingsForm: React.FC<{
   settings: MessSettings | null;
   updateMessSettings: (updates: Partial<MessSettings>) => Promise<boolean>;
@@ -115,7 +106,6 @@ const MessSettingsForm: React.FC<{
         initialValues={settings}
         style={{ maxWidth: 400 }}
       >
-        {/* শুধুমাত্র Mess Name রাখা হলো */}
         <Form.Item
           name="messName"
           label="Mess Name"
@@ -123,8 +113,6 @@ const MessSettingsForm: React.FC<{
         >
           <Input />
         </Form.Item>
-
-        {/* Monthly Rent এবং Initial Deposit সরানো হয়েছে */}
 
         <Form.Item>
           <Button type="primary" htmlType="submit" loading={submitting} block>
@@ -136,9 +124,7 @@ const MessSettingsForm: React.FC<{
   );
 };
 
-// --- C. Main Settings Page Component ---
 export default function SettingsPage() {
-  // ✅ userProfile এখন localUserProfile ব্যবহার করছে
   const {
     userProfile,
     messSettings,
@@ -186,7 +172,7 @@ export default function SettingsPage() {
   return (
     <Card className="shadow-lg">
       <Title level={2} style={{ margin: 0 }}>
-        <SettingOutlined /> **App Settings**
+        <SettingOutlined /> App Settings
       </Title>
       <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
         Manage your personal profile and the mess configuration.

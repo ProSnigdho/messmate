@@ -38,7 +38,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onFinish, loading }) => {
         Create Account
       </Title>
 
-      {/* Full Name */}
       <Form.Item
         name="name"
         label="Your Name"
@@ -50,7 +49,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onFinish, loading }) => {
           style={inputStyle}
         />
       </Form.Item>
-      {/* Email */}
+
       <Form.Item
         name="email"
         label="Email"
@@ -65,7 +64,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onFinish, loading }) => {
           style={inputStyle}
         />
       </Form.Item>
-      {/* Password */}
+
       <Form.Item
         name="password"
         label="Password"
@@ -81,7 +80,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onFinish, loading }) => {
           style={inputStyle}
         />
       </Form.Item>
-      {/* Confirm Password */}
+
       <Form.Item
         name="confirm"
         label="Confirm Password"
@@ -106,7 +105,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onFinish, loading }) => {
           style={inputStyle}
         />
       </Form.Item>
-      {/* Button */}
+
       <Form.Item style={{ marginBottom: 0 }}>
         <Button
           type="primary"

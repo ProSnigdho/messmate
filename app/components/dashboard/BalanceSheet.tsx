@@ -40,9 +40,6 @@ interface BalanceSheetProps {
   messId: string;
 }
 
-// --- Helper Components for Transaction Tables ---
-
-// 1. Deposits Table (Common for Member/Manager)
 const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
   deposits,
 }) => (
@@ -67,7 +64,6 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
         dataIndex="date"
         render={(date) => moment(date.toDate()).format("MMM DD")}
       />
-      {/* 🔥 FIX: Added User Name for clarity */}
       <Table.Column
         title="User Name"
         dataIndex="userName"
@@ -85,7 +81,6 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
   </Card>
 );
 
-// 2. Grocery Expenses Paid Table (Common for Member/Manager)
 const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
   expenses,
 }) => (
@@ -123,7 +118,6 @@ const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
   </Card>
 );
 
-// 3. Utility/Overhead Expenses Paid Table (ONLY for Manager)
 const UtilityDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
   expenses,
 }) => (
@@ -161,7 +155,6 @@ const UtilityDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
   </Card>
 );
 
-// --- Main Component ---
 export default function BalanceSheet({ messId }: BalanceSheetProps) {
   const { stats, loading } = useBalanceSheetData();
   const { isManager, user } = useAuth();
@@ -212,7 +205,6 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
         <strong>{stats.currentMonth}</strong>.
       </p>
 
-      {/* --- Member Selector --- */}
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 20 }}>
         <Col xs={24} sm={8} lg={6}>
           <Text strong>
@@ -239,7 +231,6 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
 
       <Divider />
 
-      {/* --- Detailed Member Card View --- */}
       {selectedMemberData ? (
         <Card
           title={
@@ -256,7 +247,6 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
             </Title>
           }
         >
-          {/* 1. Overview Statistics */}
           <Row gutter={[16, 16]} style={{ marginBottom: 30 }}>
             <Col xs={12} lg={6}>
               <Statistic
@@ -283,7 +273,6 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 valueStyle={{ color: "#fa8c16" }}
               />
             </Col>
-            {/* 🔥 FIX: Changed Net Balance to Total Meal Cost (Personal) */}
             <Col xs={12} lg={6}>
               <Statistic
                 title="TOTAL MEAL COST (Personal)"
@@ -302,20 +291,15 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
             <WalletOutlined /> Transaction Details
           </Divider>
 
-          {/* 2. Transaction Tables (Flex layout for side-by-side) */}
           <Row gutter={[16, 16]}>
-            {/* Deposits Table (Common) */}
             <Col xs={24} lg={12}>
               <DepositDetailsTable deposits={selectedMemberData.deposits} />
             </Col>
-            {/* Grocery Paid Table (Common) */}
             <Col xs={24} lg={12}>
               <GroceryDetailsTable
                 expenses={selectedMemberData.groceryExpensesPaid}
               />
             </Col>
-
-            {/* 🔥 Manager's Extra Table (Utility/Overhead) */}
             {selectedMemberData.member.role === "manager" && (
               <Col xs={24} lg={12}>
                 <UtilityDetailsTable

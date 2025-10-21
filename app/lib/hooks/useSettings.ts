@@ -1,24 +1,19 @@
-// app/lib/hooks/useSettings.ts
-
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
-import { useAuth } from "../auth-context"; // ধরে নিচ্ছি refreshUserData এখানে আছে
+import { useAuth } from "../auth-context";
 import { message } from "antd";
 
-// মেসের সাধারণ সেটিংসের জন্য ইন্টারফেস
 export interface MessSettings {
   messName: string;
 }
 
-// ইউজার প্রোফাইল আপডেটের জন্য ইন্টারফেস
 export interface UserProfileUpdate {
   displayName: string;
-  phoneNumber?: string; // phoneNumber অপশনাল করা হলো
+  phoneNumber?: string;
 }
 
 export const useSettings = () => {
-  // ✅ useAuth থেকে refreshUserData ডিস্ট্রাকচার করা হলো
   const { user, isManager, loading: authLoading, refreshUserData } = useAuth();
 
   const [messSettings, setMessSettings] = useState<MessSettings | null>(null);
@@ -26,12 +21,10 @@ export const useSettings = () => {
   const [loading, setLoading] = useState(true);
   const messId = user?.messId;
 
-  // Sync user from auth context to local state
   useEffect(() => {
     setLocalUserProfile(user);
   }, [user]);
 
-  // --- A. ডেটা ফেচিং লজিক (Mess Settings) ---
   useEffect(() => {
     if (authLoading || !messId) {
       setLoading(false);
@@ -63,7 +56,6 @@ export const useSettings = () => {
     fetchSettings();
   }, [messId, isManager, authLoading]);
 
-  // --- B. মেসের সেটিংস আপডেট (শুধুমাত্র ম্যানেজার) ---
   const updateMessSettings = async (updates: Partial<MessSettings>) => {
     if (!messId || !isManager) {
       message.error("Access Denied or Mess not joined.");
@@ -74,7 +66,7 @@ export const useSettings = () => {
       const messDocRef = doc(db, "messes", messId);
 
       const messUpdates = {
-        ...(updates.messName && { name: updates.messName }), // Firestore এ 'name' ফিল্ড
+        ...(updates.messName && { name: updates.messName }),
       };
 
       if (Object.keys(messUpdates).length === 0) return true;
@@ -95,7 +87,6 @@ export const useSettings = () => {
     }
   };
 
-  // --- C. ইউজার প্রোফাইল আপডেট (সবার জন্য) ---
   const updateProfile = async (updates: Partial<UserProfileUpdate>) => {
     if (!user) {
       message.error("User not authenticated.");
@@ -107,17 +98,13 @@ export const useSettings = () => {
     try {
       const userDocRef = doc(db, "users", user.uid);
 
-      // ✅ setDoc ব্যবহার করা হলো { merge: true } অপশন সহ
-      // এটি ফোন নম্বর এবং ডিসপ্লে নেম উভয়ই সেভ করবে
       await setDoc(userDocRef, updates, { merge: true });
 
-      // 1. লোকাল স্টেট আপডেট করা
       setLocalUserProfile((prev) => ({
         ...prev!,
         ...updates,
       }));
 
-      // 2. ✅ Auth Context-এর ডেটা রিফ্রেশ করা হলো (রিফ্রেশেও ডাটা থাকবে)
       if (refreshUserData) {
         await refreshUserData();
       }

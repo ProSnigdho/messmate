@@ -1,5 +1,3 @@
-// app/lib/hooks/useMembers.ts
-
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
@@ -10,15 +8,13 @@ import {
   doc,
   updateDoc,
   writeBatch,
-  getDoc,
   orderBy,
 } from "firebase/firestore";
 import { useAuth } from "../auth-context";
-import { UserProfile } from "../types"; // ধরে নিচ্ছি আপনার UserProfile টাইপটি আছে
+import { UserProfile } from "../types";
 
-// MemberData extends UserProfile with Firestore ID
 interface MemberData extends UserProfile {
-  uid: string; // Firestore document ID is the user's UID
+  uid: string;
 }
 
 export const useMembers = () => {
@@ -36,12 +32,11 @@ export const useMembers = () => {
 
     setLoading(true);
 
-    // Query the 'users' collection where messId matches the current messId
     const usersRef = collection(db, "users");
     const membersQuery = query(
       usersRef,
       where("messId", "==", messId),
-      orderBy("displayName", "asc") // Sort by name
+      orderBy("displayName", "asc")
     );
 
     const unsubscribe = onSnapshot(
@@ -66,7 +61,6 @@ export const useMembers = () => {
     return () => unsubscribe();
   }, [messId]);
 
-  // --- সদস্যের রোল পরিবর্তন ---
   const updateMemberRole = async (
     memberUid: string,
     newRole: "manager" | "member"
@@ -86,26 +80,19 @@ export const useMembers = () => {
     }
   };
 
-  // --- সদস্যকে মেস থেকে রিমুভ করা ---
   const removeMember = async (memberUid: string) => {
     if (!messId || !isManager || memberUid === user?.uid) {
       console.error("Permission denied or cannot remove self.");
       return false;
     }
 
-    // A batch write is safer for multi-step updates
     const batch = writeBatch(db);
     try {
-      // 1. Update the user's profile: remove messId and set role to 'pending'
       const userRef = doc(db, "users", memberUid);
       batch.update(userRef, {
         messId: null,
         role: "pending",
       });
-
-      // 2. Optionally: Update mess document (if you track member count/list there)
-      // const messRef = doc(db, "messes", messId);
-      // batch.update(messRef, { memberCount: increment(-1) });
 
       await batch.commit();
       return true;

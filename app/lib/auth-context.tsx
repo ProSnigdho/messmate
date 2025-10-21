@@ -8,10 +8,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import {
-  auth, // 🔥 Firebase Auth
-  db, // 🔥 Firebase Firestore
-} from "./firebase"; // নিশ্চিত করুন এই পাথটি সঠিক
+import { auth, db } from "./firebase";
 
 import {
   signInWithEmailAndPassword,
@@ -24,7 +21,6 @@ import {
 
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
-// --- Interfaces ---
 export interface User {
   uid: string;
   email: string | null;
@@ -43,7 +39,7 @@ interface AuthContextType {
   loading: boolean;
   isManager: boolean;
   isMember: boolean;
-  refreshUserData: () => Promise<void>; // ✅ রিফ্রেশ ফাংশন
+  refreshUserData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -59,9 +55,6 @@ const AuthContext = createContext<AuthContextType>({
   refreshUserData: async () => {},
 });
 
-// --- Firestore Helpers ---
-
-// 🔥 Firestore থেকে ইউজার ডেটা লোড করার ফাংশন
 const fetchUserDocument = async (uid: string): Promise<User | null> => {
   const userDocRef = doc(db, "users", uid);
   const docSnap = await getDoc(userDocRef);
@@ -73,16 +66,15 @@ const fetchUserDocument = async (uid: string): Promise<User | null> => {
       email: data.email,
       displayName: data.displayName,
       phoneNumber: data.phoneNumber || undefined,
-      role: data.role || "member", // default role
+      role: data.role || "member",
       messId: data.messId || undefined,
     } as User;
   }
   return null;
 };
 
-// 🔥 Firestore-এ ইউজার ডকুমেন্ট তৈরি বা আপডেট করার ফাংশন
 const updateUserDocument = async (userData: User) => {
-  const userDocRef = doc(db, "users", userData.uid); // Firestore-এ শুধুমাত্র প্রয়োজনীয় fields গুলো সেট করা হলো
+  const userDocRef = doc(db, "users", userData.uid);
   await setDoc(
     userDocRef,
     {
@@ -105,7 +97,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const generateSixDigitCode = () =>
     Math.random().toString(36).substring(2, 8).toUpperCase();
 
-  // 🔑 Helper Function to load and set user data
   const loadAndSetUser = async (firebaseUser: FirebaseUser | null) => {
     if (firebaseUser) {
       const userData = await fetchUserDocument(firebaseUser.uid);
@@ -113,7 +104,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       if (userData) {
         setUser(userData);
       } else {
-        // নতুন ইউজার: Firestore-এ বেসিক ডেটা তৈরি করা
         const newUser: User = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -130,9 +120,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(false);
   };
 
-  // --- 1. Session Listener ---
   useEffect(() => {
-    // 🔥 onAuthStateChanged ইউজার সেশন পরিবর্তন হলে স্বয়ংক্রিয়ভাবে loadAndSetUser কল করে
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       loadAndSetUser(firebaseUser);
     });
@@ -140,29 +128,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     return () => unsubscribe();
   }, []);
 
-  // --- 2. Core Auth Functions ---
-
-  // ✅ FIX: manually refresh user data from Firestore
   const refreshUserData = async (): Promise<void> => {
     const firebaseUser = auth.currentUser;
     if (firebaseUser) {
       setLoading(true);
-      // 🔥 সরাসরি loadAndSetUser কল করে ডেটা রিফ্রেশ করা হলো
       await loadAndSetUser(firebaseUser);
     }
-    return; // TypeScript error fix
+    return;
   };
 
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      // 🔥 Firebase Auth Login. onAuthStateChanged handles the rest.
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
       console.error("❌ Login failed:", error);
       throw new Error("Login failed. Please check your credentials.");
-    } finally {
-      // loading state is handled by onAuthStateChanged
     }
   };
 
@@ -173,7 +154,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   ): Promise<void> => {
     setLoading(true);
     try {
-      // 🔥 Firebase Auth Registration
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -181,7 +161,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       );
       const firebaseUser = userCredential.user;
 
-      await updateProfile(firebaseUser, { displayName: name }); // Firestore-এ প্রাথমিক ইউজার ডকুমেন্ট তৈরি করা
+      await updateProfile(firebaseUser, { displayName: name });
 
       const newUser: User = {
         uid: firebaseUser.uid,
@@ -190,35 +170,30 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         role: "member",
         messId: undefined,
       };
-      await updateUserDocument(newUser); // setUser state টি onAuthStateChanged হ্যান্ডেল করবে
+      await updateUserDocument(newUser);
     } catch (error: any) {
       console.error("❌ Registration failed:", error);
       throw new Error(`Registration failed: ${error.message}`);
-    } finally {
-      // loading state is handled by onAuthStateChanged
     }
   };
 
   const logout = async (): Promise<void> => {
     setLoading(true);
     try {
-      // 🔥 Firebase Auth Logout
       await signOut(auth);
       router.push("/auth");
     } catch (error) {
       console.error("Logout failed:", error);
       throw new Error("Logout failed.");
-    } finally {
-      // loading state is handled by onAuthStateChanged
     }
-  }; // --- 3. Mess Management Functions (Firestore Integrated) ---
+  };
 
   const createMess = async (): Promise<string> => {
     if (!user) throw new Error("User must be logged in to create a mess.");
 
     setLoading(true);
     try {
-      const newMessId = generateSixDigitCode(); // Firestore-এ Mess ডকুমেন্ট তৈরি
+      const newMessId = generateSixDigitCode();
 
       const messDocRef = doc(db, "messes", newMessId);
       await setDoc(messDocRef, {
@@ -226,12 +201,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         createdAt: new Date(),
         members: [user.uid],
         code: newMessId,
-      }); // 🔥 Firestore-এ ইউজার ডকুমেন্ট আপডেট: role to manager এবং messId সেট করা
+      });
 
       const updatedUser: User = { ...user, role: "manager", messId: newMessId };
       await updateUserDocument(updatedUser);
 
-      setUser(updatedUser); // লোকাল state আপডেট করা
+      setUser(updatedUser);
       return newMessId;
     } catch (error) {
       console.error("❌ Failed to create mess:", error);
@@ -246,23 +221,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     setLoading(true);
     try {
-      // Firestore-এ Mess কোডটি ভেরিফাই করা
       const messDocRef = doc(db, "messes", code);
       const messSnap = await getDoc(messDocRef);
 
       if (!messSnap.exists()) {
         throw new Error("Mess not found or invalid code.");
-      } // Mess ডকুমেন্ট আপডেট: মেম্বার লিস্টে ইউজার UID যোগ করা
+      }
 
       const messData = messSnap.data();
       await updateDoc(messDocRef, {
         members: [...messData.members, user.uid],
-      }); // 🔥 Firestore-এ ইউজার ডকুমেন্ট আপডেট: messId সেট করা
+      });
 
       const updatedUser: User = { ...user, role: "member", messId: code };
       await updateUserDocument(updatedUser);
 
-      setUser(updatedUser); // লোকাল state আপডেট করা
+      setUser(updatedUser);
     } catch (error: any) {
       console.error("❌ Failed to join mess:", error);
       throw new Error(
@@ -271,7 +245,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } finally {
       setLoading(false);
     }
-  }; // --- Context Value ---
+  };
 
   const value: AuthContextType = {
     user,
@@ -283,7 +257,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     loading,
     isManager: user?.role === "manager",
     isMember: user?.role === "member",
-    refreshUserData, // ✅ Context-এ যুক্ত করা হলো
+    refreshUserData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

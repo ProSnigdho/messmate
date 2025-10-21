@@ -1,4 +1,3 @@
-// app/(auth)/page.tsx (Final Fixed with Advanced Redirect Check)
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -7,7 +6,7 @@ import { useRouter } from "next/navigation";
 import AuthLayout from "../components/layout/AuthLayout";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
-import { useAuth, User } from "../lib/auth-context"; // User interface ইমপোর্ট করা হয়েছে
+import { useAuth, User } from "../lib/auth-context";
 
 const { Text } = Typography;
 
@@ -31,7 +30,6 @@ const AuthPage: React.FC = () => {
 
   const { user, loading, login, register } = useAuth();
 
-  // --- ১. ইমিডিয়েট রিডাইরেক্ট লজিক (কম্পোনেন্ট লোডের সময়) ---
   useEffect(() => {
     if (loading) return;
 
@@ -42,7 +40,6 @@ const AuthPage: React.FC = () => {
     }
   }, [user, loading, router]);
 
-  // যদি user অলরেডি লগইন থাকে এবং messId চেক করার জন্য লোডিং হয়
   if (loading || (user && user.messId)) {
     return (
       <div
@@ -61,26 +58,22 @@ const AuthPage: React.FC = () => {
     );
   }
 
-  // --- ২. Login Handler (ফাংশন কলের পর) ---
   const handleDevLogin = async (values: LoginValues) => {
     setIsLoading(true);
     try {
       const { email, password } = values;
 
-      // await login(email, password) কল হলো এবং লোকাল স্টোরেজে ডেটা সেভ হলো
       await login(email, password);
       message.success("Login successful! Checking mess status...");
 
-      // 🔥 FIX: login সফল হওয়ার পর, লেটেস্ট user ডেটা নিয়ে messId চেক করা
-      // লোকাল স্টোরেজ থেকে ডেটা নিয়ে User টাইপে কাস্ট করা
       const userAfterLogin: User | null = JSON.parse(
         localStorage.getItem("user") || "null"
       );
 
       if (userAfterLogin && userAfterLogin.messId) {
-        router.replace("/dashboard"); // যদি Mess থাকে, ড্যাশবোর্ড
+        router.replace("/dashboard");
       } else {
-        router.replace("/onboarding"); // যদি Mess না থাকে, অনবোর্ডিং
+        router.replace("/onboarding");
       }
     } catch (error: any) {
       console.error("Login failed:", error);
@@ -90,7 +83,6 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  // --- Register Handler ---
   const handleDevRegister = async (values: RegisterValues) => {
     setIsLoading(true);
     try {

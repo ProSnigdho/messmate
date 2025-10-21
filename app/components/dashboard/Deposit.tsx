@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-// ✅ Only addTransaction is needed now
 import { useDeposits } from "../../lib/hooks/useDeposits";
 import { useAuth } from "../../lib/auth-context";
 import {
@@ -32,7 +31,6 @@ const { Title, Text } = Typography;
 const { Column } = Table;
 const { Option } = Select;
 
-// লেনদেনের ক্যাটাগরি (আগে General Expense ছিল, এখন Deposit সহ যুক্ত হলো)
 const transactionCategories = [
   { value: "Personal Contribution", label: "Deposit" },
   { value: "Rent", label: "Rent" },
@@ -45,7 +43,6 @@ const transactionCategories = [
   { value: "Others (General Expense)", label: "Others" },
 ];
 
-// --- Add Single Transaction Form Component (For Manager only) ---
 const AddTransactionForm: React.FC<{
   members: UserProfile[];
   addTransaction: (
@@ -61,7 +58,7 @@ const AddTransactionForm: React.FC<{
 
   const onFinish = async (values: {
     category: string;
-    involvedUid: string; // Renamed from paidByUid
+    involvedUid: string;
     amount: number;
     description: string;
   }) => {
@@ -69,7 +66,7 @@ const AddTransactionForm: React.FC<{
     const success = await addTransaction(
       values.category,
       values.amount,
-      values.involvedUid, // Use the new field name
+      values.involvedUid,
       values.description
     );
     setSubmitting(false);
@@ -80,7 +77,6 @@ const AddTransactionForm: React.FC<{
     }
   };
 
-  // Dynamic label based on selection
   const selectedCategory = Form.useWatch("category", form);
   const involvedMemberLabel =
     selectedCategory === "Personal Contribution" ? "Deposited By" : "Paid By";
@@ -175,7 +171,6 @@ const AddTransactionForm: React.FC<{
   );
 };
 
-// --- Main Deposit Component (Exported as default) ---
 interface DepositProps {
   messId: string;
 }
@@ -185,7 +180,7 @@ export default function Deposit({ messId }: DepositProps) {
     deposits,
     members,
     loading: depositsLoading,
-    addTransaction, // ✅ Using the single transaction function
+    addTransaction,
     isManager,
   } = useDeposits();
 
@@ -209,7 +204,6 @@ export default function Deposit({ messId }: DepositProps) {
       </Title>
 
       <Row gutter={[16, 16]} className="mt-4">
-        {/* Forms Column */}
         <Col xs={24} lg={8}>
           {isManager ? (
             <AddTransactionForm
@@ -226,7 +220,6 @@ export default function Deposit({ messId }: DepositProps) {
           )}
         </Col>
 
-        {/* Table Column */}
         <Col xs={24} lg={16}>
           <Card
             title={<Title level={4}>Recent Transactions</Title>}

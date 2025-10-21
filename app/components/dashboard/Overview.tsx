@@ -39,7 +39,6 @@ import {
 
 const { Title, Text } = Typography;
 
-// --- Chart Component Interfaces ---
 interface MemberChartData {
   name: string;
   Balance: number;
@@ -47,7 +46,6 @@ interface MemberChartData {
   Cost: number;
 }
 
-// --- Chart Component ---
 const MemberBalanceChart: React.FC<{
   stats: OverviewStats;
   currentUserId: string | null;
@@ -65,7 +63,6 @@ const MemberBalanceChart: React.FC<{
     })
     .sort((a, b) => b.Balance - a.Balance);
 
-  // 🎨 Each member gets a different color (cycled if many members)
   const colors = [
     "#1890ff",
     "#52c41a",
@@ -109,11 +106,10 @@ const MemberBalanceChart: React.FC<{
                 `৳${value.toFixed(2)}`,
                 name,
               ]}
-              // @ts-ignore
               labelFormatter={(label: string) => label.split(" (You)")[0]}
             />
             <Legend wrapperStyle={{ paddingTop: 10 }} />
-            {/* ✅ Individual colors per member */}
+
             <Bar dataKey="Balance" name="Net Balance (৳)">
               {chartData.map((_, index) => (
                 <Cell
@@ -129,7 +125,6 @@ const MemberBalanceChart: React.FC<{
   );
 };
 
-// --- Main Overview Component ---
 interface OverviewProps {
   messId: string;
   userRole: "manager" | "member";
@@ -198,7 +193,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 30 }}>
-        {/* 1. Total Members */}
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -210,7 +204,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Card>
         </Col>
 
-        {/* 2. Total Monthly Meals */}
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -222,7 +215,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Card>
         </Col>
 
-        {/* 3. Total Meal Cost */}
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -236,7 +228,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Card>
         </Col>
 
-        {/* 4. Meal Rate or User Balance */}
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -271,7 +262,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
 
       <Divider orientation="left">Member Financial Details</Divider>
 
-      {/* --- Chart Area --- */}
       <Row gutter={[24, 24]}>
         <Col xs={24}>
           <MemberBalanceChart stats={stats} currentUserId={userIdForChart} />

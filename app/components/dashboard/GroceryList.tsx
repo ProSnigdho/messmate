@@ -29,7 +29,6 @@ import {
 const { Title, Text } = Typography;
 const { Column } = Table;
 
-// --- A. RecordPurchaseForm Component ---
 const RecordPurchaseForm: React.FC<{
   recordNewPurchase: (
     items: string,
@@ -40,7 +39,6 @@ const RecordPurchaseForm: React.FC<{
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ Predefined grocery item options
   const groceryOptions = [
     "Rice",
     "Chicken",
@@ -95,7 +93,6 @@ const RecordPurchaseForm: React.FC<{
         onFinish={onFinish}
         initialValues={{ date: dayjs() }}
       >
-        {/* ✅ Replaced TextArea with Multi-Select */}
         <Form.Item
           name="items"
           label="Select Purchased Items"
@@ -163,7 +160,6 @@ const RecordPurchaseForm: React.FC<{
   );
 };
 
-// --- B. Main GroceryList Component ---
 interface GroceryListProps {
   messId: string;
 }
@@ -187,14 +183,12 @@ export default function GroceryList({ messId }: GroceryListProps) {
       </Title>
 
       <Row gutter={[24, 24]}>
-        {/* Record Form Column */}
         {showRecordForm && (
           <Col xs={24} lg={8}>
             <RecordPurchaseForm recordNewPurchase={recordNewPurchase} />
           </Col>
         )}
 
-        {/* History Table Column */}
         <Col xs={24} lg={showRecordForm ? 16 : 24}>
           <Card
             title={

@@ -10,8 +10,6 @@ import {
 import { useAuth } from "../auth-context";
 import { UserProfile } from "../types";
 
-// --- Interface Definitions (Unchanged) ---
-
 interface Expense {
   id: string;
   amount: number;
@@ -47,8 +45,6 @@ export interface OverviewStats {
   memberBalances: Record<string, number>;
 }
 
-// --- Date Range Helper (Unchanged) ---
-
 const getCurrentMonthRange = () => {
   const now = new Date();
 
@@ -74,8 +70,6 @@ const getCurrentMonthRange = () => {
   };
 };
 
-// --- Main Hook ---
-
 export const useOverviewData = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -93,7 +87,6 @@ export const useOverviewData = () => {
   const currentUserId = user?.uid;
 
   useEffect(() => {
-    // ... (Firebase listener logic remains the same)
     if (!messId) {
       setLoading(false);
       return;
@@ -165,10 +158,10 @@ export const useOverviewData = () => {
     );
 
     return () => unsubscribes.forEach((unsub) => unsub());
-  }, [messId, start, end, startString, endString]); // --- Calculation Logic (Memoized) ---
+  }, [messId, start, end, startString, endString]);
 
   const stats = useMemo<OverviewStats | null>(() => {
-    if (loading || !messId || members.length === 0) return null; // 1. Calculate Total Meals
+    if (loading || !messId || members.length === 0) return null;
 
     const totalMeals = meals.reduce(
       (sum, meal) =>
@@ -177,10 +170,10 @@ export const useOverviewData = () => {
         (meal.lunch ? 1 : 0) +
         (meal.dinner ? 1 : 0),
       0
-    ); // 2. Calculate Total Expenses (All) & Deposits
+    );
 
     const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
-    const totalDeposits = deposits.reduce((sum, dep) => sum + dep.amount, 0); // Meal Rate Calculation: Filter expenses for meal cost only (Grocery/Meal)
+    const totalDeposits = deposits.reduce((sum, dep) => sum + dep.amount, 0);
 
     const mealExpensesForRate = expenses.filter(
       (exp) => exp.category === "grocery" || exp.category === "meal"
@@ -188,51 +181,44 @@ export const useOverviewData = () => {
     const totalMealCostForRate = mealExpensesForRate.reduce(
       (sum, exp) => sum + exp.amount,
       0
-    ); // Meal Rate calculation
+    );
 
-    const mealRate = totalMeals > 0 ? totalMealCostForRate / totalMeals : 50; // 3. Calculate Individual Balance
+    const mealRate = totalMeals > 0 ? totalMealCostForRate / totalMeals : 50;
 
     const memberMealCounts = meals.reduce((map, meal) => {
       const count =
         (meal.breakfast ? 1 : 0) + (meal.lunch ? 1 : 0) + (meal.dinner ? 1 : 0);
       map.set(meal.userId, (map.get(meal.userId) || 0) + count);
       return map;
-    }, new Map<string, number>()); // Individual Contributions: Deposit + Grocery Expense Paid (As Credit)
+    }, new Map<string, number>());
 
-    const memberCredit: Record<string, number> = {}; // 🟢 3a. Deposit is Credit
-
+    const memberCredit: Record<string, number> = {};
     deposits.forEach((dep) => {
       memberCredit[dep.userId] = (memberCredit[dep.userId] || 0) + dep.amount;
-    }); // 🟢 3b. ONLY Grocery Expense Paid is Credit (New Logic)
-
+    });
     expenses.forEach((exp) => {
       if (exp.category === "grocery") {
         memberCredit[exp.paidBy] = (memberCredit[exp.paidBy] || 0) + exp.amount;
       }
-    }); // 4. Final Balance calculation
-    // Note: Other expenses (utility, etc.) paid by members are NOT added as credit.
+    });
 
     const memberBalances: Record<string, number> = {};
-
     members.forEach((member) => {
-      const mealsTaken = memberMealCounts.get(member.uid) || 0; // Credit is Deposit + Grocery Paid
+      const mealsTaken = memberMealCounts.get(member.uid) || 0;
       const credit = memberCredit[member.uid] || 0;
-
-      const cost = mealsTaken * mealRate; // Balance = Contribution (Deposit + Grocery Paid) - Cost (Meal Cost)
-      const balance = credit - cost;
-
-      memberBalances[member.uid] = parseFloat(balance.toFixed(2));
+      const cost = mealsTaken * mealRate;
+      memberBalances[member.uid] = parseFloat((credit - cost).toFixed(2));
     });
 
     return {
-      totalMeals: totalMeals,
-      totalExpenses: totalExpenses,
+      totalMeals,
+      totalExpenses,
       totalMealCostForRate: parseFloat(totalMealCostForRate.toFixed(2)),
-      totalDeposits: totalDeposits,
+      totalDeposits,
       mealRate: parseFloat(mealRate.toFixed(2)),
       currentMonth: monthStr,
-      members: members,
-      memberBalances: memberBalances,
+      members,
+      memberBalances,
     };
   }, [meals, expenses, deposits, members, loading, messId, monthStr]);
 

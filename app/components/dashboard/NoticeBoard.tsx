@@ -1,5 +1,3 @@
-// components/dashboard/NoticeBoard.tsx
-
 "use client";
 
 import React, { useState } from "react";
@@ -19,14 +17,12 @@ import {
   Divider,
 } from "antd";
 import { BellOutlined, EditOutlined } from "@ant-design/icons";
-// ✅ ইমপোর্ট পাথ আপনার প্রজেক্টের কাঠামো অনুযায়ী ঠিক করে নিন
 import { useNotices, Notice } from "../../lib/hooks/useNotices";
 import moment from "moment";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 
-// --- Add Notice Form Component (Manager Only) ---
 const AddNoticeForm: React.FC<{
   addNotice: (title: string, content: string) => Promise<boolean>;
 }> = ({ addNotice }) => {
@@ -88,9 +84,8 @@ const AddNoticeForm: React.FC<{
   );
 };
 
-// --- Main Notices Component (Exported as default) ---
 interface NoticeBoardProps {
-  messId: string; // messId prop is generally passed from DashboardPage
+  messId: string;
 }
 
 export default function NoticeBoard({ messId }: NoticeBoardProps) {
@@ -110,7 +105,6 @@ export default function NoticeBoard({ messId }: NoticeBoardProps) {
       </Text>
 
       <Row gutter={[24, 24]}>
-        {/* Manager Form Column */}
         <Col xs={24} lg={8}>
           {isManager ? (
             <AddNoticeForm addNotice={addNotice} />
@@ -124,7 +118,6 @@ export default function NoticeBoard({ messId }: NoticeBoardProps) {
           )}
         </Col>
 
-        {/* Notices List Column */}
         <Col xs={24} lg={16}>
           <Card
             title={

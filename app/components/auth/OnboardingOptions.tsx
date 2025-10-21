@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import {
-  Card,
-  Button,
-  Typography,
-  Row,
-  Col,
-  Input,
-  Form,
-  message, // এই line যোগ করুন
-} from "antd";
+import { Card, Button, Typography, Row, Col, Input, Form, message } from "antd";
 import {
   PlusCircleOutlined,
   UsergroupAddOutlined,
@@ -38,7 +29,7 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    message.success("Code copied to clipboard!"); // এখন message কাজ করবে
+    message.success("Code copied to clipboard!");
   };
 
   return (
@@ -62,7 +53,6 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
       </Text>
 
       <Row gutter={[32, 32]} justify="center">
-        {/* Option 1: Create New Mess */}
         <Col xs={24} md={12}>
           <Card
             hoverable
@@ -146,7 +136,6 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
           </Card>
         </Col>
 
-        {/* Option 2: Join Existing Mess */}
         <Col xs={24} md={12}>
           <Card
             hoverable
@@ -240,7 +229,6 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
         </Col>
       </Row>
 
-      {/* Info Section */}
       <div
         style={{
           marginTop: 40,
