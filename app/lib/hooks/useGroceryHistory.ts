@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase";
 import {
   collection,
@@ -23,31 +23,41 @@ export interface GroceryPurchase {
   boughtById: string;
 }
 
+export interface MemberSpentSummary {
+  name: string;
+  totalSpent: number;
+}
+
 export const useGroceryHistory = () => {
   const { user, isManager } = useAuth();
   const [history, setHistory] = useState<GroceryPurchase[]>([]);
+  const [allPurchases, setAllPurchases] = useState<GroceryPurchase[]>([]);
   const [loading, setLoading] = useState(true);
   const messId = user?.messId;
-  const isMember = !isManager;
+  const isMember = user?.role === "member";
+  const currentUserId = user?.uid;
 
+  // --- Purchase History Fetching ---
   useEffect(() => {
     if (!messId) {
       setLoading(false);
+      setAllPurchases([]);
       setHistory([]);
       return;
     }
 
     setLoading(true);
     const historyRef = collection(db, "grocery");
-    const historyQuery = query(
+
+    const baseQuery = query(
       historyRef,
       where("messId", "==", messId),
       orderBy("date", "desc"),
-      limit(30)
+      limit(isManager ? 100 : 30)
     );
 
     const unsubscribe = onSnapshot(
-      historyQuery,
+      baseQuery,
       (snapshot) => {
         const fetchedHistory: GroceryPurchase[] = snapshot.docs.map(
           (doc) =>
@@ -56,7 +66,19 @@ export const useGroceryHistory = () => {
               ...(doc.data() as Omit<GroceryPurchase, "id">),
             } as GroceryPurchase)
         );
-        setHistory(fetchedHistory);
+
+        setAllPurchases(fetchedHistory);
+
+        // FIX: Member Filtering - Only show member's own purchases
+        if (!isManager && currentUserId) {
+          const memberHistory = fetchedHistory.filter(
+            (purchase) => purchase.boughtById === currentUserId
+          );
+          setHistory(memberHistory);
+        } else {
+          setHistory(fetchedHistory);
+        }
+
         setLoading(false);
       },
       (error) => {
@@ -66,7 +88,29 @@ export const useGroceryHistory = () => {
     );
 
     return () => unsubscribe();
-  }, [messId]);
+  }, [messId, isManager, currentUserId]);
+
+  // --- Calculate Total Spent per Member ---
+  const memberSpentSummary = useMemo((): MemberSpentSummary[] => {
+    if (!allPurchases.length) return [];
+
+    const memberMap = new Map<string, { name: string; totalSpent: number }>();
+
+    allPurchases.forEach((purchase) => {
+      const userId = purchase.boughtById;
+      const currentData = memberMap.get(userId) || {
+        name: purchase.boughtBy,
+        totalSpent: 0,
+      };
+
+      currentData.totalSpent += purchase.totalCost;
+      memberMap.set(userId, currentData);
+    });
+
+    return Array.from(memberMap.values()).sort(
+      (a, b) => b.totalSpent - a.totalSpent
+    );
+  }, [allPurchases]);
 
   const recordNewPurchase = async (
     items: string,
@@ -89,7 +133,6 @@ export const useGroceryHistory = () => {
         date: Timestamp.fromDate(date),
         category: "grocery",
       };
-
       await addDoc(collection(db, "expenses"), expenseData);
 
       const groceryData: Omit<GroceryPurchase, "id"> = {
@@ -121,5 +164,7 @@ export const useGroceryHistory = () => {
     recordNewPurchase,
     isManager,
     isMember,
+    memberSpentSummary,
+    user, // ✅ FIX: Returning 'user' object
   };
 };

@@ -23,18 +23,24 @@ type ExpensePayload = WithoutId<Expense>;
 export const useExpenses = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Total Contribution (calculated from 'deposits' collection)
+  const [totalContribution, setTotalContribution] = useState<number>(0);
+  const [depositsLoading, setDepositsLoading] = useState(true);
+
   const messId = user?.messId;
-  const paidByName = user?.displayName || user?.email || "Unknown User";
   const EXPENSE_CATEGORY_TO_MANAGE = "utility";
 
   useEffect(() => {
     if (!messId) {
       setLoading(false);
+      setDepositsLoading(false);
       return;
     }
 
     setLoading(true);
+    setDepositsLoading(true);
+
+    const unsubscribes: (() => void)[] = []; // 1. Fetching Overhead Expenses
 
     const expensesQuery = query(
       collection(db, "expenses"),
@@ -43,28 +49,54 @@ export const useExpenses = () => {
       orderBy("date", "desc")
     );
 
-    const unsubscribe = onSnapshot(
-      expensesQuery,
-      (snapshot: QuerySnapshot<DocumentData>) => {
-        const fetchedExpenses: ExpenseData[] = snapshot.docs.map((doc) => {
-          const data = doc.data() as Expense;
-          return { ...data, id: doc.id };
-        });
+    unsubscribes.push(
+      onSnapshot(
+        expensesQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const fetchedExpenses: ExpenseData[] = snapshot.docs.map((doc) => {
+            const data = doc.data() as Expense;
+            return { ...data, id: doc.id };
+          });
 
-        setExpenses(fetchedExpenses);
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Error fetching expenses: ", error);
-
-        message.error(
-          "Failed to load expenses. Check console for index requirements."
-        );
-        setLoading(false);
-      }
+          setExpenses(fetchedExpenses);
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error fetching expenses: ", error);
+          message.error(
+            "Failed to load expenses. Check console for index requirements."
+          );
+          setLoading(false);
+        }
+      )
     );
 
-    return () => unsubscribe();
+    // 2. Fetching and summing Total Contribution from 'deposits' collection
+    const depositsQuery = query(
+      collection(db, "deposits"),
+      where("messId", "==", messId)
+    );
+
+    unsubscribes.push(
+      onSnapshot(
+        depositsQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          // ✅ Fix: Accurately sum all deposits for Total Contribution
+          const sum = snapshot.docs.reduce(
+            (acc, doc) => acc + (doc.data().amount || 0),
+            0
+          );
+          setTotalContribution(sum);
+          setDepositsLoading(false);
+        },
+        (error) => {
+          console.error("Error fetching total deposits: ", error);
+          setDepositsLoading(false);
+        }
+      )
+    );
+
+    return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId]);
 
   const addExpense = async (
@@ -86,9 +118,9 @@ export const useExpenses = () => {
       const newExpense: ExpensePayload = {
         messId: messId,
         title: title,
-        amount: amount,
-        paidBy: user.uid,
-        paidByName: paidByName,
+        amount: amount, // ✅ Fix: Expense is paid by the Mess Fund
+        paidBy: "mess_fund",
+        paidByName: "Mess Fund", // Display name for the fund
         category: category,
         date: Timestamp.fromDate(new Date()),
         description: description,
@@ -103,5 +135,10 @@ export const useExpenses = () => {
     }
   };
 
-  return { expenses, loading, addExpense };
+  return {
+    expenses,
+    loading: loading || depositsLoading,
+    addExpense,
+    totalContribution,
+  };
 };

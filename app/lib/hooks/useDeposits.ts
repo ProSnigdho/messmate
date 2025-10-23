@@ -16,19 +16,11 @@ import { useAuth } from "../auth-context";
 import type { Deposit, UserProfile, WithoutId } from "../types";
 import { message } from "antd";
 
+// Data structures and types (assuming these are defined elsewhere)
 interface DepositData extends Deposit {
   id: string;
 }
 type DepositPayload = WithoutId<Deposit>;
-
-const TRANSACTION_CATEGORIES = {
-  DEPOSIT: "Personal Contribution",
-  RENT: "Rent",
-  UTILITY: "Utility Bill (Electricity/Water)",
-  GAS: "Gas Bill",
-  INTERNET: "Internet/Cable",
-  OTHERS: "Others (General Expense)",
-};
 
 export const useDeposits = () => {
   const { user, isManager } = useAuth();
@@ -37,6 +29,7 @@ export const useDeposits = () => {
   const [loading, setLoading] = useState(true);
   const messId = user?.messId;
 
+  // --- Data Fetching Effect ---
   useEffect(() => {
     if (!messId) {
       setLoading(false);
@@ -48,6 +41,7 @@ export const useDeposits = () => {
     setLoading(true);
     const unsubscribes: (() => void)[] = [];
 
+    // 1. Fetching Deposits (Contributions)
     const depositsRef = collection(db, "deposits");
     const depositsQuery = query(
       depositsRef,
@@ -70,11 +64,12 @@ export const useDeposits = () => {
           setDeposits(fetchedDeposits);
         },
         (error: Error) => {
-          console.error("Error fetching transactions:", error);
+          console.error("Error fetching contributions:", error);
         }
       )
     );
 
+    // 2. Fetching Members
     const membersQ = query(
       collection(db, "users"),
       where("messId", "==", messId)
@@ -100,35 +95,28 @@ export const useDeposits = () => {
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId]);
 
+  // --- Transaction Addition Logic ---
   const addTransaction = async (
     category: string,
     amount: number,
     involvedUid: string,
     description: string = ""
   ) => {
-    if (!isManager) {
+    const involvedMember = members.find((m) => m.uid === involvedUid);
+
+    if (!involvedMember || amount <= 0 || !category) {
       message.error(
-        "Permission denied. Only Mess Managers can record transactions."
+        "Invalid input: contribution type, member, or amount missing."
       );
       return false;
     }
 
-    const involvedMember = members.find((m) => m.uid === involvedUid);
-
-    if (!involvedMember || amount <= 0 || !category) {
-      message.error("Invalid input: category, member, or amount missing.");
-      return false;
-    }
-
     try {
-      const isDeposit = category === TRANSACTION_CATEGORIES.DEPOSIT;
-
+      // All entries are now confirmed to be Contributions
       const newTransaction: DepositPayload = {
         messId: messId as string,
         category: category,
-        description:
-          description ||
-          (isDeposit ? "Contribution received" : `${category} payment`),
+        description: description || `${category} contribution`,
         amount: amount,
         userId: involvedUid,
         userName: involvedMember.displayName || "Unknown User",
@@ -139,15 +127,11 @@ export const useDeposits = () => {
         collection(db, "deposits"),
         newTransaction as DepositPayload
       );
-      message.success(
-        `${
-          isDeposit ? "Deposit" : "Expense"
-        } of ৳${amount} recorded for ${category}.`
-      );
+      message.success(`Contribution of ৳${amount} recorded for ${category}.`);
       return true;
     } catch (error) {
-      console.error("Error adding transaction:", error);
-      message.error("Failed to record transaction. Please try again.");
+      console.error("Error adding contribution:", error);
+      message.error("Failed to record contribution. Please try again.");
       return false;
     }
   };

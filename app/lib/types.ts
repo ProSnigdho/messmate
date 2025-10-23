@@ -17,14 +17,17 @@ export interface Mess {
   };
 }
 
+// Update UserProfile to have both id and uid for consistency
 export interface UserProfile {
-  uid: string;
-  email: string;
+  id: string; // Document ID in Firestore
+  uid: string; // Firebase Auth UID
   displayName: string;
-  role: "manager" | "member";
-  messId?: string;
-  phone?: string;
-  joinDate: Timestamp;
+  email: string;
+  messId: string | null;
+  role: "manager" | "member" | "pending";
+  createdAt?: Date;
+  updatedAt?: Date;
+  photoURL?: string;
 }
 
 export interface Meal {

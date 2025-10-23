@@ -19,16 +19,19 @@ import {
   ShoppingOutlined,
   DollarCircleOutlined,
   HistoryOutlined,
+  PieChartOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import {
   useGroceryHistory,
   GroceryPurchase,
+  MemberSpentSummary,
 } from "../../lib/hooks/useGroceryHistory";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
 
+// --- Component 1: RecordPurchaseForm (No functional changes) ---
 const RecordPurchaseForm: React.FC<{
   recordNewPurchase: (
     items: string,
@@ -160,40 +163,96 @@ const RecordPurchaseForm: React.FC<{
   );
 };
 
+// --- Component 2: MemberTotalSpentSummary ---
+const MemberTotalSpentSummary: React.FC<{
+  summary: MemberSpentSummary[];
+}> = ({ summary }) => {
+  const totalAllSpent = summary.reduce((sum, s) => sum + s.totalSpent, 0);
+
+  return (
+    <Card
+      title={
+        <Title level={4} style={{ margin: 0 }}>
+          <PieChartOutlined /> Member Total Spent Summary
+        </Title>
+      }
+      size="small"
+      style={{ marginBottom: 20 }}
+    >
+      <Table dataSource={summary} rowKey="name" pagination={false} size="small">
+        <Column title="Member" dataIndex="name" key="name" />
+        <Column
+          title="Total Spent (৳)"
+          dataIndex="totalSpent"
+          key="totalSpent"
+          align="right"
+          render={(spent: number) => (
+            <Text strong type="success">
+              ৳ {spent.toFixed(2)}
+            </Text>
+          )}
+        />
+      </Table>
+      <div style={{ marginTop: 10, textAlign: "right", paddingRight: 8 }}>
+        <Text strong>Grand Total: </Text>
+        <Tag color="blue" style={{ fontSize: 14 }}>
+          ৳ {totalAllSpent.toFixed(2)}
+        </Tag>
+      </div>
+    </Card>
+  );
+};
+
+// --- Component 3: Main Component (GroceryList) ---
 interface GroceryListProps {
   messId: string;
 }
 
 export default function GroceryList({ messId }: GroceryListProps) {
-  const { history, loading, recordNewPurchase, isManager, isMember } =
-    useGroceryHistory();
+  // ✅ FIX: 'user' is now destructured from the hook
+  const {
+    history,
+    loading,
+    recordNewPurchase,
+    isManager,
+    memberSpentSummary,
+    user,
+  } = useGroceryHistory();
+
+  // Get current user's UID for comparison
+  const currentUserId = user?.uid;
 
   if (loading) {
-    return (
-      <Spin tip="Loading Grocery History..." style={{ margin: "50px 0" }} />
-    );
+    return <Spin tip="Loading Expense Data..." style={{ margin: "50px 0" }} />;
   }
 
-  const showRecordForm = isManager || isMember;
+  const showRecordForm = true;
 
   return (
     <Card className="shadow-lg">
-      <Title level={2} style={{ margin: 0 }}>
+      <Title level={2} style={{ margin: 0, marginBottom: 16 }}>
         <ShoppingOutlined /> Daily Meal Expense Tracker
       </Title>
 
       <Row gutter={[24, 24]}>
-        {showRecordForm && (
-          <Col xs={24} lg={8}>
+        {/* Left Column: Form and Summary */}
+        <Col xs={24} lg={8}>
+          {/* Expense Recording Form (Visible to all) */}
+          {showRecordForm && (
             <RecordPurchaseForm recordNewPurchase={recordNewPurchase} />
-          </Col>
-        )}
+          )}
 
+          {/* Total Spent Summary Table (Visible to All) */}
+          <MemberTotalSpentSummary summary={memberSpentSummary} />
+        </Col>
+
+        {/* Right Column: Purchase History Table */}
         <Col xs={24} lg={showRecordForm ? 16 : 24}>
           <Card
             title={
               <Title level={4} style={{ margin: 0 }}>
-                <HistoryOutlined /> Purchase History (Last 30 Days)
+                <HistoryOutlined /> Purchase History ({isManager ? "All" : "My"}{" "}
+                Purchases - Last {history.length} Entries)
               </Title>
             }
             size="small"
@@ -208,6 +267,7 @@ export default function GroceryList({ messId }: GroceryListProps) {
                 title="Date"
                 key="date"
                 width={100}
+                // ✅ FIX: Using 'record' argument correctly
                 render={(_, record: GroceryPurchase) => (
                   <Text strong>
                     {dayjs(record.date.toDate()).format("MMM DD")}
@@ -239,7 +299,13 @@ export default function GroceryList({ messId }: GroceryListProps) {
                 dataIndex="boughtBy"
                 key="boughtBy"
                 width={120}
-                render={(name: string) => <Text type="secondary">{name}</Text>}
+                // ✅ FIX: Using 'record' argument correctly and currentUserId
+                render={(_, record: GroceryPurchase) => (
+                  <Text type="secondary">
+                    {record.boughtBy}
+                    {record.boughtById === currentUserId ? " (You)" : ""}
+                  </Text>
+                )}
               />
             </Table>
           </Card>

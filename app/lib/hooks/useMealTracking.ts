@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { db } from "../firebase";
+import { db } from "../../lib/firebase";
 import {
   collection,
   query,
@@ -7,37 +7,42 @@ import {
   onSnapshot,
   QuerySnapshot,
   DocumentData,
-  Timestamp,
 } from "firebase/firestore";
-import { useAuth } from "../auth-context";
-import type { Meal, UserProfile } from "../types";
+import { useAuth } from "../../lib/auth-context";
+import type { Meal, UserProfile } from "../../lib/types";
+
+import Dayjs from "dayjs";
 
 // --- Interfaces ---
 interface MealData extends Meal {
   id: string;
 }
 
-interface UserMealData {
-  user: Pick<UserProfile, "uid" | "displayName" | "role">;
-  meals: Partial<MealData>; // The meal record for the current day
-  monthlyTotalMeals: number; // Monthly total meal count
+interface GroceryPurchaseData {
+  totalCost: number;
+  date: any; // Firestore Timestamp
+  boughtById: string;
 }
 
-// --- Date Helpers (Uses ISO String for consistent query) ---
-const getMonthStartString = (): string => {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  return startOfMonth.toISOString().split("T")[0];
-};
+interface UserMealData {
+  user: Pick<UserProfile, "uid" | "displayName" | "role">;
+  meals: Partial<MealData>;
+  monthlyTotalMeals: number;
+  monthlyTotalPaid: number;
+}
 
-const getMonthEndString = (): string => {
-  const now = new Date();
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return endOfMonth.toISOString().split("T")[0];
-};
+interface BillingSummary {
+  totalMeals: number;
+  totalGroceryCost: number;
+  mealRate: number;
+}
 
-const getCurrentDateString = (): string =>
-  new Date().toISOString().split("T")[0];
+// --- Date Helpers (YYYY-MM-DD) ---
+const getMonthStartString = (): string =>
+  Dayjs().startOf("month").format("YYYY-MM-DD");
+const getMonthEndString = (): string =>
+  Dayjs().endOf("month").format("YYYY-MM-DD");
+const getCurrentDateString = (): string => Dayjs().format("YYYY-MM-DD");
 
 // --- Hook Definition ---
 export const useMealTracking = () => {
@@ -45,6 +50,11 @@ export const useMealTracking = () => {
   const [userMealData, setUserMealData] = useState<UserMealData[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate] = useState(getCurrentDateString());
+  const [billingSummary, setBillingSummary] = useState<BillingSummary>({
+    totalMeals: 0,
+    totalGroceryCost: 0,
+    mealRate: 0,
+  });
   const messId = user?.messId;
 
   useEffect(() => {
@@ -60,9 +70,21 @@ export const useMealTracking = () => {
     let currentMembers: UserProfile[] = [];
     let dailyMeals: MealData[] = [];
     let monthlyMeals: MealData[] = [];
+    let monthlyGroceryPurchases: GroceryPurchaseData[] = [];
 
     const monthStartString = getMonthStartString();
     const monthEndString = getMonthEndString();
+
+    const calculateTotalPaidByMember = (
+      purchases: GroceryPurchaseData[]
+    ): Map<string, number> => {
+      const paidMap = new Map<string, number>();
+      purchases.forEach((purchase) => {
+        const currentTotal = paidMap.get(purchase.boughtById) || 0;
+        paidMap.set(purchase.boughtById, currentTotal + purchase.totalCost);
+      });
+      return paidMap;
+    };
 
     const calculateMonthlyTotal = (userId: string): number => {
       return monthlyMeals
@@ -78,6 +100,33 @@ export const useMealTracking = () => {
     };
 
     const combineData = () => {
+      const overallTotalMeals = monthlyMeals.reduce(
+        (total, meal) =>
+          total +
+          (meal.breakfast ? 1 : 0) +
+          (meal.lunch ? 1 : 0) +
+          (meal.dinner ? 1 : 0),
+        0
+      );
+
+      const overallTotalGroceryCost = monthlyGroceryPurchases.reduce(
+        (sum, purchase) => sum + purchase.totalCost,
+        0
+      );
+
+      const rate =
+        overallTotalMeals > 0
+          ? parseFloat((overallTotalGroceryCost / overallTotalMeals).toFixed(2))
+          : 0;
+
+      const memberPaidMap = calculateTotalPaidByMember(monthlyGroceryPurchases);
+
+      setBillingSummary({
+        totalMeals: overallTotalMeals,
+        totalGroceryCost: overallTotalGroceryCost,
+        mealRate: rate,
+      });
+
       if (currentMembers.length === 0) {
         if (!loading) setUserMealData([]);
         return;
@@ -108,6 +157,7 @@ export const useMealTracking = () => {
           },
           meals: mealRecord || defaultMeal,
           monthlyTotalMeals: calculateMonthlyTotal(memberData.uid),
+          monthlyTotalPaid: memberPaidMap.get(memberData.uid) || 0,
         };
       });
 
@@ -121,6 +171,7 @@ export const useMealTracking = () => {
       setLoading(false);
     };
 
+    // ১. মেম্বারদের তথ্য আনা (users collection)
     const membersQuery = query(
       collection(db, "users"),
       where("messId", "==", messId)
@@ -134,6 +185,7 @@ export const useMealTracking = () => {
       })
     );
 
+    // ২. আজকের দিনের খাবারের তথ্য আনা (meals collection)
     const dailyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
@@ -148,6 +200,7 @@ export const useMealTracking = () => {
       })
     );
 
+    // ৩. বর্তমান মাসের মোট খাবারের তথ্য আনা (meals collection)
     const monthlyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
@@ -169,8 +222,47 @@ export const useMealTracking = () => {
       )
     );
 
+    // ৪. বর্তমান মাসের মোট গ্রোসারি খরচ আনা (grocery collection)
+    const groceryQuery = query(
+      collection(db, "grocery"),
+      where("messId", "==", messId)
+    );
+
+    unsubscribes.push(
+      onSnapshot(
+        groceryQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const startOfMonth = Dayjs(monthStartString);
+          const endOfMonth = Dayjs(monthEndString);
+
+          monthlyGroceryPurchases = snapshot.docs
+            .map((doc) => ({ ...doc.data() } as GroceryPurchaseData))
+            .filter((purchase) => {
+              // FIX: purchase.date এর সেফটি চেক
+              if (
+                !purchase.date ||
+                typeof purchase.date.toDate !== "function"
+              ) {
+                return false;
+              }
+
+              const purchaseDate = Dayjs(purchase.date.toDate());
+
+              return (
+                purchaseDate.isAfter(startOfMonth.subtract(1, "day")) &&
+                purchaseDate.isBefore(endOfMonth.add(1, "day"))
+              );
+            });
+          combineData();
+        },
+        (error) => {
+          console.error("Error fetching monthly grocery data:", error);
+        }
+      )
+    );
+
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId, currentDate]);
 
-  return { userMealData, loading, currentDate, messId };
+  return { userMealData, loading, currentDate, messId, billingSummary };
 };

@@ -185,7 +185,23 @@ export const getMessMembers = async (
   );
 
   const snapshot = await getDocs(q);
-  return mapSnapshotToData(snapshot) as UserProfile[];
+  const members = mapSnapshotToData(snapshot) as any[];
+
+  return members.map((member) => ({
+    ...member,
+    uid: member.id,
+  })) as UserProfile[];
+};
+
+export const updateMemberRole = async (
+  memberUid: string,
+  newRole: "manager" | "member"
+): Promise<void> => {
+  const userRef = doc(db, "users", memberUid);
+  await updateDoc(userRef, {
+    role: newRole,
+    updatedAt: Timestamp.now(),
+  });
 };
 
 export const getMessById = async (messId: string): Promise<Mess | null> => {

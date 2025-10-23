@@ -27,6 +27,7 @@ import {
 
 import { useAuth } from "../lib/auth-context";
 import { useRouter } from "next/navigation";
+import { useSettings } from "../lib/hooks/useSettings";
 import Overview from "../components/dashboard/Overview";
 import MealTracker from "../components/dashboard/MealTracker";
 import ExpenseManager from "../components/dashboard/ExpenseManager";
@@ -35,7 +36,7 @@ import DepositManager from "../components/dashboard/Deposit";
 import NoticeBoard from "../components/dashboard/NoticeBoard";
 import MembersManager from "../components/dashboard/MembersManager";
 import GroceryList from "../components/dashboard/GroceryList";
-import SettingsPage from "../components/dashboard/SettingsPage"; // ✅ SettingsPage Import
+import SettingsPage from "../components/dashboard/SettingsPage";
 
 const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -46,6 +47,7 @@ export default function DashboardPage() {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState("1");
   const { user, loading, isManager, logout } = useAuth();
+  const { messSettings } = useSettings();
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
@@ -109,11 +111,11 @@ export default function DashboardPage() {
 
   const sharedMenuItems: MenuItem[] = [
     { key: "1", icon: <DashboardOutlined />, label: "Overview" },
-    { key: "6", icon: <BellOutlined />, label: "Notices" }, // 🔼 Moved up
+    { key: "6", icon: <BellOutlined />, label: "Notices" },
     { key: "2", icon: <FireOutlined />, label: "Meal Tracker" },
     { key: "9", icon: <DollarOutlined />, label: "Deposits" },
     { key: "5", icon: <ShoppingOutlined />, label: "Grocery List" },
-    { key: "7", icon: <SettingOutlined />, label: "Settings" }, // 🔽 Stays at bottom
+    { key: "7", icon: <SettingOutlined />, label: "Settings" },
   ];
 
   const menuItems: MenuItem[] = isManager
@@ -121,6 +123,19 @@ export default function DashboardPage() {
     : sharedMenuItems;
 
   const userMenuItems: MenuProps["items"] = [
+    {
+      key: "1",
+      icon: <UserOutlined />,
+      label: "Profile",
+    },
+    {
+      key: "2",
+      icon: <SettingOutlined />,
+      label: "Settings",
+    },
+    {
+      type: "divider",
+    },
     {
       key: "3",
       icon: <LogoutOutlined />,
@@ -145,8 +160,10 @@ export default function DashboardPage() {
         if (!isManager) {
           return (
             <Alert
-              message="Access Denied: Only managers can access expense management"
+              message="Access Denied"
+              description="Only managers can access expense management"
               type="error"
+              showIcon
             />
           );
         }
@@ -156,8 +173,10 @@ export default function DashboardPage() {
         if (!isManager) {
           return (
             <Alert
-              message="Access Denied: Only managers can manage members"
+              message="Access Denied"
+              description="Only managers can manage members"
               type="error"
+              showIcon
             />
           );
         }
@@ -176,8 +195,10 @@ export default function DashboardPage() {
         if (!isManager) {
           return (
             <Alert
-              message="Access Denied: Only managers can access balance sheet"
+              message="Access Denied"
+              description="Only managers can access balance sheet"
               type="error"
+              showIcon
             />
           );
         }
@@ -200,6 +221,8 @@ export default function DashboardPage() {
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         theme="light"
+        breakpoint="md"
+        collapsedWidth="0"
         style={{
           overflow: "auto",
           height: "100vh",
@@ -221,10 +244,22 @@ export default function DashboardPage() {
           </Title>
           {!collapsed && user && (
             <div>
-              <Text type="secondary" style={{ fontSize: 12, display: "block" }}>
-                {user.messId
-                  ? `Mess ID: ${user.messId.slice(0, 6)}`
-                  : "No Mess Joined"}
+              <Text
+                type="secondary"
+                style={{
+                  fontSize: 12,
+                  display: "block",
+                  marginTop: 8,
+                  fontWeight: "bold",
+                }}
+              >
+                {messSettings?.messName || "Our Mess"}
+              </Text>
+              <Text
+                type="secondary"
+                style={{ fontSize: 10, display: "block", marginTop: 4 }}
+              >
+                Mess ID: {user.messId}
               </Text>
             </div>
           )}
@@ -242,17 +277,19 @@ export default function DashboardPage() {
 
       <Layout
         style={{
-          marginLeft: collapsed ? 80 : 200,
+          marginLeft: collapsed ? 0 : 200,
           transition: "margin-left 0.2s",
         }}
       >
         <Header
           style={{
-            padding: "0 24px",
+            padding: "0 16px",
             background: "#fff",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            flexWrap: "wrap",
+            gap: "8px",
             boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             position: "sticky",
             top: 0,
@@ -264,27 +301,20 @@ export default function DashboardPage() {
             <Title level={4} style={{ margin: 0, color: "#004d40" }}>
               {getCurrentPageTitle()}
             </Title>
-            {isManager && (
-              <span
-                style={{
-                  background: "#ff4d4f",
-                  color: "white",
-                  padding: "0px 8px",
-                  borderRadius: "25px",
-                  fontSize: "12px",
-                  fontWeight: "bold",
-                }}
-              >
-                MANAGER
-              </span>
-            )}
           </div>
 
           {user && (
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <Button
                 type="text"
-                style={{ display: "flex", alignItems: "center", gap: 8 }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  height: "auto",
+                  padding: "8px 12px",
+                  borderRadius: "8px",
+                }}
               >
                 <Avatar
                   size="small"
@@ -293,12 +323,27 @@ export default function DashboardPage() {
                   }}
                   icon={<UserOutlined />}
                 />
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontWeight: "bold", fontSize: "14px" }}>
-                    {user.displayName}
+                <div
+                  style={{
+                    textAlign: "left",
+                    display: "flex",
+                    flexDirection: "column",
+                    maxWidth: "120px",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
+                    {user.displayName || user.email}
                   </div>
                   <div style={{ fontSize: "12px", color: "#666" }}>
-                    {user.role}
+                    {isManager ? "👑 Manager" : "👤 Member"}
                   </div>
                 </div>
               </Button>
@@ -308,12 +353,12 @@ export default function DashboardPage() {
 
         <Content
           style={{
-            margin: "24px",
-            padding: 24,
+            margin: "16px",
+            padding: "16px",
             background: "#fff",
             borderRadius: 8,
             minHeight: "calc(100vh - 112px)",
-            overflow: "initial",
+            overflowX: "auto",
           }}
         >
           {renderContent()}

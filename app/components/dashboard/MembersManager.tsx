@@ -10,11 +10,13 @@ import {
   Alert,
   message,
   Tag,
-  Modal,
   Select,
+  Space,
+  Tooltip,
 } from "antd";
-import { TeamOutlined, DeleteOutlined, UserOutlined } from "@ant-design/icons";
+import { TeamOutlined, UserOutlined, CrownOutlined } from "@ant-design/icons";
 import { useMembers } from "../../lib/hooks/useMembers";
+import { useAuth } from "../../lib/auth-context";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
@@ -24,9 +26,17 @@ interface MembersManagerProps {
   messId: string;
 }
 
+interface Member {
+  uid: string;
+  displayName: string;
+  email: string;
+  role: "manager" | "member";
+  messId: string | null;
+}
+
 export default function MembersManager({ messId }: MembersManagerProps) {
-  const { members, loading, updateMemberRole, removeMember, isManager } =
-    useMembers();
+  const { user } = useAuth();
+  const { members, loading, updateMemberRole, isManager } = useMembers();
 
   if (!isManager) {
     return (
@@ -35,119 +45,186 @@ export default function MembersManager({ messId }: MembersManagerProps) {
         description="You must be the Mess Manager to access member management."
         type="error"
         showIcon
+        style={{ margin: "20px 0" }}
       />
     );
   }
 
   if (loading) {
-    return <Spin tip="Loading Mess Members..." style={{ margin: "50px 0" }} />;
+    return (
+      <div style={{ textAlign: "center", margin: "50px 0" }}>
+        <Spin size="large" tip="Loading Mess Members..." />
+      </div>
+    );
   }
 
   const handleRoleChange = async (
     uid: string,
-    newRole: "manager" | "member"
+    newRole: "manager" | "member",
+    currentName: string
   ) => {
     const success = await updateMemberRole(uid, newRole);
     if (success) {
-      message.success(`Successfully changed role to ${newRole}.`);
+      message.success(
+        `Successfully changed ${currentName}'s role to ${newRole}.`
+      );
     } else {
-      message.error("Failed to change role. Check permissions.");
+      message.error("Failed to change role. You may not have permission.");
     }
   };
 
-  const handleRemoveMember = (member: any) => {
-    Modal.confirm({
-      title: `Are you sure you want to remove ${member.displayName}?`,
-      content:
-        "This action will permanently remove the user from your mess. They will need to rejoin.",
-      icon: <DeleteOutlined style={{ color: "red" }} />,
-      okText: "Yes, Remove",
-      okType: "danger",
-      cancelText: "No",
-      onOk: async () => {
-        const success = await removeMember(member.uid);
-        if (success) {
-          message.success(
-            `${member.displayName} has been removed from the mess.`
-          );
-        } else {
-          message.error("Failed to remove member. Check console.");
-        }
-      },
-    });
-  };
+  const managerCount = members.filter((m) => m.role === "manager").length;
+  const memberCount = members.filter((m) => m.role === "member").length;
 
   return (
-    <Card className="shadow-lg">
-      <Title level={2} style={{ margin: 0 }}>
-        <TeamOutlined /> Mess Member Management
+    <Card
+      className="shadow-lg"
+      style={{ margin: "20px 0" }}
+      styles={{ body: { padding: "24px" } }}
+    >
+      <Title
+        level={2}
+        style={{
+          margin: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          marginBottom: 8,
+        }}
+      >
+        <TeamOutlined style={{ color: "#1890ff" }} />
+        Mess Member Management
       </Title>
-      <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
-        Total Members: <Text strong>{members.length}</Text> | Mess ID:{" "}
-        <Text code>{messId}</Text>
-      </Text>
+
+      <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
+        <Text type="secondary" style={{ fontSize: "16px" }}>
+          Total Members: <Text strong>{members.length}</Text>
+          {" | "} Managers: <Tag color="volcano">{managerCount}</Tag>
+          {" | "} Members: <Tag color="green">{memberCount}</Tag>
+        </Text>
+        <Text type="secondary">
+          Mess ID:{" "}
+          <Text code copyable>
+            {messId}
+          </Text>
+        </Text>
+      </Space>
 
       <Table
         dataSource={members}
         rowKey="uid"
-        pagination={{ pageSize: 10 }}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) =>
+            `Showing ${range[0]}-${range[1]} of ${total} members`,
+        }}
         scroll={{ x: 800 }}
+        loading={loading}
+        locale={{
+          emptyText: "No members found in your mess",
+        }}
       >
         <Column
-          title="Name"
+          title="Member"
           dataIndex="displayName"
           key="displayName"
-          render={(name, record: any) => (
-            <Text strong style={{ display: "flex", alignItems: "center" }}>
-              <UserOutlined
-                style={{
-                  marginRight: 8,
-                  color: record.role === "manager" ? "#ff4d4f" : "#1890ff",
-                }}
-              />
-              {name}
-            </Text>
+          width="30%"
+          render={(name: string, record: Member) => (
+            <Space>
+              {record.role === "manager" ? (
+                <CrownOutlined style={{ color: "#ff7a45", fontSize: "16px" }} />
+              ) : (
+                <UserOutlined style={{ color: "#1890ff", fontSize: "16px" }} />
+              )}
+              <Text strong>{name}</Text>
+              {user && record.uid === user.uid && (
+                <Tag color="blue" style={{ margin: 0 }}>
+                  You
+                </Tag>
+              )}
+            </Space>
           )}
+          sorter={(a: Member, b: Member) =>
+            a.displayName.localeCompare(b.displayName)
+          }
         />
-        <Column title="Email" dataIndex="email" key="email" />
+
+        <Column
+          title="Email"
+          dataIndex="email"
+          key="email"
+          width="40%"
+          sorter={(a: Member, b: Member) => a.email.localeCompare(b.email)}
+        />
+
         <Column
           title="Role"
           dataIndex="role"
           key="role"
-          render={(role: string) => (
-            <Tag color={role === "manager" ? "volcano" : "green"}>
+          width="20%"
+          render={(role: string, record: Member) => (
+            <Tag
+              color={role === "manager" ? "volcano" : "green"}
+              icon={role === "manager" ? <CrownOutlined /> : <UserOutlined />}
+              style={{ fontSize: "12px", padding: "4px 8px" }}
+            >
               {role.toUpperCase()}
             </Tag>
           )}
+          filters={[
+            { text: "Manager", value: "manager" },
+            { text: "Member", value: "member" },
+          ]}
+          onFilter={(value, record: Member) => record.role === value}
         />
 
         <Column
-          title="Action"
+          title="Change Role"
           key="action"
-          render={(_, record: any) => (
-            <div style={{ display: "flex", gap: 8 }}>
-              <Select
-                value={record.role}
-                onChange={(value: "manager" | "member") =>
-                  handleRoleChange(record.uid, value)
-                }
-                style={{ width: 120 }}
-                disabled={record.uid === messId}
-              >
-                <Option value="manager">Manager</Option>
-                <Option value="member">Member</Option>
-              </Select>
+          width="30%"
+          render={(_: any, record: Member) => {
+            const isCurrentUser = user && record.uid === user.uid;
+            const managerMembers = members.filter((m) => m.role === "manager");
+            const isOnlyManager =
+              record.role === "manager" && managerMembers.length === 1;
 
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => handleRemoveMember(record)}
-                disabled={record.uid === messId}
+            return (
+              <Tooltip
+                title={
+                  isCurrentUser
+                    ? "You cannot change your own role"
+                    : isOnlyManager
+                    ? "Cannot change role of the only manager"
+                    : "Change member role"
+                }
               >
-                Remove
-              </Button>
-            </div>
-          )}
+                <Select
+                  value={record.role}
+                  onChange={(value: "manager" | "member") =>
+                    handleRoleChange(record.uid, value, record.displayName)
+                  }
+                  style={{ width: 120 }}
+                  disabled={isCurrentUser || isOnlyManager}
+                  size="small"
+                >
+                  <Option value="manager">
+                    <Space size="small">
+                      <CrownOutlined />
+                      Manager
+                    </Space>
+                  </Option>
+                  <Option value="member">
+                    <Space size="small">
+                      <UserOutlined />
+                      Member
+                    </Space>
+                  </Option>
+                </Select>
+              </Tooltip>
+            );
+          }}
         />
       </Table>
     </Card>

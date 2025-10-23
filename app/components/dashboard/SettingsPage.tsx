@@ -99,7 +99,7 @@ const MessSettingsForm: React.FC<{
   };
 
   return (
-    <Card title="🏠 Mess General Settings" bordered={false}>
+    <Card title="🏠 Mess General Settings" variant="borderless">
       <Form
         layout="vertical"
         onFinish={onFinish}
@@ -111,7 +111,7 @@ const MessSettingsForm: React.FC<{
           label="Mess Name"
           rules={[{ required: true, message: "Please enter a Mess Name" }]}
         >
-          <Input />
+          <Input placeholder="Enter your mess name" />
         </Form.Item>
 
         <Form.Item>

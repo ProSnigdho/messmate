@@ -34,16 +34,15 @@ export const useSettings = () => {
     const fetchSettings = async () => {
       setLoading(true);
       try {
-        if (isManager) {
-          const messDocRef = doc(db, "messes", messId);
-          const docSnap = await getDoc(messDocRef);
+        // Always fetch mess settings for both manager and members
+        const messDocRef = doc(db, "messes", messId);
+        const docSnap = await getDoc(messDocRef);
 
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setMessSettings({
-              messName: data.name || "N/A",
-            });
-          }
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setMessSettings({
+            messName: data.name || "Our Mess",
+          });
         }
       } catch (error) {
         console.error("Error fetching mess settings:", error);
@@ -77,6 +76,11 @@ export const useSettings = () => {
         ...prev!,
         ...(updates as MessSettings),
       }));
+
+      // Refresh user data to update mess name in context
+      if (refreshUserData) {
+        await refreshUserData();
+      }
 
       message.success("Mess name updated successfully!");
       return true;

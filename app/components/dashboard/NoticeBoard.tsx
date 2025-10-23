@@ -15,9 +15,17 @@ import {
   List,
   Tag,
   Divider,
+  Avatar,
+  Space,
 } from "antd";
-import { BellOutlined, EditOutlined } from "@ant-design/icons";
+import {
+  BellOutlined,
+  EditOutlined,
+  UserOutlined,
+  ClockCircleOutlined,
+} from "@ant-design/icons";
 import { useNotices, Notice } from "../../lib/hooks/useNotices";
+import { useAuth } from "../../lib/auth-context";
 import moment from "moment";
 
 const { Title, Text } = Typography;
@@ -38,7 +46,7 @@ const AddNoticeForm: React.FC<{
       message.success("Notice published successfully!");
       form.resetFields();
     } else {
-      message.error("Failed to publish notice. Check console for details.");
+      message.error("Failed to publish notice.");
     }
   };
 
@@ -46,7 +54,7 @@ const AddNoticeForm: React.FC<{
     <Card
       title={
         <Title level={4} style={{ margin: 0 }}>
-          Publish New Notice
+          Create New Notice
         </Title>
       }
       size="small"
@@ -57,7 +65,7 @@ const AddNoticeForm: React.FC<{
           label="Title"
           rules={[{ required: true, message: "Please enter a title" }]}
         >
-          <Input placeholder="e.g., Mess Fee Submission Deadline" />
+          <Input placeholder="e.g., Monthly Fee Submission Deadline" />
         </Form.Item>
 
         <Form.Item
@@ -90,15 +98,22 @@ interface NoticeBoardProps {
 
 export default function NoticeBoard({ messId }: NoticeBoardProps) {
   const { notices, loading, addNotice, isManager } = useNotices();
+  const { user } = useAuth();
+  const [selectedNotice, setSelectedNotice] = useState<Notice | null>(null);
 
   if (loading) {
     return <Spin tip="Loading Notice Board..." style={{ margin: "50px 0" }} />;
   }
 
+  const getTimeDisplay = (date: any) => {
+    const noticeDate = moment(date.toDate());
+    return noticeDate.format("MMM DD, h:mm A");
+  };
+
   return (
     <Card className="shadow-lg">
       <Title level={2} style={{ margin: 0 }}>
-        <BellOutlined /> **Mess Notice Board**
+        <BellOutlined /> Mess Notice Board
       </Title>
       <Text type="secondary" style={{ display: "block", marginBottom: 20 }}>
         Important announcements and information for all mess members.
@@ -152,7 +167,7 @@ export default function NoticeBoard({ messId }: NoticeBoardProps) {
                             {item.title}
                           </Text>
                           <Tag color="geekblue">
-                            {moment(item.date.toDate()).fromNow()}
+                            {getTimeDisplay(item.date)}
                           </Tag>
                         </div>
                       }

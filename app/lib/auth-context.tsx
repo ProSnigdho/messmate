@@ -27,6 +27,7 @@ export interface User {
   displayName: string | null;
   role: "manager" | "member";
   messId?: string;
+  phoneNumber?: string;
 }
 
 interface AuthContextType {
@@ -80,6 +81,7 @@ const updateUserDocument = async (userData: User) => {
     {
       email: userData.email,
       displayName: userData.displayName,
+      phoneNumber: userData.phoneNumber || null,
       role: userData.role,
       messId: userData.messId || null,
     },
@@ -197,6 +199,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
       const messDocRef = doc(db, "messes", newMessId);
       await setDoc(messDocRef, {
+        name: `${user.displayName}'s Mess`,
         managerId: user.uid,
         createdAt: new Date(),
         members: [user.uid],
