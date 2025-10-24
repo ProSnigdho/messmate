@@ -1,9 +1,10 @@
-// app/lib/firebase.ts
-
+// firebase.ts (Updated)
 import { initializeApp, FirebaseApp, getApps, getApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 import { getAnalytics, Analytics } from "firebase/analytics";
+// 🚨 Import getFunctions
+import { getFunctions, Functions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDw9qNMmxzOdmfcQyLsQV7TOLL_Itob0Y4",
@@ -19,6 +20,8 @@ let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let analytics: Analytics | null = null;
+// 🚨 Declare functions variable
+let functions: Functions;
 
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
@@ -28,6 +31,8 @@ if (!getApps().length) {
 
 auth = getAuth(app);
 db = getFirestore(app);
+// 🚨 Initialize functions
+functions = getFunctions(app);
 
 if (typeof window !== "undefined" && app.name && firebaseConfig.measurementId) {
   try {
@@ -37,6 +42,7 @@ if (typeof window !== "undefined" && app.name && firebaseConfig.measurementId) {
   }
 }
 
-export { app, auth, db, analytics };
+// 🚨 Export functions
+export { app, auth, db, analytics, functions };
 
 export default app;

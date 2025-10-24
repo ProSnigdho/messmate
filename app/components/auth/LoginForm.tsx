@@ -29,12 +29,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onFinish, loading }) => (
       Sign In
     </Title>
 
-    {/* Email Input */}
     <Form.Item
       name="email"
       label="Email"
       rules={[
-        { type: "email", message: "Invalid E-mail!" },
+        { type: "email", message: "The input is not valid E-mail!" },
         { required: true, message: "Please input your Email!" },
       ]}
     >
@@ -46,13 +45,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onFinish, loading }) => (
       />
     </Form.Item>
 
-    {/* Password Input */}
     <Form.Item
       name="password"
       label="Password"
       rules={[
         { required: true, message: "Please input your Password!" },
-        { min: 6, message: "Min 6 characters." },
+        { min: 6, message: "Password must be at least 6 characters." },
       ]}
       style={{ marginBottom: 30 }}
     >
@@ -63,7 +61,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ onFinish, loading }) => (
       />
     </Form.Item>
 
-    {/* Submit Button */}
     <Form.Item>
       <Button
         type="primary"

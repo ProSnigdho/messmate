@@ -29,7 +29,6 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    message.success("Code copied to clipboard!");
   };
 
   return (
@@ -335,7 +334,6 @@ const OnboardingOptions: React.FC<OnboardingOptionsProps> = ({
         </Row>
       </div>
 
-      {/* Mobile-specific responsive styles */}
       <style jsx>{`
         @media (max-width: 768px) {
           .ant-card {

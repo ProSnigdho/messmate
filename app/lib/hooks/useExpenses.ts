@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
@@ -12,7 +14,7 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { useAuth } from "../auth-context";
-import type { Expense, WithoutId } from "../types";
+import type { Expense, WithoutId, ExpenseCategory } from "../types";
 import { message } from "antd";
 
 interface ExpenseData extends Expense {
@@ -23,12 +25,22 @@ type ExpensePayload = WithoutId<Expense>;
 export const useExpenses = () => {
   const { user } = useAuth();
   const [expenses, setExpenses] = useState<ExpenseData[]>([]);
-  const [loading, setLoading] = useState(true); // Total Contribution (calculated from 'deposits' collection)
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [totalContribution, setTotalContribution] = useState<number>(0);
   const [depositsLoading, setDepositsLoading] = useState(true);
 
   const messId = user?.messId;
-  const EXPENSE_CATEGORY_TO_MANAGE = "utility";
+
+  const DIVIDED_EXPENSE_CATEGORIES: ExpenseCategory[] = [
+    "gas",
+    "internet",
+    "electricity",
+    "water",
+    "cleaner",
+    "other_bills",
+    "utility",
+  ];
 
   useEffect(() => {
     if (!messId) {
@@ -40,12 +52,11 @@ export const useExpenses = () => {
     setLoading(true);
     setDepositsLoading(true);
 
-    const unsubscribes: (() => void)[] = []; // 1. Fetching Overhead Expenses
+    const unsubscribes: (() => void)[] = [];
 
     const expensesQuery = query(
       collection(db, "expenses"),
       where("messId", "==", messId),
-      where("category", "==", EXPENSE_CATEGORY_TO_MANAGE),
       orderBy("date", "desc")
     );
 
@@ -59,19 +70,38 @@ export const useExpenses = () => {
           });
 
           setExpenses(fetchedExpenses);
-          setLoading(false);
         },
         (error) => {
           console.error("Error fetching expenses: ", error);
-          message.error(
-            "Failed to load expenses. Check console for index requirements."
-          );
+          message.error("Failed to load expenses.");
+        }
+      )
+    );
+
+    const membersQuery = query(
+      collection(db, "users"),
+      where("messId", "==", messId)
+    );
+
+    unsubscribes.push(
+      onSnapshot(
+        membersQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const fetchedMembers = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            uid: doc.id,
+            ...doc.data(),
+          }));
+          setMembers(fetchedMembers);
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error fetching members: ", error);
           setLoading(false);
         }
       )
     );
 
-    // 2. Fetching and summing Total Contribution from 'deposits' collection
     const depositsQuery = query(
       collection(db, "deposits"),
       where("messId", "==", messId)
@@ -81,7 +111,6 @@ export const useExpenses = () => {
       onSnapshot(
         depositsQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
-          // ✅ Fix: Accurately sum all deposits for Total Contribution
           const sum = snapshot.docs.reduce(
             (acc, doc) => acc + (doc.data().amount || 0),
             0
@@ -99,10 +128,22 @@ export const useExpenses = () => {
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [messId]);
 
+  const calculateDividedAmount = (
+    amount: number,
+    category: ExpenseCategory
+  ): number => {
+    if (!DIVIDED_EXPENSE_CATEGORIES.includes(category)) {
+      return amount;
+    }
+
+    const activeMembers = members.filter((m) => m.role !== "pending");
+    return activeMembers.length > 0 ? amount / activeMembers.length : amount;
+  };
+
   const addExpense = async (
     title: string,
     amount: number,
-    category: Expense["category"] = EXPENSE_CATEGORY_TO_MANAGE as any,
+    category: ExpenseCategory = "utility",
     description: string = ""
   ) => {
     if (!messId || !user) {
@@ -115,18 +156,36 @@ export const useExpenses = () => {
     }
 
     try {
+      const activeMembers = members.filter((m) => m.role !== "pending");
+      const dividedAmount = DIVIDED_EXPENSE_CATEGORIES.includes(category)
+        ? amount / activeMembers.length
+        : amount;
+
       const newExpense: ExpensePayload = {
         messId: messId,
         title: title,
-        amount: amount, // ✅ Fix: Expense is paid by the Mess Fund
+        amount: amount,
         paidBy: "mess_fund",
-        paidByName: "Mess Fund", // Display name for the fund
+        paidByName: "Mess Fund",
         category: category,
         date: Timestamp.fromDate(new Date()),
         description: description,
+        dividedAmount: parseFloat(dividedAmount.toFixed(2)),
+        totalMembers: activeMembers.length,
       };
 
       await addDoc(collection(db, "expenses"), newExpense);
+
+      if (DIVIDED_EXPENSE_CATEGORIES.includes(category)) {
+        message.success(
+          `Expense added! Each member needs to pay ৳${dividedAmount.toFixed(
+            2
+          )} for ${category}.`
+        );
+      } else {
+        message.success("Expense added successfully!");
+      }
+
       return true;
     } catch (error) {
       console.error("Error adding expense:", error);
@@ -135,10 +194,48 @@ export const useExpenses = () => {
     }
   };
 
+  const getMemberDueAmount = (category: ExpenseCategory): number => {
+    const categoryExpenses = expenses.filter(
+      (exp) => exp.category === category
+    );
+    const totalAmount = categoryExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+    const activeMembers = members.filter((m) => m.role !== "pending");
+
+    return activeMembers.length > 0 ? totalAmount / activeMembers.length : 0;
+  };
+
+  const getDividedExpensesSummary = () => {
+    const summary: Record<string, { total: number; perMember: number }> = {};
+
+    DIVIDED_EXPENSE_CATEGORIES.forEach((category) => {
+      const categoryExpenses = expenses.filter(
+        (exp) => exp.category === category
+      );
+      const total = categoryExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const activeMembers = members.filter((m) => m.role !== "pending");
+      const perMember =
+        activeMembers.length > 0 ? total / activeMembers.length : 0;
+
+      summary[category] = {
+        total: parseFloat(total.toFixed(2)),
+        perMember: parseFloat(perMember.toFixed(2)),
+      };
+    });
+
+    return summary;
+  };
+
   return {
     expenses,
+    members,
     loading: loading || depositsLoading,
     addExpense,
     totalContribution,
+    getMemberDueAmount,
+    getDividedExpensesSummary,
+    DIVIDED_EXPENSE_CATEGORIES,
   };
 };

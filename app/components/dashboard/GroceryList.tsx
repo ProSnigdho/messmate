@@ -31,7 +31,6 @@ import {
 const { Title, Text } = Typography;
 const { Column } = Table;
 
-// --- Component 1: RecordPurchaseForm (No functional changes) ---
 const RecordPurchaseForm: React.FC<{
   recordNewPurchase: (
     items: string,
@@ -163,7 +162,6 @@ const RecordPurchaseForm: React.FC<{
   );
 };
 
-// --- Component 2: MemberTotalSpentSummary ---
 const MemberTotalSpentSummary: React.FC<{
   summary: MemberSpentSummary[];
 }> = ({ summary }) => {
@@ -203,13 +201,11 @@ const MemberTotalSpentSummary: React.FC<{
   );
 };
 
-// --- Component 3: Main Component (GroceryList) ---
 interface GroceryListProps {
   messId: string;
 }
 
 export default function GroceryList({ messId }: GroceryListProps) {
-  // ✅ FIX: 'user' is now destructured from the hook
   const {
     history,
     loading,
@@ -219,7 +215,6 @@ export default function GroceryList({ messId }: GroceryListProps) {
     user,
   } = useGroceryHistory();
 
-  // Get current user's UID for comparison
   const currentUserId = user?.uid;
 
   if (loading) {
@@ -235,24 +230,20 @@ export default function GroceryList({ messId }: GroceryListProps) {
       </Title>
 
       <Row gutter={[24, 24]}>
-        {/* Left Column: Form and Summary */}
         <Col xs={24} lg={8}>
-          {/* Expense Recording Form (Visible to all) */}
           {showRecordForm && (
             <RecordPurchaseForm recordNewPurchase={recordNewPurchase} />
           )}
 
-          {/* Total Spent Summary Table (Visible to All) */}
           <MemberTotalSpentSummary summary={memberSpentSummary} />
         </Col>
 
-        {/* Right Column: Purchase History Table */}
         <Col xs={24} lg={showRecordForm ? 16 : 24}>
           <Card
             title={
               <Title level={4} style={{ margin: 0 }}>
                 <HistoryOutlined /> Purchase History ({isManager ? "All" : "My"}{" "}
-                Purchases - Last {history.length} Entries)
+                Purchases)
               </Title>
             }
             size="small"
@@ -267,7 +258,6 @@ export default function GroceryList({ messId }: GroceryListProps) {
                 title="Date"
                 key="date"
                 width={100}
-                // ✅ FIX: Using 'record' argument correctly
                 render={(_, record: GroceryPurchase) => (
                   <Text strong>
                     {dayjs(record.date.toDate()).format("MMM DD")}
@@ -299,7 +289,6 @@ export default function GroceryList({ messId }: GroceryListProps) {
                 dataIndex="boughtBy"
                 key="boughtBy"
                 width={120}
-                // ✅ FIX: Using 'record' argument correctly and currentUserId
                 render={(_, record: GroceryPurchase) => (
                   <Text type="secondary">
                     {record.boughtBy}

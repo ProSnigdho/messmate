@@ -85,18 +85,20 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
   });
 
   const columns = [
-    { title: "Member", dataIndex: "name", key: "name" },
+    { title: "Member", dataIndex: "name", key: "name", width: 100 },
     {
       title: "Total Meals (Monthly)",
       dataIndex: "totalMeals",
       key: "totalMeals",
       align: "center" as const,
+      width: 120,
     },
     {
       title: "Total Paid (Grocery)",
       dataIndex: "totalPaid",
       key: "totalPaid",
       align: "right" as const,
+      width: 130,
       render: (text: string) => (
         <Text strong type="warning">
           {text} ৳
@@ -108,6 +110,7 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
       dataIndex: "mealCost",
       key: "mealCost",
       align: "right" as const,
+      width: 120,
       render: (text: string) => <Text>{text} ৳</Text>,
     },
     {
@@ -115,6 +118,7 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
       dataIndex: "paidVsDue",
       key: "paidVsDue",
       align: "right" as const,
+      width: 150,
       render: (text: string) => {
         const amount = parseFloat(text);
 
@@ -163,6 +167,8 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
+            gap: 8,
             justifyContent: "space-between",
             marginTop: 8,
           }}
@@ -193,10 +199,12 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
         pagination={false}
         bordered
         size="middle"
+        scroll={{ x: 720 }}
       />
     </Card>
   );
 };
+
 const convertToCSV = (
   data: FullMealHistoryEntry[],
   memberName: string,
@@ -345,12 +353,13 @@ const MonthlyMealHistory: React.FC<{
   };
 
   const historyColumns = [
-    { title: "Date", dataIndex: "date", key: "date" },
+    { title: "Date", dataIndex: "date", key: "date", width: 120 },
     {
       title: "Breakfast",
       dataIndex: "breakfast",
       key: "breakfast",
       align: "center" as const,
+      width: 90,
       render: (e: boolean) => (e ? "✅" : "❌"),
     },
     {
@@ -358,6 +367,7 @@ const MonthlyMealHistory: React.FC<{
       dataIndex: "lunch",
       key: "lunch",
       align: "center" as const,
+      width: 90,
       render: (e: boolean) => (e ? "✅" : "❌"),
     },
     {
@@ -365,6 +375,7 @@ const MonthlyMealHistory: React.FC<{
       dataIndex: "dinner",
       key: "dinner",
       align: "center" as const,
+      width: 90,
       render: (e: boolean) => (e ? "✅" : "❌"),
     },
     {
@@ -372,6 +383,7 @@ const MonthlyMealHistory: React.FC<{
       dataIndex: "total",
       key: "total",
       align: "center" as const,
+      width: 90,
     },
   ];
 
@@ -405,7 +417,7 @@ const MonthlyMealHistory: React.FC<{
       >
         <Text strong>Select Member:</Text>
         <Select
-          style={{ width: 200 }}
+          style={{ flexGrow: 1, minWidth: 150 }}
           placeholder="Select a member"
           options={memberOptions}
           value={selectedMemberId}
@@ -415,6 +427,7 @@ const MonthlyMealHistory: React.FC<{
 
         <Text strong>Select Date Range (DD-MM-YYYY):</Text>
         <RangePicker
+          style={{ flexGrow: 1, minWidth: 200 }}
           value={dateRange}
           onChange={(dates) => setDateRange(dates as RangeValue)}
           format="DD-MM-YYYY"
@@ -430,6 +443,7 @@ const MonthlyMealHistory: React.FC<{
         pagination={{ pageSize: 10 }}
         bordered
         size="middle"
+        scroll={{ x: 600 }}
       />
 
       <div style={{ marginTop: 16, textAlign: "right" }}>
@@ -525,6 +539,7 @@ const MealTracker: React.FC = () => {
       title: "Member",
       dataIndex: ["user", "displayName"],
       key: "displayName",
+      width: 120,
       render: (_: string, record: any) => (
         <Text strong={record.user.uid === currentUser.uid}>
           {record.user.displayName}{" "}
@@ -536,6 +551,7 @@ const MealTracker: React.FC = () => {
       title: "Role",
       dataIndex: ["user", "role"],
       key: "role",
+      width: 80,
       render: (role: string) => (
         <Text type={role === "manager" ? "warning" : "secondary"}>
           {role.toUpperCase()}
@@ -547,6 +563,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "breakfast"],
       key: "breakfast",
       align: "center" as const,
+      width: 80,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -562,6 +579,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "lunch"],
       key: "lunch",
       align: "center" as const,
+      width: 70,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -575,6 +593,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "dinner"],
       key: "dinner",
       align: "center" as const,
+      width: 70,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -587,6 +606,7 @@ const MealTracker: React.FC = () => {
       title: "Daily Total",
       key: "dailyTotal",
       align: "center" as const,
+      width: 80,
       render: (_: any, record: any) => {
         const meals = record.meals;
         return (
@@ -601,6 +621,7 @@ const MealTracker: React.FC = () => {
       dataIndex: "monthlyTotalMeals",
       key: "monthlyTotalMeals",
       align: "center" as const,
+      width: 90,
       render: (value: number, record: any) => {
         if (isManager || record.user.uid === currentUser.uid) {
           return (
@@ -638,6 +659,7 @@ const MealTracker: React.FC = () => {
           pagination={false}
           bordered
           size="middle"
+          scroll={{ x: 700 }}
         />
         {loading && (
           <Spin tip="Loading real-time data..." style={{ marginTop: 20 }} />

@@ -13,14 +13,13 @@ import type { Meal, UserProfile } from "../../lib/types";
 
 import Dayjs from "dayjs";
 
-// --- Interfaces ---
 interface MealData extends Meal {
   id: string;
 }
 
 interface GroceryPurchaseData {
   totalCost: number;
-  date: any; // Firestore Timestamp
+  date: any;
   boughtById: string;
 }
 
@@ -37,14 +36,12 @@ interface BillingSummary {
   mealRate: number;
 }
 
-// --- Date Helpers (YYYY-MM-DD) ---
 const getMonthStartString = (): string =>
   Dayjs().startOf("month").format("YYYY-MM-DD");
 const getMonthEndString = (): string =>
   Dayjs().endOf("month").format("YYYY-MM-DD");
 const getCurrentDateString = (): string => Dayjs().format("YYYY-MM-DD");
 
-// --- Hook Definition ---
 export const useMealTracking = () => {
   const { user } = useAuth();
   const [userMealData, setUserMealData] = useState<UserMealData[]>([]);
@@ -171,7 +168,6 @@ export const useMealTracking = () => {
       setLoading(false);
     };
 
-    // ১. মেম্বারদের তথ্য আনা (users collection)
     const membersQuery = query(
       collection(db, "users"),
       where("messId", "==", messId)
@@ -185,7 +181,6 @@ export const useMealTracking = () => {
       })
     );
 
-    // ২. আজকের দিনের খাবারের তথ্য আনা (meals collection)
     const dailyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
@@ -200,7 +195,6 @@ export const useMealTracking = () => {
       })
     );
 
-    // ৩. বর্তমান মাসের মোট খাবারের তথ্য আনা (meals collection)
     const monthlyMealQuery = query(
       collection(db, "meals"),
       where("messId", "==", messId),
@@ -222,7 +216,6 @@ export const useMealTracking = () => {
       )
     );
 
-    // ৪. বর্তমান মাসের মোট গ্রোসারি খরচ আনা (grocery collection)
     const groceryQuery = query(
       collection(db, "grocery"),
       where("messId", "==", messId)
@@ -238,7 +231,6 @@ export const useMealTracking = () => {
           monthlyGroceryPurchases = snapshot.docs
             .map((doc) => ({ ...doc.data() } as GroceryPurchaseData))
             .filter((purchase) => {
-              // FIX: purchase.date এর সেফটি চেক
               if (
                 !purchase.date ||
                 typeof purchase.date.toDate !== "function"

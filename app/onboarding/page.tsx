@@ -18,7 +18,6 @@ const OnboardingPage: React.FC = () => {
   useEffect(() => {
     if (loading) return;
     if (user && user.messId) {
-      message.info("You've already joined a mess. Redirecting to dashboard.");
       router.replace("/dashboard");
     }
     if (!user) {
@@ -44,9 +43,7 @@ const OnboardingPage: React.FC = () => {
   const handleCreateMess = async () => {
     try {
       const messId = await createMess();
-      message.success(
-        `Mess created successfully! Code: ${messId}. Redirecting...`
-      );
+
       router.replace("/dashboard");
     } catch (error) {
       message.error("Failed to create mess. Please try again.");
@@ -61,7 +58,7 @@ const OnboardingPage: React.FC = () => {
     }
     try {
       await joinMess(joinCode);
-      message.success("Joined mess successfully! Redirecting to dashboard.");
+
       router.replace("/dashboard");
     } catch (error) {
       message.error("Failed to join mess. Check the code.");
@@ -78,7 +75,7 @@ const OnboardingPage: React.FC = () => {
         textAlign: "center",
       }}
     >
-      <Title level={2}>Welcome to MessMate!</Title>
+      <Title level={2}>Welcome to MessMate! 🎉</Title>
       <Text type="secondary" style={{ marginBottom: 40, display: "block" }}>
         Start by creating a new mess or joining an existing one.
       </Text>

@@ -1,42 +1,79 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
 import { db } from "../firebase";
 import {
   collection,
   query,
   where,
-  getDocs,
+  onSnapshot,
+  QuerySnapshot,
   DocumentData,
-  Timestamp,
 } from "firebase/firestore";
 import { useAuth } from "../auth-context";
-import { message } from "antd";
-import type { Expense as ExpenseType, Deposit as DepositType } from "../types";
+import type {
+  Meal,
+  UserProfile,
+  Expense,
+  Deposit,
+  ExpenseCategory,
+} from "../types";
+import Dayjs from "dayjs";
+
+interface MealData extends Meal {
+  id: string;
+}
+
+interface GroceryPurchaseData {
+  id: string;
+  totalCost: number;
+  date: any;
+  boughtById: string;
+}
+
+interface ExpenseData extends Expense {
+  id: string;
+}
+
+interface DepositData extends Deposit {
+  id: string;
+}
 
 export interface Member {
   uid: string;
   displayName: string;
-  role: "manager" | "member";
+  role: "manager" | "member" | "pending";
 }
 
 export interface MemberDetailedData {
   member: Member;
   totalMeals: number;
   totalPaidAmount: number;
-  deposits: DepositType[];
-  expensesPaid: ExpenseType[];
-  groceryExpensesPaid: ExpenseType[];
-  utilityExpensesPaid: ExpenseType[];
+  monthlyTotalPaid: number;
+  deposits: DepositData[];
+  groceryExpensesPaid: ExpenseData[];
+  utilityExpensesPaid: ExpenseData[];
   totalMealCost: number;
   mealRate: number;
+  utilityShare: number;
+  finalBalance: number;
 }
 
-export interface OverviewStats {
+export interface BalanceSheetStats {
   currentMonth: string;
   allMembersData: MemberDetailedData[];
   globalMealRate: number;
+  totalUtilityCost: number;
+  utilityCostPerMember: number;
+  totalGroceryCost: number;
+  totalMeals: number;
 }
 
-const getCurrentMonthTimestamps = () => {
+const getMonthStartString = (): string =>
+  Dayjs().startOf("month").format("YYYY-MM-DD");
+const getMonthEndString = (): string =>
+  Dayjs().endOf("month").format("YYYY-MM-DD");
+const getCurrentMonthRange = () => {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const endOfMonth = new Date(
@@ -49,180 +86,274 @@ const getCurrentMonthTimestamps = () => {
   );
 
   return {
-    startTimestamp: Timestamp.fromDate(startOfMonth),
-    endTimestamp: Timestamp.fromDate(endOfMonth),
-  };
-};
-
-const getCurrentMonthDateStrings = () => {
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-  return {
-    startDateString: startOfMonth.toISOString().split("T")[0],
-    endDateString: endOfMonth.toISOString().split("T")[0],
+    start: startOfMonth,
+    end: endOfMonth,
+    startString: getMonthStartString(),
+    endString: getMonthEndString(),
+    monthStr: now.toLocaleString("en-US", { month: "long", year: "numeric" }),
   };
 };
 
 export const useBalanceSheetData = () => {
-  const { user, loading: authLoading } = useAuth();
-  const [stats, setStats] = useState<OverviewStats | null>(null);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState<UserProfile[]>([]);
+  const [monthlyMeals, setMonthlyMeals] = useState<MealData[]>([]);
+  const [monthlyGroceryPurchases, setMonthlyGroceryPurchases] = useState<
+    GroceryPurchaseData[]
+  >([]);
+  const [monthlyExpenses, setMonthlyExpenses] = useState<ExpenseData[]>([]);
+  const [monthlyDeposits, setMonthlyDeposits] = useState<DepositData[]>([]);
+
+  const { start, end, startString, endString, monthStr } = useMemo(
+    getCurrentMonthRange,
+    []
+  );
+
   const messId = user?.messId;
 
   useEffect(() => {
-    if (authLoading || !messId) {
+    if (!messId) {
       setLoading(false);
       return;
     }
 
-    const calculateOverview = async () => {
-      setLoading(true);
+    setLoading(true);
+    const unsubscribes: (() => void)[] = [];
 
-      try {
-        const { startTimestamp, endTimestamp } = getCurrentMonthTimestamps();
-        const { startDateString, endDateString } = getCurrentMonthDateStrings();
-
-        const currentMonthString = new Date().toLocaleString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-
-        const membersQuery = query(
-          collection(db, "users"),
-          where("messId", "==", messId)
+    const membersQuery = query(
+      collection(db, "users"),
+      where("messId", "==", messId)
+    );
+    unsubscribes.push(
+      onSnapshot(membersQuery, (snapshot: QuerySnapshot<DocumentData>) => {
+        const fetchedMembers = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              uid: doc.id,
+              ...doc.data(),
+            } as UserProfile)
         );
-        const membersSnapshot = await getDocs(membersQuery);
-        const members: Member[] = membersSnapshot.docs.map((doc) => ({
-          uid: doc.id,
-          displayName: doc.data().displayName || "Unknown Member",
-          role: doc.data().role || "member",
-        }));
+        setMembers(fetchedMembers);
+      })
+    );
 
-        const fetchTimestampData = async (
-          collectionName: string
-        ): Promise<DocumentData[]> => {
-          const q = query(
-            collection(db, collectionName),
-            where("messId", "==", messId),
-            where("date", ">=", startTimestamp),
-            where("date", "<=", endTimestamp)
+    const monthlyMealQuery = query(
+      collection(db, "meals"),
+      where("messId", "==", messId),
+      where("date", ">=", startString),
+      where("date", "<=", endString)
+    );
+    unsubscribes.push(
+      onSnapshot(
+        monthlyMealQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const fetchedMeals = snapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() } as MealData)
           );
-          const snapshot = await getDocs(q);
-          return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        };
+          setMonthlyMeals(fetchedMeals);
+        },
+        (error) => {
+          console.error("Error fetching monthly meal data:", error);
+        }
+      )
+    );
 
-        const fetchStringDateData = async (
-          collectionName: string
-        ): Promise<DocumentData[]> => {
-          const q = query(
-            collection(db, collectionName),
-            where("messId", "==", messId),
-            where("date", ">=", startDateString),
-            where("date", "<=", endDateString)
+    const groceryQuery = query(
+      collection(db, "grocery"),
+      where("messId", "==", messId)
+    );
+    unsubscribes.push(
+      onSnapshot(
+        groceryQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const startOfMonth = Dayjs(startString);
+          const endOfMonth = Dayjs(endString);
+
+          const monthlyGrocery = snapshot.docs
+            .map(
+              (doc) => ({ id: doc.id, ...doc.data() } as GroceryPurchaseData)
+            )
+            .filter((purchase) => {
+              if (
+                !purchase.date ||
+                typeof purchase.date.toDate !== "function"
+              ) {
+                return false;
+              }
+              const purchaseDate = Dayjs(purchase.date.toDate());
+              return (
+                purchaseDate.isAfter(startOfMonth.subtract(1, "day")) &&
+                purchaseDate.isBefore(endOfMonth.add(1, "day"))
+              );
+            });
+          setMonthlyGroceryPurchases(monthlyGrocery);
+        },
+        (error) => {
+          console.error("Error fetching monthly grocery data:", error);
+        }
+      )
+    );
+
+    const expensesQuery = query(
+      collection(db, "expenses"),
+      where("messId", "==", messId),
+      where("date", ">=", start),
+      where("date", "<=", end)
+    );
+    unsubscribes.push(
+      onSnapshot(
+        expensesQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const fetchedExpenses = snapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() } as ExpenseData)
           );
-          const snapshot = await getDocs(q);
-          return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        };
+          setMonthlyExpenses(fetchedExpenses);
+        },
+        (error) => {
+          console.error("Error fetching expenses data:", error);
+        }
+      )
+    );
 
-        const [expensesData, mealsData, depositsData] = await Promise.all([
-          fetchTimestampData("expenses"),
-          fetchStringDateData("meals"),
-          fetchTimestampData("deposits"),
-        ]);
-
-        const allExpenses: ExpenseType[] = expensesData as ExpenseType[];
-        const allMeals = mealsData as DocumentData[];
-        const allDeposits: DepositType[] = depositsData as DepositType[];
-
-        const mealExpensesForRate = allExpenses.filter(
-          (exp) => exp.category === "grocery" || exp.category === "meal"
-        );
-
-        const totalMealCostForRate = mealExpensesForRate.reduce(
-          (sum, exp) => sum + exp.amount,
-          0
-        );
-
-        const totalMealsCount = allMeals.reduce(
-          (sum, meal) =>
-            sum +
-            (meal.breakfast ? 1 : 0) +
-            (meal.lunch ? 1 : 0) +
-            (meal.dinner ? 1 : 0),
-          0
-        );
-
-        const globalMealRate =
-          totalMealsCount > 0 ? totalMealCostForRate / totalMealsCount : 0;
-
-        const allMembersData: MemberDetailedData[] = members.map((member) => {
-          const memberMeals = allMeals.filter((m) => m.userId === member.uid);
-          const memberTotalMeals = memberMeals.reduce(
-            (sum, meal) =>
-              sum +
-              (meal.breakfast ? 1 : 0) +
-              (meal.lunch ? 1 : 0) +
-              (meal.dinner ? 1 : 0),
-            0
+    const depositsQuery = query(
+      collection(db, "deposits"),
+      where("messId", "==", messId),
+      where("date", ">=", start),
+      where("date", "<=", end)
+    );
+    unsubscribes.push(
+      onSnapshot(
+        depositsQuery,
+        (snapshot: QuerySnapshot<DocumentData>) => {
+          const fetchedDeposits = snapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() } as DepositData)
           );
+          setMonthlyDeposits(fetchedDeposits);
+        },
+        (error) => {
+          console.error("Error fetching deposits data:", error);
+        }
+      )
+    );
 
-          const expensesPaid = allExpenses.filter(
-            (exp) => exp.paidBy === member.uid
-          );
+    return () => unsubscribes.forEach((unsub) => unsub());
+  }, [messId, start, end, startString, endString]);
 
-          const groceryExpensesPaid = expensesPaid.filter(
-            (exp) => exp.category === "grocery" || exp.category === "meal"
-          );
-          const utilityExpensesPaid = expensesPaid.filter(
-            (exp) => exp.category === "utility"
-          );
+  const stats = useMemo<BalanceSheetStats | null>(() => {
+    if (loading || !messId || members.length === 0) return null;
 
-          const deposits = allDeposits.filter(
-            (dep) => dep.userId === member.uid
-          );
+    const memberMealCounts: Record<string, number> = {};
+    let totalMeals = 0;
 
-          const totalPaidAmount = deposits.reduce(
-            (sum, dep) => sum + dep.amount,
-            0
-          );
+    monthlyMeals.forEach((meal) => {
+      const mealCount =
+        (meal.breakfast ? 1 : 0) + (meal.lunch ? 1 : 0) + (meal.dinner ? 1 : 0);
+      totalMeals += mealCount;
+      memberMealCounts[meal.userId] =
+        (memberMealCounts[meal.userId] || 0) + mealCount;
+    });
 
-          const totalMealCost = memberTotalMeals * globalMealRate;
+    const totalGroceryCost = monthlyGroceryPurchases.reduce(
+      (sum, grocery) => sum + grocery.totalCost,
+      0
+    );
 
-          return {
-            member,
-            totalMeals: memberTotalMeals,
-            totalPaidAmount,
-            deposits: deposits as DepositType[],
-            expensesPaid: expensesPaid as ExpenseType[],
-            groceryExpensesPaid: groceryExpensesPaid as ExpenseType[],
-            utilityExpensesPaid: utilityExpensesPaid as ExpenseType[],
-            totalMealCost,
-            mealRate: globalMealRate,
-          };
-        });
+    const globalMealRate = totalMeals > 0 ? totalGroceryCost / totalMeals : 0;
 
-        setStats({
-          currentMonth: currentMonthString,
-          allMembersData,
-          globalMealRate,
-        });
-      } catch (error) {
-        console.error(
-          "FATAL ERROR: Detailed data calculation failed. Check if Firestore indexes are needed.",
-          error
-        );
-        message.error(
-          "Failed to load all monthly data. Check console for database or index issues."
-        );
-      } finally {
-        setLoading(false);
-      }
+    const utilityExpenses = monthlyExpenses.filter(
+      (exp) => exp.category === "utility"
+    );
+    const totalUtilityCost = utilityExpenses.reduce(
+      (sum, exp) => sum + exp.amount,
+      0
+    );
+    const utilityCostPerMember =
+      members.length > 0 ? totalUtilityCost / members.length : 0;
+
+    const memberGroceryPaid: Record<string, number> = {};
+    monthlyGroceryPurchases.forEach((grocery) => {
+      memberGroceryPaid[grocery.boughtById] =
+        (memberGroceryPaid[grocery.boughtById] || 0) + grocery.totalCost;
+    });
+
+    const allMembersData: MemberDetailedData[] = members.map((member) => {
+      const memberTotalMeals = memberMealCounts[member.uid] || 0;
+
+      const memberDeposits = monthlyDeposits.filter(
+        (dep) => dep.userId === member.uid
+      );
+
+      const expensesPaid = monthlyExpenses.filter(
+        (exp) => exp.paidBy === member.uid
+      );
+
+      const groceryExpensesPaid = expensesPaid.filter(
+        (exp) => exp.category === "grocery" || exp.category === "meal"
+      );
+
+      const utilityExpensesPaid = expensesPaid.filter(
+        (exp) => exp.category === "utility"
+      );
+
+      const totalPaidAmount = memberDeposits.reduce(
+        (sum, dep) => sum + dep.amount,
+        0
+      );
+
+      const monthlyTotalPaid = memberGroceryPaid[member.uid] || 0;
+
+      const totalMealCost = memberTotalMeals * globalMealRate;
+
+      const utilityShare = utilityCostPerMember;
+
+      const finalBalance = monthlyTotalPaid - totalMealCost;
+
+      return {
+        member: {
+          uid: member.uid,
+          displayName: member.displayName,
+          role: member.role,
+        },
+        totalMeals: memberTotalMeals,
+        totalPaidAmount,
+        monthlyTotalPaid,
+        deposits: memberDeposits,
+        groceryExpensesPaid,
+        utilityExpensesPaid,
+        totalMealCost: parseFloat(totalMealCost.toFixed(2)),
+        mealRate: parseFloat(globalMealRate.toFixed(2)),
+        utilityShare: parseFloat(utilityShare.toFixed(2)),
+        finalBalance: parseFloat(finalBalance.toFixed(2)),
+      };
+    });
+
+    return {
+      currentMonth: monthStr,
+      allMembersData,
+      globalMealRate: parseFloat(globalMealRate.toFixed(2)),
+      totalUtilityCost: parseFloat(totalUtilityCost.toFixed(2)),
+      utilityCostPerMember: parseFloat(utilityCostPerMember.toFixed(2)),
+      totalGroceryCost: parseFloat(totalGroceryCost.toFixed(2)),
+      totalMeals,
     };
+  }, [
+    monthlyMeals,
+    monthlyGroceryPurchases,
+    monthlyExpenses,
+    monthlyDeposits,
+    members,
+    loading,
+    messId,
+    monthStr,
+  ]);
 
-    calculateOverview();
-  }, [messId, authLoading]);
+  useEffect(() => {
+    if (members.length > 0) {
+      setLoading(false);
+    }
+  }, [members.length]);
 
   return { stats, loading };
 };

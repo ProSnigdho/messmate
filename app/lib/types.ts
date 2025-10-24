@@ -14,13 +14,13 @@ export interface Mess {
     mealRate: number;
     currency: string;
     maxMembers?: number;
+    defaultRent?: number;
   };
 }
 
-// Update UserProfile to have both id and uid for consistency
 export interface UserProfile {
-  id: string; // Document ID in Firestore
-  uid: string; // Firebase Auth UID
+  id: string;
+  uid: string;
   displayName: string;
   email: string;
   messId: string | null;
@@ -28,6 +28,9 @@ export interface UserProfile {
   createdAt?: Date;
   updatedAt?: Date;
   photoURL?: string;
+  monthlyRent?: number;
+  customRent?: number;
+  totalRent?: number;
 }
 
 export interface Meal {
@@ -47,7 +50,13 @@ export type ExpenseCategory =
   | "grocery"
   | "meal"
   | "others"
-  | "general";
+  | "general"
+  | "gas"
+  | "internet"
+  | "electricity"
+  | "water"
+  | "cleaner"
+  | "other_bills";
 
 export interface Expense {
   id: string;
@@ -59,7 +68,19 @@ export interface Expense {
   category: ExpenseCategory;
   date: Timestamp;
   description?: string;
+  dividedAmount?: number; // প্রত্যেক member এর share
+  totalMembers?: number; // মোট member সংখ্যা যখন expense add করা হয়
 }
+
+export type DepositCategory =
+  | "rent"
+  | "utility_contribution"
+  | "gas_contribution"
+  | "internet_contribution"
+  | "electricity_contribution"
+  | "water_contribution"
+  | "cleaner_contribution"
+  | "other_bills_contribution";
 
 export interface Deposit {
   id: string;
@@ -70,8 +91,12 @@ export interface Deposit {
   date: Timestamp;
   method?: string;
   comment?: string;
-  category: string;
+  category: DepositCategory;
   description: string;
+  month?: string;
+  isRentPaid?: boolean;
+  rentMonth?: string;
+  relatedExpenseId?: string; // কোন expense এর জন্য payment
 }
 
 export interface Grocery {
@@ -104,4 +129,12 @@ export interface OverviewStats {
   totalDeposits: number;
   members: UserProfile[];
   memberBalances: Record<string, number>;
+}
+
+interface MemberChartData {
+  name: string;
+  FinalBalance: number;
+  GroceryPaid: number;
+  MealCost: number;
+  colorIndex: number; // ✅ add this line
 }

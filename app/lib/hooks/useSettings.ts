@@ -34,7 +34,6 @@ export const useSettings = () => {
     const fetchSettings = async () => {
       setLoading(true);
       try {
-        // Always fetch mess settings for both manager and members
         const messDocRef = doc(db, "messes", messId);
         const docSnap = await getDoc(messDocRef);
 
@@ -77,7 +76,6 @@ export const useSettings = () => {
         ...(updates as MessSettings),
       }));
 
-      // Refresh user data to update mess name in context
       if (refreshUserData) {
         await refreshUserData();
       }

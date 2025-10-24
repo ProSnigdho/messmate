@@ -204,6 +204,19 @@ export const updateMemberRole = async (
   });
 };
 
+export const updateUserProfile = async (
+  uid: string,
+  updates: Partial<UserProfile>
+): Promise<void> => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, updates);
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    throw error;
+  }
+};
+
 export const getMessById = async (messId: string): Promise<Mess | null> => {
   const messDoc = await getDoc(doc(db, "messes", messId));
   if (!messDoc.exists()) return null;

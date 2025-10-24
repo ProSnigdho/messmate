@@ -119,12 +119,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     } else {
       setUser(null);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      loadAndSetUser(firebaseUser);
+      loadAndSetUser(firebaseUser).then(() => {
+        setLoading(false);
+      });
     });
 
     return () => unsubscribe();
@@ -140,7 +141,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const login = async (email: string, password: string): Promise<void> => {
-    setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (error) {
@@ -154,7 +154,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     email: string,
     password: string
   ): Promise<void> => {
-    setLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -180,7 +179,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   const logout = async (): Promise<void> => {
-    setLoading(true);
     try {
       await signOut(auth);
       router.push("/auth");

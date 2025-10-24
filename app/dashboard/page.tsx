@@ -11,6 +11,7 @@ import {
   Spin,
   Alert,
   message,
+  Drawer,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -23,6 +24,7 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
+  MenuOutlined,
 } from "@ant-design/icons";
 
 import { useAuth } from "../lib/auth-context";
@@ -46,6 +48,7 @@ type MenuItem = Required<MenuProps>["items"][number];
 export default function DashboardPage() {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState("1");
+  const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
   const { user, loading, isManager, logout } = useAuth();
   const { messSettings } = useSettings();
   const router = useRouter();
@@ -214,6 +217,57 @@ export default function DashboardPage() {
     return (currentItem as any)?.label || "Dashboard";
   };
 
+  const handleMenuClick = (key: string) => {
+    setSelectedKey(key);
+    setMobileDrawerVisible(false);
+  };
+
+  const siderContent = (
+    <>
+      <div
+        style={{
+          padding: "16px",
+          textAlign: "center" as const,
+          borderBottom: "1px solid #f0f0f0",
+        }}
+      >
+        <Title level={4} style={{ color: "#004d40", margin: 0 }}>
+          {collapsed ? "MM" : "MessMate"}
+        </Title>
+        {!collapsed && user && (
+          <div>
+            <Text
+              type="secondary"
+              style={{
+                fontSize: 12,
+                display: "block",
+                marginTop: 8,
+                fontWeight: "bold",
+              }}
+            >
+              {messSettings?.messName || "Our Mess"}
+            </Text>
+            <Text
+              type="secondary"
+              style={{ fontSize: 10, display: "block", marginTop: 4 }}
+            >
+              Mess ID: {user.messId}
+            </Text>
+          </div>
+        )}
+      </div>
+
+      <Menu
+        theme="light"
+        selectedKeys={[selectedKey]}
+        mode="inline"
+        items={menuItems}
+        onClick={({ key }) => handleMenuClick(key)}
+        style={{ border: "none" }}
+      />
+    </>
+  );
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider
@@ -221,8 +275,6 @@ export default function DashboardPage() {
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         theme="light"
-        breakpoint="md"
-        collapsedWidth="0"
         style={{
           overflow: "auto",
           height: "100vh",
@@ -230,56 +282,73 @@ export default function DashboardPage() {
           left: 0,
           top: 0,
           bottom: 0,
+          zIndex: 100,
         }}
+        breakpoint="md"
+        onBreakpoint={(broken) => {
+          if (broken) {
+            setCollapsed(true);
+          }
+        }}
+        className="desktop-sider"
       >
-        <div
-          style={{
-            padding: "16px",
-            textAlign: "center" as const,
-            borderBottom: "1px solid #f0f0f0",
-          }}
-        >
-          <Title level={4} style={{ color: "#004d40", margin: 0 }}>
-            {collapsed ? "MM" : "MessMate"}
-          </Title>
-          {!collapsed && user && (
-            <div>
-              <Text
-                type="secondary"
-                style={{
-                  fontSize: 12,
-                  display: "block",
-                  marginTop: 8,
-                  fontWeight: "bold",
-                }}
-              >
-                {messSettings?.messName || "Our Mess"}
-              </Text>
-              <Text
-                type="secondary"
-                style={{ fontSize: 10, display: "block", marginTop: 4 }}
-              >
-                Mess ID: {user.messId}
-              </Text>
-            </div>
-          )}
-        </div>
+        {siderContent}
+      </Sider>
 
+      <Drawer
+        title={
+          <div style={{ textAlign: "center" }}>
+            <Title level={4} style={{ color: "#004d40", margin: 0 }}>
+              MessMate
+            </Title>
+            {user && (
+              <div>
+                <Text
+                  type="secondary"
+                  style={{
+                    fontSize: 12,
+                    display: "block",
+                    marginTop: 8,
+                    fontWeight: "bold",
+                  }}
+                >
+                  {messSettings?.messName || "Our Mess"}
+                </Text>
+                <Text
+                  type="secondary"
+                  style={{ fontSize: 10, display: "block", marginTop: 4 }}
+                >
+                  Mess ID: {user.messId}
+                </Text>
+              </div>
+            )}
+          </div>
+        }
+        placement="left"
+        onClose={() => setMobileDrawerVisible(false)}
+        open={mobileDrawerVisible}
+        styles={{
+          body: { padding: 0 },
+        }}
+        width={280}
+        className="mobile-drawer"
+      >
         <Menu
           theme="light"
           selectedKeys={[selectedKey]}
           mode="inline"
           items={menuItems}
-          onClick={({ key }) => setSelectedKey(key)}
+          onClick={({ key }) => handleMenuClick(key)}
           style={{ border: "none" }}
         />
-      </Sider>
+      </Drawer>
 
       <Layout
         style={{
-          marginLeft: collapsed ? 0 : 200,
+          marginLeft: collapsed ? 80 : 200,
           transition: "margin-left 0.2s",
         }}
+        className="main-layout"
       >
         <Header
           style={{
@@ -288,17 +357,28 @@ export default function DashboardPage() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            flexWrap: "wrap",
-            gap: "8px",
             boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             position: "sticky",
             top: 0,
-            zIndex: 1,
+            zIndex: 99,
             width: "100%",
           }}
+          className="dashboard-header"
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Title level={4} style={{ margin: 0, color: "#004d40" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileDrawerVisible(true)}
+              style={{
+                display: "none",
+              }}
+              className="mobile-menu-button"
+            />
+            <Title
+              level={4}
+              style={{ margin: 0, color: "#004d40", fontSize: "16px" }}
+            >
               {getCurrentPageTitle()}
             </Title>
           </div>
@@ -312,9 +392,10 @@ export default function DashboardPage() {
                   alignItems: "center",
                   gap: 8,
                   height: "auto",
-                  padding: "8px 12px",
+                  padding: "6px 12px",
                   borderRadius: "8px",
                 }}
+                className="user-dropdown-button"
               >
                 <Avatar
                   size="small"
@@ -323,23 +404,8 @@ export default function DashboardPage() {
                   }}
                   icon={<UserOutlined />}
                 />
-                <div
-                  style={{
-                    textAlign: "left",
-                    display: "flex",
-                    flexDirection: "column",
-                    maxWidth: "120px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontWeight: "bold",
-                      fontSize: "14px",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontWeight: "bold", fontSize: "14px" }}>
                     {user.displayName || user.email}
                   </div>
                   <div style={{ fontSize: "12px", color: "#666" }}>
@@ -354,16 +420,82 @@ export default function DashboardPage() {
         <Content
           style={{
             margin: "16px",
-            padding: "16px",
+            padding: 16,
             background: "#fff",
             borderRadius: 8,
-            minHeight: "calc(100vh - 112px)",
-            overflowX: "auto",
+            minHeight: "calc(100vh - 96px)",
+            overflow: "initial",
           }}
+          className="dashboard-content"
         >
           {renderContent()}
         </Content>
       </Layout>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .desktop-sider {
+            display: none !important;
+          }
+
+          .mobile-menu-button {
+            display: block !important;
+          }
+
+          .main-layout {
+            margin-left: 0 !important;
+          }
+
+          .dashboard-header {
+            padding: 0 12px !important;
+          }
+
+          .dashboard-content {
+            margin: 12px !important;
+            padding: 12px !important;
+            min-height: calc(100vh - 80px) !important;
+          }
+
+          .user-dropdown-button .ant-btn {
+            padding: 4px 8px !important;
+          }
+
+          .user-dropdown-button .ant-avatar {
+            width: 24px !important;
+            height: 24px !important;
+            line-height: 24px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .dashboard-content {
+            margin: 8px !important;
+            padding: 12px !important;
+          }
+
+          .dashboard-header {
+            padding: 0 8px !important;
+          }
+
+          .user-dropdown-button .ant-btn {
+            padding: 2px 6px !important;
+          }
+
+          .user-dropdown-button .ant-btn > span:last-child {
+            display: none;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .mobile-drawer {
+            display: none !important;
+          }
+
+          .mobile-menu-button {
+            display: none !important;
+          }
+        }
+      `}</style>
     </Layout>
   );
 }

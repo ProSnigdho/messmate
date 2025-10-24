@@ -22,13 +22,15 @@ import {
   FireOutlined,
   DollarCircleOutlined,
   SwapOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
   CalculatorOutlined,
   BankOutlined,
   ShoppingOutlined,
   TeamOutlined,
   BellOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
 } from "@ant-design/icons";
 import {
   BarChart,
@@ -53,10 +55,19 @@ const { Column } = Table;
 
 interface MemberChartData {
   name: string;
-  Balance: number;
-  Credit: number;
-  Debit: number;
+  FinalBalance: number;
   GroceryPaid: number;
+  MealCost: number;
+  colorIndex: number;
+}
+
+interface MemberDetailRow {
+  key: string;
+  name: string;
+  mealsTaken: number;
+  mealCost: number;
+  groceryPaid: number;
+  finalBalance: number;
 }
 
 const useNoticeReadStatus = () => {
@@ -102,66 +113,73 @@ const useNoticeReadStatus = () => {
   return { markAsRead, markAllAsRead, isNoticeRead, getUnreadCount };
 };
 
+const CHART_COLORS = {
+  GroceryPaid: "#FFD666",
+  MealCost: "#FF7875",
+  FinalBalance: "#40A9FF",
+};
+
 const MemberBalanceChart: React.FC<{
   stats: OverviewStats;
   currentUserId: string | null;
 }> = ({ stats, currentUserId }) => {
-  const chartData: MemberChartData[] = stats.members
-    .map((member) => {
-      const balance = stats.memberBalances[member.uid] || 0;
-      const credit = stats.memberCredits[member.uid] || 0;
-      const debit = stats.memberDebits[member.uid] || 0;
-      const groceryPaid = stats.memberGroceryPaid[member.uid] || 0;
+  const chartData: MemberChartData[] = stats.members.map((member, idx) => {
+    const finalBalance = stats.memberFinalBalances[member.uid] || 0;
+    const groceryPaid = stats.memberGroceryPaid[member.uid] || 0;
+    const mealCost = (stats.memberMealCounts[member.uid] || 0) * stats.mealRate;
 
-      return {
-        name:
-          member.displayName + (member.uid === currentUserId ? " (You)" : ""),
-        Balance: balance,
-        Credit: credit,
-        Debit: debit,
-        GroceryPaid: groceryPaid,
-      };
-    })
-    .sort((a, b) => b.Balance - a.Balance);
+    return {
+      name: member.displayName + (member.uid === currentUserId ? " (You)" : ""),
+      FinalBalance: finalBalance,
+      GroceryPaid: groceryPaid,
+      MealCost: mealCost,
+      colorIndex: idx % 8,
+    };
+  });
 
   return (
-    <Card
-      title={
-        <Title level={4} style={{ margin: 0 }}>
-          📊 Members Financial Overview
-        </Title>
-      }
-      style={{ height: "100%" }}
-    >
-      <div style={{ width: "100%", overflow: "auto" }}>
+    <Card title="📊 Member Financial Comparison (Paid vs Cost vs Balance)">
+      <div
+        style={{ width: "100%", height: 400, minWidth: 0, overflowX: "auto" }}
+      >
         <BarChart
-          width={800}
+          width={Math.max(stats.members.length * 150, 600)} // Dynamic width based on member count, min 600
           height={400}
           data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis
             dataKey="name"
-            angle={-45}
+            angle={-30}
             textAnchor="end"
-            height={80}
             interval={0}
+            height={120}
           />
-          <YAxis tickFormatter={(value: number) => `৳${value.toFixed(0)}`} />
+          <YAxis tickFormatter={(value) => `৳${value}`} />
           <Tooltip
-            formatter={(value: number, name: string) => [
-              `৳${value.toFixed(2)}`,
-              name,
-            ]}
+            formatter={(value: number) => `৳${value.toFixed(2)}`}
             labelFormatter={(label: string) => label.split(" (You)")[0]}
           />
           <Legend wrapperStyle={{ paddingTop: 10 }} />
 
-          <Bar dataKey="GroceryPaid" name="Grocery Paid (৳)" fill="#faad14" />
-          <Bar dataKey="Credit" name="Total Credit (৳)" fill="#52c41a" />
-          <Bar dataKey="Debit" name="Total Debit (৳)" fill="#f5222d" />
-          <Bar dataKey="Balance" name="Net Balance (৳)" fill="#1890ff" />
+          <Bar
+            dataKey="GroceryPaid"
+            name="Grocery Paid (৳)"
+            fill={CHART_COLORS.GroceryPaid}
+          />
+
+          <Bar
+            dataKey="MealCost"
+            name="Meal Cost (৳)"
+            fill={CHART_COLORS.MealCost}
+          />
+
+          <Bar
+            dataKey="FinalBalance"
+            name="Final Balance (৳)"
+            fill={CHART_COLORS.FinalBalance}
+          />
         </BarChart>
       </div>
     </Card>
@@ -169,125 +187,169 @@ const MemberBalanceChart: React.FC<{
 };
 
 const MemberDetailsTable: React.FC<{
-  stats: OverviewStats;
-  currentUserId: string | null;
-}> = ({ stats, currentUserId }) => {
-  const tableData = stats.members.map((member) => {
-    const mealsTaken = stats.memberMealCounts[member.uid] || 0;
-    const credit = stats.memberCredits[member.uid] || 0;
-    const debit = stats.memberDebits[member.uid] || 0;
-    const balance = stats.memberBalances[member.uid] || 0;
-    const groceryPaid = stats.memberGroceryPaid[member.uid] || 0;
-    const mealCost = mealsTaken * stats.mealRate;
-    const utilityShare = stats.utilityCostPerMember;
-
-    return {
-      key: member.uid,
-      name: member.displayName + (member.uid === currentUserId ? " (You)" : ""),
-      mealsTaken,
-      mealCost: parseFloat(mealCost.toFixed(2)),
-      utilityShare: parseFloat(utilityShare.toFixed(2)),
-      totalDebit: parseFloat(debit.toFixed(2)),
-      totalCredit: parseFloat(credit.toFixed(2)),
-      groceryPaid: parseFloat(groceryPaid.toFixed(2)),
-      netBalance: parseFloat(balance.toFixed(2)),
-    };
-  });
-
+  tableData: MemberDetailRow[];
+}> = ({ tableData }) => {
   return (
-    <Card title="📋 Member Financial Details" style={{ marginTop: 16 }}>
-      <Table
+    <Card
+      title="📋 Member Financial Details (Table View)"
+      style={{ marginTop: 16 }}
+    >
+      <div style={{ width: "100%", overflowX: "auto" }}>
+        <Table
+          dataSource={tableData}
+          pagination={false}
+          scroll={{ x: 800 }}
+          size="small"
+        >
+          <Column
+            title="Member"
+            dataIndex="name"
+            key="name"
+            fixed="left"
+            width={100}
+            render={(name) => (
+              <Text strong style={{ fontSize: 12 }}>
+                {name}
+              </Text>
+            )}
+          />
+          <Column
+            title="Meals"
+            dataIndex="mealsTaken"
+            key="mealsTaken"
+            align="center"
+            width={70}
+            render={(value) => <Text style={{ fontSize: 12 }}>{value}</Text>}
+          />
+          <Column
+            title="Meal Cost"
+            dataIndex="mealCost"
+            key="mealCost"
+            align="right"
+            width={80}
+            render={(value) => <Text style={{ fontSize: 11 }}>৳{value}</Text>}
+          />
+          <Column
+            title="Grocery Paid"
+            dataIndex="groceryPaid"
+            key="groceryPaid"
+            align="right"
+            width={80}
+            render={(value) => (
+              <Text
+                strong
+                style={{ color: CHART_COLORS.GroceryPaid, fontSize: 11 }}
+              >
+                ৳{value}
+              </Text>
+            )}
+          />
+          <Column
+            title="Final Balance"
+            dataIndex="finalBalance"
+            key="finalBalance"
+            align="right"
+            fixed="right"
+            width={90}
+            render={(value) => (
+              <Text
+                strong
+                style={{
+                  color: value >= 0 ? "#73D13D" : "#FF4D4F",
+                  fontSize: 12,
+                }}
+              >
+                ৳{value}
+              </Text>
+            )}
+          />
+        </Table>
+      </div>
+    </Card>
+  );
+};
+
+const MemberDetailsList: React.FC<{
+  tableData: MemberDetailRow[];
+}> = ({ tableData }) => {
+  return (
+    <Card
+      title="📋 Member Financial Details (List View)"
+      style={{ marginTop: 16 }}
+    >
+      <List
         dataSource={tableData}
-        pagination={false}
-        scroll={{ x: 900 }}
-        size="small"
-      >
-        <Column
-          title="Member"
-          dataIndex="name"
-          key="name"
-          fixed="left"
-          width={120}
-        />
-        <Column
-          title="Meals Taken"
-          dataIndex="mealsTaken"
-          key="mealsTaken"
-          align="center"
-          width={100}
-        />
-        <Column
-          title="Meal Cost (৳)"
-          dataIndex="mealCost"
-          key="mealCost"
-          align="right"
-          render={(value) => `৳${value}`}
-          width={100}
-        />
-        <Column
-          title="Utility Share (৳)"
-          dataIndex="utilityShare"
-          key="utilityShare"
-          align="right"
-          render={(value) => `৳${value}`}
-          width={100}
-        />
-        <Column
-          title="Grocery Paid (৳)"
-          dataIndex="groceryPaid"
-          key="groceryPaid"
-          align="right"
-          render={(value) => (
-            <Text strong style={{ color: "#faad14" }}>
-              ৳{value}
-            </Text>
-          )}
-          width={100}
-        />
-        <Column
-          title="Total Credit (৳)"
-          dataIndex="totalCredit"
-          key="totalCredit"
-          align="right"
-          render={(value) => (
-            <Text strong style={{ color: "#389e0d" }}>
-              ৳{value}
-            </Text>
-          )}
-          width={100}
-        />
-        <Column
-          title="Total Debit (৳)"
-          dataIndex="totalDebit"
-          key="totalDebit"
-          align="right"
-          render={(value) => (
-            <Text strong style={{ color: "#cf1322" }}>
-              ৳{value}
-            </Text>
-          )}
-          width={100}
-        />
-        <Column
-          title="Net Balance (৳)"
-          dataIndex="netBalance"
-          key="netBalance"
-          align="right"
-          fixed="right"
-          render={(value) => (
-            <Text
-              strong
-              style={{
-                color: value >= 0 ? "#389e0d" : "#cf1322",
-                fontSize: "14px",
-              }}
-            >
-              ৳{value}
-            </Text>
-          )}
-          width={120}
-        />
-      </Table>
+        renderItem={(item) => (
+          <Card
+            size="small"
+            style={{
+              marginBottom: 12,
+              borderLeft:
+                item.finalBalance >= 0
+                  ? "4px solid #73D13D"
+                  : "4px solid #FF4D4F",
+            }}
+          >
+            <List.Item style={{ padding: 0 }}>
+              <List.Item.Meta
+                avatar={<UserOutlined style={{ fontSize: 20 }} />}
+                title={<Text strong>{item.name}</Text>}
+                description={`Meals: ${item.mealsTaken}`}
+              />
+              <div style={{ textAlign: "right" }}>
+                <Text
+                  strong
+                  style={{
+                    color: item.finalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                    fontSize: 16,
+                  }}
+                >
+                  ৳{item.finalBalance.toFixed(2)}
+                </Text>
+              </div>
+            </List.Item>
+            <Row gutter={[8, 8]} style={{ marginTop: 8 }}>
+              <Col xs={8}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  Meal Cost:
+                </Text>
+                <br />
+                <Text style={{ color: CHART_COLORS.MealCost, fontSize: 12 }}>
+                  ৳{item.mealCost.toFixed(2)}
+                </Text>
+              </Col>
+              <Col xs={8}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  Grocery Paid:
+                </Text>
+                <br />
+                <Text style={{ color: CHART_COLORS.GroceryPaid, fontSize: 12 }}>
+                  ৳{item.groceryPaid.toFixed(2)}
+                </Text>
+              </Col>
+              <Col xs={8}>
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  Status:
+                </Text>
+                <br />
+                <Text
+                  style={{
+                    color: item.finalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                    fontSize: 12,
+                  }}
+                >
+                  {item.finalBalance >= 0 ? (
+                    <CheckCircleOutlined />
+                  ) : (
+                    <CloseCircleOutlined />
+                  )}
+                  {item.finalBalance >= 0 ? " Receivable" : " Payable"}
+                </Text>
+              </Col>
+            </Row>
+          </Card>
+        )}
+      />
     </Card>
   );
 };
@@ -321,7 +383,7 @@ const NoticesPopup: React.FC<{
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <BellOutlined style={{ color: "#1890ff" }} />
-          <Text strong style={{ margin: 0, fontSize: "18px" }}>
+          <Text strong style={{ margin: 0, fontSize: 18 }}>
             Latest Notices
           </Text>
           {unreadCount > 0 && (
@@ -348,7 +410,7 @@ const NoticesPopup: React.FC<{
         {notices.length === 0 ? (
           <div style={{ textAlign: "center", padding: "40px 20px" }}>
             <BellOutlined
-              style={{ fontSize: "48px", color: "#d9d9d9", marginBottom: 16 }}
+              style={{ fontSize: 48, color: "#d9d9d9", marginBottom: 16 }}
             />
             <Title level={4} style={{ color: "#d9d9d9" }}>
               No Notices
@@ -377,14 +439,14 @@ const NoticesPopup: React.FC<{
                         alignItems: "flex-start",
                       }}
                     >
-                      <Text strong style={{ fontSize: "16px" }}>
+                      <Text strong style={{ fontSize: 16 }}>
                         {item.title}
                       </Text>
                       <Tag color="geekblue">{getTimeDisplay(item.date)}</Tag>
                     </div>
                   }
                   description={
-                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
                       Posted by: <strong>{item.authorName}</strong>
                     </Text>
                   }
@@ -413,30 +475,17 @@ export default function Overview({ messId, userRole }: OverviewProps) {
     messId: currentMessId,
     currentUserId,
   } = useOverviewData();
-
-  const { notices, loading: noticesLoading } = useNotices();
+  const { notices } = useNotices();
   const { markAllAsRead, getUnreadCount } = useNoticeReadStatus();
   const [noticesPopupVisible, setNoticesPopupVisible] = useState(false);
 
   const isManager = userRole === "manager";
   const stats = fetchedStats;
-  const currentUserBalance = stats?.memberBalances?.[currentUserId || ""] || 0;
-  const userIdForChart = currentUserId || null;
+  const currentUserFinalBalance =
+    stats?.memberFinalBalances?.[currentUserId || ""] || 0;
 
   const allNoticeIds = notices.map((notice) => notice.id);
   const unreadCount = getUnreadCount(allNoticeIds);
-
-  const handleBellClick = () => {
-    setNoticesPopupVisible(true);
-  };
-
-  const handleMarkAllAsRead = () => {
-    markAllAsRead(allNoticeIds);
-  };
-
-  const handleClosePopup = () => {
-    setNoticesPopupVisible(false);
-  };
 
   if (loading || !stats) {
     return (
@@ -463,18 +512,52 @@ export default function Overview({ messId, userRole }: OverviewProps) {
   const totalGroceryCost = stats.totalGroceryCost;
   const currentMealRate = stats.mealRate;
 
+  const memberTableData: MemberDetailRow[] = stats.members.map((member) => {
+    const mealsTaken = stats.memberMealCounts[member.uid] || 0;
+    const groceryPaid = stats.memberGroceryPaid[member.uid] || 0;
+    const mealCost = mealsTaken * stats.mealRate;
+    const finalBalance = stats.memberFinalBalances[member.uid] || 0;
+
+    return {
+      key: member.uid,
+      name: member.displayName + (member.uid === currentUserId ? " (You)" : ""),
+      mealsTaken,
+      mealCost: parseFloat(mealCost.toFixed(2)),
+      groceryPaid: parseFloat(groceryPaid.toFixed(2)),
+      finalBalance: parseFloat(finalBalance.toFixed(2)),
+    };
+  });
+
   return (
-    <div>
+    <div style={{ position: "relative" }}>
+      {" "}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 24,
+          flexWrap: "wrap",
+          gap: 16,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Title level={2} style={{ color: "#004d40", margin: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 16,
+            marginRight: 60,
+          }}
+        >
+          <Title
+            level={2}
+            style={{
+              color: "#004d40",
+              margin: 0,
+              fontSize: "clamp(20px, 5vw, 32px)",
+            }}
+          >
             🏠 Mess Financial Overview
             <Text type="secondary" style={{ fontSize: 16, marginLeft: 10 }}>
               ({stats.currentMonth})
@@ -482,39 +565,46 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Title>
           <Tag
             color={isManager ? "red" : "blue"}
-            style={{ fontSize: "14px", padding: "4px 12px" }}
+            style={{ fontSize: 14, padding: "4px 12px" }}
           >
             {isManager ? "👑 Manager View" : "👤 Member View"}
           </Tag>
         </div>
 
-        <Badge count={unreadCount} size="small" offset={[-5, 5]}>
-          <Button
-            type="text"
-            icon={
-              <BellOutlined
-                style={{
-                  fontSize: "24px",
-                  color: unreadCount > 0 ? "#1890ff" : "#666",
-                }}
-              />
-            }
-            onClick={handleBellClick}
-            style={{
-              width: "48px",
-              height: "48px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border:
-                unreadCount > 0 ? "2px solid #1890ff" : "2px solid #d9d9d9",
-              background: unreadCount > 0 ? "#f0f8ff" : "#fafafa",
-            }}
-          />
-        </Badge>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            right: 0,
+          }}
+        >
+          <Badge count={unreadCount} size="small" offset={[-5, 5]}>
+            <Button
+              type="text"
+              icon={
+                <BellOutlined
+                  style={{
+                    fontSize: 24,
+                    color: unreadCount > 0 ? "#1890ff" : "#666",
+                  }}
+                />
+              }
+              onClick={() => setNoticesPopupVisible(true)}
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border:
+                  unreadCount > 0 ? "2px solid #1890ff" : "2px solid #d9d9d9",
+                background: unreadCount > 0 ? "#f0f8ff" : "#fafafa",
+              }}
+            />
+          </Badge>
+        </div>
       </div>
-
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -526,7 +616,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -537,7 +626,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -550,7 +638,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
@@ -558,15 +645,12 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={currentMealRate}
               prefix="৳"
               precision={2}
-              valueStyle={{
-                color: "#389e0d",
-              }}
+              valueStyle={{ color: "#389e0d" }}
               suffix={<CalculatorOutlined />}
             />
           </Card>
         </Col>
       </Row>
-
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
           <Card>
@@ -605,19 +689,26 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Card>
         </Col>
       </Row>
-
       <Divider orientation="left">Financial Analysis</Divider>
-
       <Row gutter={[24, 24]}>
-        <Col xs={24}>
-          <MemberBalanceChart stats={stats} currentUserId={userIdForChart} />
+        <Col xs={24} style={{ minWidth: 0 }}>
+          <MemberBalanceChart
+            stats={stats}
+            currentUserId={currentUserId || null}
+          />
         </Col>
       </Row>
-
       {isManager && (
-        <MemberDetailsTable stats={stats} currentUserId={userIdForChart} />
-      )}
+        <Row gutter={[24, 24]}>
+          <Col xs={0} sm={0} md={24}>
+            <MemberDetailsTable tableData={memberTableData} />
+          </Col>
 
+          <Col xs={24} sm={24} md={0}>
+            <MemberDetailsList tableData={memberTableData} />
+          </Col>
+        </Row>
+      )}
       {!isManager && (
         <Card title="📊 Your Financial Summary" style={{ marginTop: 24 }}>
           <Row gutter={[16, 16]}>
@@ -630,10 +721,10 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             </Col>
             <Col xs={12} sm={6}>
               <Statistic
-                title="Your Deposits"
-                value={stats.memberCredits[currentUserId || ""] || 0}
+                title="Your Grocery Paid"
+                value={stats.memberGroceryPaid[currentUserId || ""] || 0}
                 prefix="৳"
-                valueStyle={{ color: "#389e0d" }}
+                valueStyle={{ color: CHART_COLORS.GroceryPaid }}
               />
             </Col>
             <Col xs={12} sm={6}>
@@ -645,7 +736,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 }
                 prefix="৳"
                 precision={0}
-                valueStyle={{ color: "#cf1322" }}
+                valueStyle={{ color: CHART_COLORS.MealCost }}
               />
             </Col>
             <Col xs={12} sm={6}>
@@ -654,46 +745,58 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 value={stats.utilityCostPerMember}
                 prefix="৳"
                 precision={0}
-                valueStyle={{ color: "#faad14" }}
+                valueStyle={{ color: "#722ed1" }}
               />
             </Col>
           </Row>
-
           <Divider style={{ margin: "16px 0" }} />
           <div style={{ textAlign: "center", padding: "8px 0" }}>
             <Text
               strong
-              style={{ fontSize: "16px", display: "block", marginBottom: 4 }}
+              style={{ fontSize: 16, display: "block", marginBottom: 4 }}
             >
-              Your Net Balance
+              Your Final Balance (Settlement)
             </Text>
-            <Text
-              strong
+            <div
               style={{
-                fontSize: "20px",
-                color: currentUserBalance >= 0 ? "#389e0d" : "#cf1322",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              ৳{currentUserBalance.toFixed(2)}
-            </Text>
+              {currentUserFinalBalance >= 0 ? (
+                <ArrowUpOutlined style={{ color: "#73D13D", fontSize: 20 }} />
+              ) : (
+                <ArrowDownOutlined style={{ color: "#FF4D4F", fontSize: 20 }} />
+              )}
+              <Text
+                strong
+                style={{
+                  fontSize: 24,
+                  color: currentUserFinalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                }}
+              >
+                ৳{Math.abs(currentUserFinalBalance).toFixed(2)}
+              </Text>
+            </div>
             <Text
               type="secondary"
-              style={{ fontSize: "12px", display: "block", marginTop: 4 }}
+              style={{ fontSize: 12, display: "block", marginTop: 4 }}
             >
-              {currentUserBalance >= 0
+              {currentUserFinalBalance >= 0
                 ? "You will receive this amount"
                 : "You need to pay this amount"}
             </Text>
           </div>
         </Card>
       )}
-
       <NoticesPopup
         visible={noticesPopupVisible}
-        onClose={handleClosePopup}
+        onClose={() => setNoticesPopupVisible(false)}
         notices={notices}
         unreadCount={unreadCount}
-        onMarkAllAsRead={handleMarkAllAsRead}
+        onMarkAllAsRead={() => markAllAsRead(allNoticeIds)}
       />
     </div>
   );

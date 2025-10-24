@@ -37,7 +37,6 @@ export const useGroceryHistory = () => {
   const isMember = user?.role === "member";
   const currentUserId = user?.uid;
 
-  // --- Purchase History Fetching ---
   useEffect(() => {
     if (!messId) {
       setLoading(false);
@@ -69,7 +68,6 @@ export const useGroceryHistory = () => {
 
         setAllPurchases(fetchedHistory);
 
-        // FIX: Member Filtering - Only show member's own purchases
         if (!isManager && currentUserId) {
           const memberHistory = fetchedHistory.filter(
             (purchase) => purchase.boughtById === currentUserId
@@ -90,7 +88,6 @@ export const useGroceryHistory = () => {
     return () => unsubscribe();
   }, [messId, isManager, currentUserId]);
 
-  // --- Calculate Total Spent per Member ---
   const memberSpentSummary = useMemo((): MemberSpentSummary[] => {
     if (!allPurchases.length) return [];
 
@@ -165,6 +162,6 @@ export const useGroceryHistory = () => {
     isManager,
     isMember,
     memberSpentSummary,
-    user, // ✅ FIX: Returning 'user' object
+    user,
   };
 };

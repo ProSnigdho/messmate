@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../auth-context";
 import { UserProfile } from "../types";
-import { getMessMembers, updateMemberRole } from "../database";
+import {
+  getMessMembers,
+  updateMemberRole,
+  updateUserProfile,
+} from "../database";
 
 export const useMembers = () => {
   const { user, isManager } = useAuth();
@@ -53,10 +57,40 @@ export const useMembers = () => {
     }
   };
 
+  const updateMemberRent = async (
+    memberUid: string,
+    monthlyRent: number,
+    customRent: number
+  ): Promise<boolean> => {
+    if (!messId || !isManager) {
+      return false;
+    }
+
+    try {
+      await updateUserProfile(memberUid, {
+        monthlyRent,
+        customRent,
+      });
+
+      setMembers((prev) =>
+        prev.map((member) =>
+          member.uid === memberUid
+            ? { ...member, monthlyRent, customRent }
+            : member
+        )
+      );
+      return true;
+    } catch (error) {
+      console.error("Error updating rent:", error);
+      return false;
+    }
+  };
+
   return {
     members,
     loading,
     updateMemberRole: updateMemberRoleHandler,
+    updateMemberRent,
     isManager,
     refreshMembers: loadMembers,
   };
