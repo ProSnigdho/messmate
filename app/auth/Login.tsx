@@ -1,6 +1,3 @@
-// app/auth/Login.tsx
-// This file contains the main authentication logic and client-side hooks.
-
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -35,9 +32,7 @@ interface RegisterValues {
   confirm: string;
 }
 
-// Renamed the main component to Login
 const Login: React.FC = () => {
-  // 💡 message.useMessage() hook implementation
   const [messageApi, contextHolder] = message.useMessage();
 
   const [isLogin, setIsLogin] = useState(true);
@@ -51,13 +46,11 @@ const Login: React.FC = () => {
     useState(false);
   const [cameFromVerification, setCameFromVerification] = useState(false);
 
-  // 💡 NEW STATE: Track successful login/register to trigger messages in useEffect
   const [authSuccess, setAuthSuccess] = useState<"login" | "register" | null>(
     null
   );
 
   const router = useRouter();
-  // 🛑 This hook requires the <Suspense> wrapper in the parent file (page.tsx)
   const searchParams = useSearchParams();
 
   const {
@@ -73,20 +66,15 @@ const Login: React.FC = () => {
     logout,
   } = useAuth();
 
-  // 1. Core Redirection and Verification Check
   useEffect(() => {
     if (loading) return;
 
     if (user && user.emailVerified) {
-      // Handle Success message after a successful login
       if (authSuccess === "login") {
         messageApi.success("Login successful! Redirecting...");
-      } else if (authSuccess === "register") {
-        // Message for register is handled inside handleDevRegister before showing alert
       }
-      setAuthSuccess(null); // Clear success state
+      setAuthSuccess(null);
 
-      // Redirect logic
       if (user.messId) {
         router.replace("/dashboard");
       } else {
@@ -95,7 +83,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    // Handle user logged in but NOT verified (show alert)
     if (
       user &&
       !user.emailVerified &&
@@ -106,7 +93,6 @@ const Login: React.FC = () => {
       setPendingEmail(user.email);
     }
 
-    // Clear flag after a back button operation
     if (cameFromVerification) {
       setCameFromVerification(false);
     }
@@ -120,11 +106,9 @@ const Login: React.FC = () => {
     messageApi,
   ]);
 
-  // Handle browser back/forward navigation
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
       if (showVerificationAlert) {
-        // 🚀 Use messageApi
         messageApi.info("Please complete email verification to continue.");
         handleForceLogout();
       }
@@ -132,7 +116,6 @@ const Login: React.FC = () => {
 
     window.addEventListener("popstate", handlePopState);
 
-    // Dependency array updated to include messageApi
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
@@ -143,7 +126,6 @@ const Login: React.FC = () => {
       await logout();
       setShowVerificationAlert(false);
       setCameFromVerification(true);
-      // 🚀 Use messageApi
       messageApi.info("Please verify your email and login again.");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -151,7 +133,6 @@ const Login: React.FC = () => {
     }
   };
 
-  // Handle email verification from link
   useEffect(() => {
     const mode = searchParams.get("mode");
     const actionCode = searchParams.get("oobCode");
@@ -167,13 +148,11 @@ const Login: React.FC = () => {
     try {
       await verifyEmail(actionCode);
       setVerificationStatus("success");
-      // 🚀 Use messageApi
       messageApi.success("Email verified successfully! Redirecting...");
 
       setTimeout(async () => {
         const isVerified = await checkEmailVerified();
         if (isVerified) {
-          // Setting a success flag to let the main useEffect handle redirection
           setAuthSuccess("login");
         } else {
           setIsLogin(true);
@@ -182,7 +161,6 @@ const Login: React.FC = () => {
       }, 2000);
     } catch (error: any) {
       setVerificationStatus("error");
-      // 🚀 Use messageApi
       messageApi.error(error.message || "Email verification failed.");
     } finally {
       setIsLoading(false);
@@ -192,13 +170,11 @@ const Login: React.FC = () => {
 
   const handleResendVerification = async () => {
     if (!pendingEmail) {
-      // 🚀 Use messageApi
       messageApi.error("No email found to resend verification.");
       return;
     }
 
     if (isVerificationCooldown) {
-      // 🚀 Use messageApi
       messageApi.warning(
         `Please wait ${verificationCooldown} seconds before resending.`
       );
@@ -208,24 +184,19 @@ const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await resendVerification(pendingEmail);
-      // 🚀 Use messageApi
       messageApi.success(
         "Verification email sent successfully! Please check your inbox."
       );
     } catch (error: any) {
       if (error?.message?.includes("Please log in first")) {
-        // 🚀 Use messageApi
         messageApi.error("Please log in first to resend verification email.");
       } else if (error?.message?.includes("No account found")) {
-        // 🚀 Use messageApi
         messageApi.error(
           "No account found with this email. Please register first."
         );
       } else if (error?.message?.includes("Too many attempts")) {
-        // 🚀 Use messageApi
         messageApi.error("Too many resend attempts. Please try again later.");
       } else {
-        // 🚀 Use messageApi
         messageApi.error(
           error?.message || "Failed to resend verification email."
         );
@@ -234,8 +205,6 @@ const Login: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  // --- Conditional Render Blocks ---
 
   if (verificationStatus === "success") {
     return (
@@ -310,7 +279,6 @@ const Login: React.FC = () => {
     );
   }
 
-  // Show verification alert only if user exists and is NOT verified
   if (showVerificationAlert && user && !user.emailVerified) {
     return (
       <AuthLayout>
@@ -380,8 +348,6 @@ const Login: React.FC = () => {
     );
   }
 
-  // --- Event Handlers ---
-
   const handleDevLogin = async (values: LoginValues) => {
     setIsLoading(true);
     try {
@@ -389,22 +355,18 @@ const Login: React.FC = () => {
 
       await login(email, password);
 
-      // After login, check if user is verified
       const isVerified = await checkEmailVerified();
 
       if (!isVerified) {
         setPendingEmail(email);
         setShowVerificationAlert(true);
-        // 🚀 Use messageApi
         messageApi.warning("Please verify your email to continue.");
         return;
       }
 
-      // 💡 FIX: Set the success flag instead of redirecting/showing success here.
       setAuthSuccess("login");
     } catch (error: any) {
       console.error("Login failed:", error);
-      // 🚀 Use messageApi
       messageApi.error(`Login failed: ${error.message || "Check credentials"}`);
     } finally {
       setIsLoading(false);
@@ -416,17 +378,14 @@ const Login: React.FC = () => {
     try {
       await register(values.name, values.email, values.password);
 
-      // 🚀 Use messageApi
       messageApi.success(
         "Registration successful! Please check your email for verification."
       );
 
-      // After registration, show verification alert
       setPendingEmail(values.email);
       setShowVerificationAlert(true);
     } catch (error: any) {
       console.error("Registration failed:", error);
-      // 🚀 Use messageApi
       messageApi.error(
         `Registration failed: ${error.message || "Server error"}`
       );
@@ -435,11 +394,8 @@ const Login: React.FC = () => {
     }
   };
 
-  // --- Main Render ---
-
   return (
     <AuthLayout>
-      {/* 💡 RENDER THE CONTEXT HOLDER FIRST */}
       {contextHolder}
 
       {isLogin ? (
