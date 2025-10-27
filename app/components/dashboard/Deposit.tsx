@@ -330,7 +330,7 @@ const BillPaymentForm: React.FC<{
     <Card
       title={
         <Title level={4}>
-          <DollarCircleOutlined /> Bill Payment
+          <DollarCircleOutlined /> Record Bill Payment
         </Title>
       }
       size="small"
@@ -448,7 +448,7 @@ const BillPaymentForm: React.FC<{
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
               <Text strong>👤 Individual Share:</Text>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <Text>Your Share:</Text>
+                <Text>Member's Share:</Text>
                 <Text strong>৳{memberDue.toFixed(2)}</Text>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -776,23 +776,13 @@ export default function Deposit({ messId }: DepositProps) {
                 />
               </>
             ) : (
-              <>
-                <Alert
-                  message="Member View"
-                  description="You can view your payment history and make bill payments below."
-                  type="info"
-                  showIcon
-                  style={{ marginBottom: 20 }}
-                />
-                <BillPaymentForm
-                  members={members}
-                  addTransaction={addTransaction}
-                  getTotalDueAmount={getTotalDueAmount}
-                  getTotalPaidAmount={getTotalPaidAmount}
-                  getMemberDueAmount={getMemberDueAmount}
-                  getMemberPaidAmount={getMemberPaidAmount}
-                />
-              </>
+              <Alert
+                message="View Only Access"
+                description="Only managers can record payments. Please contact your mess manager for any payment related queries."
+                type="info"
+                showIcon
+                style={{ marginBottom: 20 }}
+              />
             )}
 
             <Card size="small" title="📊 Summary">
@@ -893,7 +883,7 @@ export default function Deposit({ messId }: DepositProps) {
               {!isManager && (
                 <Alert
                   message="Personal Payment History"
-                  description="This table shows only your personal payment records."
+                  description="This table shows only your personal payment records. You cannot add or edit payments."
                   type="info"
                   showIcon
                   style={{ marginBottom: 16 }}

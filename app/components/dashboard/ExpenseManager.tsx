@@ -41,7 +41,6 @@ const { Title, Text } = Typography;
 const { Column } = Table;
 const { Option } = Select;
 
-// Category configurations
 const EXPENSE_CATEGORIES = [
   { value: "gas", label: "Gas Bill", icon: <FireOutlined />, color: "orange" },
   {
@@ -82,7 +81,6 @@ const EXPENSE_CATEGORIES = [
   },
 ];
 
-// --- AddExpenseForm Component ---
 const AddExpenseForm: React.FC<{
   addExpense: (
     title: string,
@@ -210,7 +208,6 @@ interface ExpenseManagerProps {
   messId: string;
 }
 
-// --- Main ExpenseManager Component ---
 export default function ExpenseManager({ messId }: ExpenseManagerProps) {
   const {
     expenses,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Card,
   Row,
@@ -26,10 +26,12 @@ import {
   useGroceryHistory,
   GroceryPurchase,
   MemberSpentSummary,
+  MemberData,
 } from "../../lib/hooks/useGroceryHistory";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
+const { Option } = Select;
 
 const RecordPurchaseForm: React.FC<{
   recordNewPurchase: (
@@ -207,7 +209,9 @@ interface GroceryListProps {
 
 export default function GroceryList({ messId }: GroceryListProps) {
   const {
-    history,
+    allPurchases,
+    history: memberHistory,
+    allMembers,
     loading,
     recordNewPurchase,
     isManager,
@@ -216,6 +220,24 @@ export default function GroceryList({ messId }: GroceryListProps) {
   } = useGroceryHistory();
 
   const currentUserId = user?.uid;
+
+  const [selectedMemberId, setSelectedMemberId] = useState<string | "all">(
+    "all"
+  );
+
+  const displayHistory = useMemo(() => {
+    if (!isManager) {
+      return memberHistory;
+    }
+
+    if (selectedMemberId === "all") {
+      return allPurchases;
+    }
+
+    return allPurchases.filter(
+      (purchase) => purchase.boughtById === selectedMemberId
+    );
+  }, [isManager, selectedMemberId, allPurchases, memberHistory]);
 
   if (loading) {
     return <Spin tip="Loading Expense Data..." style={{ margin: "50px 0" }} />;
@@ -234,7 +256,6 @@ export default function GroceryList({ messId }: GroceryListProps) {
           {showRecordForm && (
             <RecordPurchaseForm recordNewPurchase={recordNewPurchase} />
           )}
-
           <MemberTotalSpentSummary summary={memberSpentSummary} />
         </Col>
 
@@ -242,17 +263,48 @@ export default function GroceryList({ messId }: GroceryListProps) {
           <Card
             title={
               <Title level={4} style={{ margin: 0 }}>
-                <HistoryOutlined /> Purchase History ({isManager ? "All" : "My"}{" "}
-                Purchases)
+                <HistoryOutlined /> Purchase History
               </Title>
             }
             size="small"
           >
+            {isManager && (
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>View Purchases By:</Text>
+                <Select
+                  defaultValue="all"
+                  style={{ width: 200, marginLeft: 8 }}
+                  onChange={(value: string) =>
+                    setSelectedMemberId(value as string)
+                  }
+                >
+                  <Option value="all">All Members</Option>
+                  {allMembers.map((member) => (
+                    <Option key={member.uid} value={member.uid}>
+                      {member.displayName}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            {!isManager && (
+              <div style={{ marginBottom: 16 }}>
+                <Text type="secondary">Showing **Your** Purchase History.</Text>
+              </div>
+            )}
+
             <Table
-              dataSource={history}
+              dataSource={displayHistory}
               rowKey="id"
               pagination={{ pageSize: 7 }}
               scroll={{ x: 600 }}
+              locale={{
+                emptyText: (
+                  <Text type="secondary">
+                    No purchases found for this view.
+                  </Text>
+                ),
+              }}
             >
               <Column
                 title="Date"

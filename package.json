@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.1.0",
+    "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@types/moment": "^2.11.29",
     "antd": "^5.27.5",
     "firebase": "^12.4.0",

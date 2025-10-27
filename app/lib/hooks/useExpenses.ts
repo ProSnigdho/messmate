@@ -32,7 +32,7 @@ export const useExpenses = () => {
 
   const messId = user?.messId;
 
-  const DIVIDED_EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  const OVERHEAD_EXPENSE_CATEGORIES: ExpenseCategory[] = [
     "gas",
     "internet",
     "electricity",
@@ -41,6 +41,9 @@ export const useExpenses = () => {
     "other_bills",
     "utility",
   ];
+
+  const DIVIDED_EXPENSE_CATEGORIES: ExpenseCategory[] =
+    OVERHEAD_EXPENSE_CATEGORIES;
 
   useEffect(() => {
     if (!messId) {
@@ -64,10 +67,14 @@ export const useExpenses = () => {
       onSnapshot(
         expensesQuery,
         (snapshot: QuerySnapshot<DocumentData>) => {
-          const fetchedExpenses: ExpenseData[] = snapshot.docs.map((doc) => {
+          let fetchedExpenses: ExpenseData[] = snapshot.docs.map((doc) => {
             const data = doc.data() as Expense;
             return { ...data, id: doc.id };
           });
+
+          fetchedExpenses = fetchedExpenses.filter((expense) =>
+            OVERHEAD_EXPENSE_CATEGORIES.includes(expense.category)
+          );
 
           setExpenses(fetchedExpenses);
         },

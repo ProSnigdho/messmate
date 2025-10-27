@@ -138,7 +138,7 @@ const MemberBalanceChart: React.FC<{
   });
 
   return (
-    <Card title="📊 Member Financial Comparison (Paid vs Cost vs Balance)">
+    <Card title="📊 Member Financial Comparison">
       <div
         style={{ width: "100%", height: 400, minWidth: 0, overflowX: "auto" }}
       >
@@ -190,10 +190,7 @@ const MemberDetailsTable: React.FC<{
   tableData: MemberDetailRow[];
 }> = ({ tableData }) => {
   return (
-    <Card
-      title="📋 Member Financial Details (Table View)"
-      style={{ marginTop: 16 }}
-    >
+    <Card title="📋 Member Financial Details" style={{ marginTop: 16 }}>
       <div style={{ width: "100%", overflowX: "auto" }}>
         <Table
           dataSource={tableData}
@@ -273,10 +270,7 @@ const MemberDetailsList: React.FC<{
   tableData: MemberDetailRow[];
 }> = ({ tableData }) => {
   return (
-    <Card
-      title="📋 Member Financial Details (List View)"
-      style={{ marginTop: 16 }}
-    >
+    <Card title="📋 Member Financial Details" style={{ marginTop: 16 }}>
       <List
         dataSource={tableData}
         renderItem={(item) => (
@@ -465,7 +459,7 @@ const NoticesPopup: React.FC<{
 
 interface OverviewProps {
   messId: string;
-  userRole: "manager" | "member";
+  userRole: "manager" | "member" | "pending";
 }
 
 export default function Overview({ messId, userRole }: OverviewProps) {

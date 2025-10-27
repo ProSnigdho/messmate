@@ -12,6 +12,7 @@ import {
   Alert,
   message,
   Drawer,
+  Tag,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -25,6 +26,9 @@ import {
   UserOutlined,
   LogoutOutlined,
   MenuOutlined,
+  HomeOutlined,
+  IdcardOutlined,
+  CopyOutlined,
 } from "@ant-design/icons";
 
 import { useAuth } from "../lib/auth-context";
@@ -46,6 +50,8 @@ const { Title, Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 export default function DashboardPage() {
+  const [messageApi, contextHolder] = message.useMessage();
+
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState("1");
   const [mobileDrawerVisible, setMobileDrawerVisible] = useState(false);
@@ -63,21 +69,28 @@ export default function DashboardPage() {
       return;
     }
 
+    if (!user.emailVerified) {
+      setRedirecting(true);
+      messageApi.warning("Please verify your email first.");
+      router.replace("/auth");
+      return;
+    }
+
     if (!user.messId) {
       setRedirecting(true);
-      message.warning("Please create or join a mess first.");
+      messageApi.warning("Please create or join a mess first.");
       router.replace("/onboarding");
     }
-  }, [loading, user, redirecting, router]);
+  }, [loading, user, redirecting, router, messageApi]);
 
   const handleLogout = async () => {
     setRedirecting(true);
     try {
       await logout();
-      message.success("Logged out successfully.");
+      messageApi.success("Logged out successfully.");
     } catch (error) {
       console.error("Logout failed:", error);
-      message.error("Logout failed. Please try again.");
+      messageApi.error("Logout failed. Please try again.");
       setRedirecting(false);
     }
   };
@@ -93,6 +106,7 @@ export default function DashboardPage() {
           flexDirection: "column",
         }}
       >
+        {contextHolder}
         <Spin size="large" />
         <Text type="secondary" style={{ marginTop: 16 }}>
           {redirecting
@@ -226,33 +240,85 @@ export default function DashboardPage() {
     <>
       <div
         style={{
-          padding: "16px",
+          padding: "20px 16px",
           textAlign: "center" as const,
           borderBottom: "1px solid #f0f0f0",
+          background: "linear-gradient(135deg, #004d40 0%, #00796b 100%)",
         }}
       >
-        <Title level={4} style={{ color: "#004d40", margin: 0 }}>
+        <Title
+          level={3}
+          style={{
+            color: "white",
+            margin: "0 0 16px 0",
+            fontSize: collapsed ? "18px" : "24px",
+            fontWeight: "700",
+            letterSpacing: "0.5px",
+          }}
+        >
           {collapsed ? "MM" : "MessMate"}
         </Title>
         {!collapsed && user && (
-          <div>
-            <Text
-              type="secondary"
+          <div style={{ textAlign: "left" }}>
+            <div
               style={{
-                fontSize: 12,
-                display: "block",
-                marginTop: 8,
-                fontWeight: "bold",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 12,
+                padding: "8px 12px",
+                background: "rgba(255, 255, 255, 0.15)",
+                borderRadius: "8px",
+                backdropFilter: "blur(10px)",
               }}
             >
-              {messSettings?.messName || "Our Mess"}
-            </Text>
-            <Text
-              type="secondary"
-              style={{ fontSize: 10, display: "block", marginTop: 4 }}
+              <HomeOutlined style={{ color: "#80cbc4", fontSize: "16px" }} />
+              <div style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    color: "white",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                    display: "block",
+                    lineHeight: "1.3",
+                  }}
+                >
+                  {messSettings?.messName || "Our Mess"}
+                </Text>
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "6px 12px",
+                background: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "6px",
+              }}
             >
-              Mess ID: {user.messId}
-            </Text>
+              <IdcardOutlined style={{ color: "#80cbc4", fontSize: "14px" }} />
+
+              <Text
+                copyable={{
+                  text: user.messId,
+                  tooltips: ["Copy Mess ID", "Copied!"],
+                  onCopy: () => messageApi.success("Mess ID copied!"),
+
+                  icon: <CopyOutlined style={{ color: "#ffffff" }} />,
+                }}
+                style={{
+                  color: "#e0f2f1",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                  letterSpacing: "0.5px",
+                  cursor: "pointer",
+                }}
+              >
+                ID: {user.messId}
+              </Text>
+            </div>
           </div>
         )}
       </div>
@@ -263,13 +329,18 @@ export default function DashboardPage() {
         mode="inline"
         items={menuItems}
         onClick={({ key }) => handleMenuClick(key)}
-        style={{ border: "none" }}
+        style={{
+          border: "none",
+          padding: "8px 0",
+        }}
       />
     </>
   );
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
+      {contextHolder}
+
       <Sider
         collapsible
         collapsed={collapsed}
@@ -283,6 +354,7 @@ export default function DashboardPage() {
           top: 0,
           bottom: 0,
           zIndex: 100,
+          boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
         }}
         breakpoint="md"
         onBreakpoint={(broken) => {
@@ -298,28 +370,81 @@ export default function DashboardPage() {
       <Drawer
         title={
           <div style={{ textAlign: "center" }}>
-            <Title level={4} style={{ color: "#004d40", margin: 0 }}>
+            <Title
+              level={3}
+              style={{
+                color: "#004d40",
+                margin: "0 0 16px 0",
+                fontWeight: "700",
+              }}
+            >
               MessMate
             </Title>
             {user && (
-              <div>
-                <Text
-                  type="secondary"
+              <div style={{ textAlign: "left" }}>
+                <div
                   style={{
-                    fontSize: 12,
-                    display: "block",
-                    marginTop: 8,
-                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                    padding: "8px 12px",
+                    background: "#f5f5f5",
+                    borderRadius: "8px",
                   }}
                 >
-                  {messSettings?.messName || "Our Mess"}
-                </Text>
-                <Text
-                  type="secondary"
-                  style={{ fontSize: 10, display: "block", marginTop: 4 }}
+                  <HomeOutlined
+                    style={{ color: "#004d40", fontSize: "16px" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        color: "#004d40",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        display: "block",
+                        lineHeight: "1.3",
+                      }}
+                    >
+                      {messSettings?.messName || "Our Mess"}
+                    </Text>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "6px 12px",
+                    background: "#fafafa",
+                    borderRadius: "6px",
+                    marginBottom: 8,
+                  }}
                 >
-                  Mess ID: {user.messId}
-                </Text>
+                  <IdcardOutlined
+                    style={{ color: "#004d40", fontSize: "14px" }}
+                  />
+
+                  <Text
+                    copyable={{
+                      text: user.messId,
+                      tooltips: ["Copy Mess ID", "Copied!"],
+                      onCopy: () => messageApi.success("Mess ID copied!"),
+
+                      icon: <CopyOutlined style={{ color: "#004d40" }} />,
+                    }}
+                    style={{
+                      color: "#666",
+                      fontSize: "12px",
+                      fontWeight: "500",
+                      letterSpacing: "0.5px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    ID: {user.messId}
+                  </Text>
+                </div>
               </div>
             )}
           </div>
@@ -339,7 +464,10 @@ export default function DashboardPage() {
           mode="inline"
           items={menuItems}
           onClick={({ key }) => handleMenuClick(key)}
-          style={{ border: "none" }}
+          style={{
+            border: "none",
+            padding: "8px 0",
+          }}
         />
       </Drawer>
 
@@ -377,7 +505,12 @@ export default function DashboardPage() {
             />
             <Title
               level={4}
-              style={{ margin: 0, color: "#004d40", fontSize: "16px" }}
+              style={{
+                margin: 0,
+                color: "#004d40",
+                fontSize: "16px",
+                fontWeight: "600",
+              }}
             >
               {getCurrentPageTitle()}
             </Title>

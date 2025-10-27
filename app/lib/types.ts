@@ -28,9 +28,11 @@ export interface UserProfile {
   createdAt?: Date;
   updatedAt?: Date;
   photoURL?: string;
+  phoneNumber?: string;
   monthlyRent?: number;
   customRent?: number;
   totalRent?: number;
+  emailVerified?: boolean;
 }
 
 export interface Meal {
@@ -68,8 +70,8 @@ export interface Expense {
   category: ExpenseCategory;
   date: Timestamp;
   description?: string;
-  dividedAmount?: number; // প্রত্যেক member এর share
-  totalMembers?: number; // মোট member সংখ্যা যখন expense add করা হয়
+  dividedAmount?: number;
+  totalMembers?: number;
 }
 
 export type DepositCategory =
@@ -96,7 +98,7 @@ export interface Deposit {
   month?: string;
   isRentPaid?: boolean;
   rentMonth?: string;
-  relatedExpenseId?: string; // কোন expense এর জন্য payment
+  relatedExpenseId?: string;
 }
 
 export interface Grocery {
@@ -129,12 +131,4 @@ export interface OverviewStats {
   totalDeposits: number;
   members: UserProfile[];
   memberBalances: Record<string, number>;
-}
-
-interface MemberChartData {
-  name: string;
-  FinalBalance: number;
-  GroceryPaid: number;
-  MealCost: number;
-  colorIndex: number; // ✅ add this line
 }
