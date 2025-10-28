@@ -6,13 +6,11 @@ import {
   Menu,
   Typography,
   Avatar,
-  Dropdown,
   Button,
   Spin,
   Alert,
   message,
   Drawer,
-  Tag,
 } from "antd";
 import type { MenuProps } from "antd";
 import {
@@ -48,6 +46,9 @@ const { Header, Sider, Content } = Layout;
 const { Title, Text } = Typography;
 
 type MenuItem = Required<MenuProps>["items"][number];
+
+const DESKTOP_SIDER_WIDTH = 280;
+const COLLAPSED_SIDER_WIDTH = 80;
 
 export default function DashboardPage() {
   const [messageApi, contextHolder] = message.useMessage();
@@ -139,40 +140,14 @@ export default function DashboardPage() {
     ? [...sharedMenuItems, ...managerMenuItems]
     : sharedMenuItems;
 
-  const userMenuItems: MenuProps["items"] = [
-    {
-      key: "1",
-      icon: <UserOutlined />,
-      label: "Profile",
-    },
-    {
-      key: "2",
-      icon: <SettingOutlined />,
-      label: "Settings",
-    },
-    {
-      type: "divider",
-    },
-    {
-      key: "3",
-      icon: <LogoutOutlined />,
-      label: "Logout",
-      danger: true,
-      onClick: handleLogout,
-    },
-  ];
-
   const renderContent = () => {
     switch (selectedKey) {
       case "1":
         return <Overview messId={messId} userRole={userRole} />;
-
       case "2":
         return <MealTracker />;
-
       case "9":
         return <DepositManager messId={messId} />;
-
       case "3":
         if (!isManager) {
           return (
@@ -185,7 +160,6 @@ export default function DashboardPage() {
           );
         }
         return <ExpenseManager messId={messId} />;
-
       case "4":
         if (!isManager) {
           return (
@@ -198,16 +172,12 @@ export default function DashboardPage() {
           );
         }
         return <MembersManager messId={messId} />;
-
       case "5":
         return <GroceryList messId={messId} />;
-
       case "6":
         return <NoticeBoard messId={messId} />;
-
       case "7":
         return <SettingsPage />;
-
       case "8":
         if (!isManager) {
           return (
@@ -220,7 +190,6 @@ export default function DashboardPage() {
           );
         }
         return <BalanceSheet messId={messId} />;
-
       default:
         return <Overview messId={messId} userRole={userRole} />;
     }
@@ -243,7 +212,7 @@ export default function DashboardPage() {
           padding: "20px 16px",
           textAlign: "center" as const,
           borderBottom: "1px solid #f0f0f0",
-          background: "linear-gradient(135deg, #004d40 0%, #00796b 100%)",
+          background: "linear-gradient(135deg, #004d40ff 0%, #00796b 100%)",
         }}
       >
         <Title
@@ -346,6 +315,8 @@ export default function DashboardPage() {
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         theme="light"
+        width={DESKTOP_SIDER_WIDTH}
+        collapsedWidth={COLLAPSED_SIDER_WIDTH}
         style={{
           overflow: "auto",
           height: "100vh",
@@ -369,13 +340,20 @@ export default function DashboardPage() {
 
       <Drawer
         title={
-          <div style={{ textAlign: "center" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+            }}
+          >
             <Title
               level={3}
               style={{
                 color: "#004d40",
-                margin: "0 0 16px 0",
+                margin: "0 0 8px 30px",
                 fontWeight: "700",
+                fontSize: "20px",
               }}
             >
               MessMate
@@ -387,23 +365,23 @@ export default function DashboardPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
-                    marginBottom: 12,
-                    padding: "8px 12px",
+                    marginBottom: 8,
+                    padding: "6px 8px",
                     background: "#f5f5f5",
                     borderRadius: "8px",
                   }}
                 >
                   <HomeOutlined
-                    style={{ color: "#004d40", fontSize: "16px" }}
+                    style={{ color: "#004d40", fontSize: "14px" }}
                   />
                   <div style={{ flex: 1 }}>
                     <Text
                       style={{
                         color: "#004d40",
-                        fontSize: "14px",
+                        fontSize: "12px",
                         fontWeight: "600",
                         display: "block",
-                        lineHeight: "1.3",
+                        lineHeight: "1.2",
                       }}
                     >
                       {messSettings?.messName || "Our Mess"}
@@ -416,14 +394,14 @@ export default function DashboardPage() {
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
-                    padding: "6px 12px",
+                    padding: "4px 8px",
                     background: "#fafafa",
                     borderRadius: "6px",
-                    marginBottom: 8,
+                    marginBottom: 4,
                   }}
                 >
                   <IdcardOutlined
-                    style={{ color: "#004d40", fontSize: "14px" }}
+                    style={{ color: "#004d40", fontSize: "12px" }}
                   />
 
                   <Text
@@ -436,7 +414,7 @@ export default function DashboardPage() {
                     }}
                     style={{
                       color: "#666",
-                      fontSize: "12px",
+                      fontSize: "10px",
                       fontWeight: "500",
                       letterSpacing: "0.5px",
                       cursor: "pointer",
@@ -454,8 +432,13 @@ export default function DashboardPage() {
         open={mobileDrawerVisible}
         styles={{
           body: { padding: 0 },
+          header: {
+            padding: "12px 24px",
+            justifyContent: "flex-start",
+            position: "relative",
+          },
         }}
-        width={280}
+        width={240}
         className="mobile-drawer"
       >
         <Menu
@@ -473,7 +456,7 @@ export default function DashboardPage() {
 
       <Layout
         style={{
-          marginLeft: collapsed ? 80 : 200,
+          marginLeft: collapsed ? COLLAPSED_SIDER_WIDTH : DESKTOP_SIDER_WIDTH,
           transition: "margin-left 0.2s",
         }}
         className="main-layout"
@@ -517,18 +500,24 @@ export default function DashboardPage() {
           </div>
 
           {user && (
-            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Button
-                type="text"
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                padding: "6px 0",
+              }}
+            >
+              <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  height: "auto",
-                  padding: "6px 12px",
+                  padding: "4px 8px",
                   borderRadius: "8px",
+                  backgroundColor: "#f5f5f5",
                 }}
-                className="user-dropdown-button"
+                className="user-info-display"
               >
                 <Avatar
                   size="small"
@@ -537,16 +526,47 @@ export default function DashboardPage() {
                   }}
                   icon={<UserOutlined />}
                 />
-                <div style={{ textAlign: "left" }}>
-                  <div style={{ fontWeight: "bold", fontSize: "14px" }}>
+                <div
+                  className="user-text-info"
+                  style={{
+                    textAlign: "left",
+                    display: "flex",
+                    flexDirection: "column",
+                    lineHeight: "1.2",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "14px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
                     {user.displayName || user.email}
                   </div>
-                  <div style={{ fontSize: "12px", color: "#666" }}>
-                    {isManager ? "👑 Manager" : "👤 Member"}
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {isManager ? "Manager" : "Member"}
                   </div>
                 </div>
+              </div>
+
+              <Button
+                type="primary"
+                danger
+                icon={<LogoutOutlined />}
+                onClick={handleLogout}
+                style={{ height: "auto", padding: "6px 12px" }}
+                size="small"
+              >
+                Logout
               </Button>
-            </Dropdown>
+            </div>
           )}
         </Header>
 
@@ -566,6 +586,20 @@ export default function DashboardPage() {
       </Layout>
 
       <style jsx global>{`
+        .mobile-drawer .ant-drawer-header-title {
+          flex-grow: 1;
+          justify-content: flex-end;
+        }
+
+        .mobile-drawer .ant-drawer-close {
+          position: absolute !important;
+          top: 18px !important;
+          left: 12px !important;
+          z-index: 10;
+          padding: 8px;
+        }
+
+        /* =========== Mobile Styles (max-width: 768px) =========== */
         @media (max-width: 768px) {
           .desktop-sider {
             display: none !important;
@@ -589,14 +623,19 @@ export default function DashboardPage() {
             min-height: calc(100vh - 80px) !important;
           }
 
-          .user-dropdown-button .ant-btn {
-            padding: 4px 8px !important;
+          .user-info-display {
+            display: flex !important;
+            padding: 4px 6px !important;
+            background-color: transparent !important;
           }
 
-          .user-dropdown-button .ant-avatar {
-            width: 24px !important;
-            height: 24px !important;
-            line-height: 24px !important;
+          .user-info-display .user-text-info {
+            display: flex !important;
+          }
+
+          .dashboard-header .ant-btn {
+            height: 32px !important;
+            padding: 4px 8px !important;
           }
         }
 
@@ -610,15 +649,18 @@ export default function DashboardPage() {
             padding: 0 8px !important;
           }
 
-          .user-dropdown-button .ant-btn {
-            padding: 2px 6px !important;
+          .dashboard-header
+            .ant-btn:not(.mobile-menu-button)
+            > span:last-child {
+            display: none;
           }
 
-          .user-dropdown-button .ant-btn > span:last-child {
-            display: none;
+          .user-info-display {
+            padding: 2px 4px !important;
           }
         }
 
+        /* =========== PC VIEW IMPROVEMENTS (min-width: 769px) =========== */
         @media (min-width: 769px) {
           .mobile-drawer {
             display: none !important;
@@ -626,6 +668,98 @@ export default function DashboardPage() {
 
           .mobile-menu-button {
             display: none !important;
+          }
+
+          .desktop-sider.ant-layout-sider-has-trigger:not(
+              .ant-layout-sider-collapsed
+            ) {
+            width: ${DESKTOP_SIDER_WIDTH}px !important;
+            flex: 0 0 ${DESKTOP_SIDER_WIDTH}px !important;
+            max-width: ${DESKTOP_SIDER_WIDTH}px !important;
+            min-width: ${DESKTOP_SIDER_WIDTH}px !important;
+          }
+
+          .main-layout {
+            margin-left: ${collapsed
+              ? COLLAPSED_SIDER_WIDTH
+              : DESKTOP_SIDER_WIDTH}px !important;
+          }
+
+          /* 1. Sidebar Menu Item Size/Font */
+          .desktop-sider .ant-menu-item {
+            height: 56px !important;
+            line-height: 56px !important;
+            padding: 0 32px !important;
+            font-size: 18px;
+          }
+
+          .desktop-sider .ant-menu-item > span.anticon {
+            font-size: 20px !important;
+            margin-right: 12px !important;
+          }
+
+          /* 2. Sidebar Mess ID and User Info Text Size */
+          .desktop-sider .ant-layout-sider-children .ant-typography {
+            font-size: 16px !important;
+          }
+          .desktop-sider .ant-layout-sider-children .ant-typography[copyable] {
+            font-size: 14px !important;
+          }
+
+          /* MessMate Title Text Size */
+          .desktop-sider h3.ant-typography {
+            font-size: 30px !important;
+          }
+
+          /* 3. Main Content Padding/Margin */
+          .dashboard-content {
+            margin: 30px !important;
+            padding: 30px !important;
+          }
+
+          /* 4. Header Text Size (Current Page Title) */
+          .dashboard-header h4.ant-typography {
+            font-size: 24px !important;
+          }
+
+          /* 5. Header User Info Size */
+          .dashboard-header {
+            height: 64px !important;
+            padding: 0 24px !important;
+          }
+
+          .dashboard-header .user-info-display {
+            padding: 10px 16px !important;
+            gap: 16px !important;
+          }
+
+          .dashboard-header .ant-avatar-small {
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+          }
+          .dashboard-header .ant-avatar-small > .anticon {
+            font-size: 20px !important;
+          }
+
+          .dashboard-header
+            .user-info-display
+            .user-text-info
+            > div:first-child {
+            font-size: 18px !important;
+          }
+          .dashboard-header
+            .user-info-display
+            .user-text-info
+            > div:last-child {
+            font-size: 14px !important;
+          }
+
+          /* 6. Logout Button Size */
+          .dashboard-header .ant-btn.ant-btn-primary {
+            height: 44px !important;
+            padding: 10px 20px !important;
+            font-size: 16px;
           }
         }
       `}</style>

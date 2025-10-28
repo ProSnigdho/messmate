@@ -34,12 +34,17 @@ import {
   DropboxOutlined,
   UserOutlined,
   SettingOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import moment from "moment";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
 const { Option } = Select;
+
+const PRIMARY_COLOR = "#00695C";
+const SUCCESS_COLOR = "#3f8600";
+const ERROR_COLOR = "#cf1322";
 
 const EXPENSE_CATEGORIES = [
   { value: "gas", label: "Gas Bill", icon: <FireOutlined />, color: "orange" },
@@ -91,7 +96,7 @@ const AddExpenseForm: React.FC<{
 }> = ({ addExpense, members }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string>("gas");
+  const selectedCategoryValue = Form.useWatch("category", form) || "gas";
 
   const onFinish = async (values: {
     description: string;
@@ -116,11 +121,32 @@ const AddExpenseForm: React.FC<{
 
   const activeMembers = members.filter((m) => m.role !== "pending");
   const categoryConfig = EXPENSE_CATEGORIES.find(
-    (cat) => cat.value === selectedCategory
+    (cat) => cat.value === selectedCategoryValue
   );
 
+  const totalAmount = Form.useWatch("amount", form) || 0;
+  const perMemberCost =
+    activeMembers.length > 0 ? totalAmount / activeMembers.length : 0;
+
   return (
-    <Card title="Add New Expense" size="small">
+    <Card
+      title={
+        <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+          <PlusOutlined style={{ marginRight: 8 }} /> Add New Expense
+        </Title>
+      }
+      size="default"
+      className="shadow-xl"
+      style={{
+        marginBottom: 24,
+        borderColor: PRIMARY_COLOR,
+        borderTop: `4px solid ${PRIMARY_COLOR}`,
+        borderRadius: "10px",
+      }}
+      styles={{
+        body: { padding: 24 },
+      }}
+    >
       <Form
         form={form}
         layout="vertical"
@@ -129,13 +155,17 @@ const AddExpenseForm: React.FC<{
       >
         <Form.Item
           name="category"
-          label="Expense Category"
+          label={
+            <Text strong style={{ fontSize: "1rem" }}>
+              Expense Category
+            </Text>
+          }
           rules={[{ required: true, message: "Please select a category" }]}
         >
-          <Select placeholder="Select category" onChange={setSelectedCategory}>
+          <Select placeholder="Select category" size="large">
             {EXPENSE_CATEGORIES.map((category) => (
               <Option key={category.value} value={category.value}>
-                <Space>
+                <Space style={{ fontSize: "1rem" }}>
                   {category.icon}
                   {category.label}
                 </Space>
@@ -146,44 +176,66 @@ const AddExpenseForm: React.FC<{
 
         <Form.Item
           name="description"
-          label="Description"
+          label={
+            <Text strong style={{ fontSize: "1rem" }}>
+              Description
+            </Text>
+          }
           rules={[{ required: true, message: "Please enter a description" }]}
         >
-          <Input placeholder={`e.g., Monthly ${categoryConfig?.label}`} />
+          <Input
+            placeholder={`e.g., Monthly ${categoryConfig?.label}`}
+            size="large"
+          />
         </Form.Item>
 
         <Form.Item
           name="amount"
-          label="Total Amount (৳)"
+          label={
+            <Text strong style={{ fontSize: "1rem" }}>
+              Total Amount (৳)
+            </Text>
+          }
           rules={[{ required: true, message: "Please enter the amount" }]}
         >
           <InputNumber
             min={1}
-            style={{ width: "100%" }}
+            size="large"
+            style={{ width: "100%", fontSize: "1rem" }}
             placeholder="Total bill amount"
+            formatter={(value) =>
+              `৳ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+            }
+            parser={(value: string | undefined) => {
+              const cleanedValue = value ? value.replace(/৳\s?|(,*)/g, "") : "";
+              return parseFloat(cleanedValue) || 0;
+            }}
           />
         </Form.Item>
 
         {categoryConfig && (
           <div
             style={{
-              padding: "12px",
-              background: "#f0f8ff",
-              borderRadius: "6px",
-              marginBottom: "16px",
-              border: "1px solid #d6e4ff",
+              padding: "16px",
+              background: "#e0f2f1",
+              borderRadius: "8px",
+              marginBottom: "24px",
+              border: `1px solid ${PRIMARY_COLOR}`,
             }}
           >
-            <Text type="secondary">
-              <CalculatorOutlined /> This {categoryConfig.label.toLowerCase()}{" "}
-              will be divided among {activeMembers.length} members. Each member
-              will need to pay:{" "}
-              <Text strong>
-                ৳
-                {(
-                  form.getFieldValue("amount") / activeMembers.length || 0
-                ).toFixed(2)}
-              </Text>
+            <Text type="secondary" style={{ display: "block", fontSize: 14 }}>
+              <CalculatorOutlined
+                style={{ marginRight: 5, color: PRIMARY_COLOR }}
+              />
+              This **{categoryConfig.label}** will be divided among **
+              {activeMembers.length}** active members.
+            </Text>
+            <Divider style={{ margin: "8px 0" }} />
+            <Text strong style={{ color: PRIMARY_COLOR, fontSize: 18 }}>
+              Each member's share:
+              <span style={{ float: "right" }}>
+                ৳{perMemberCost.toFixed(2)}
+              </span>
             </Text>
           </div>
         )}
@@ -195,6 +247,14 @@ const AddExpenseForm: React.FC<{
             loading={submitting}
             icon={<PlusOutlined />}
             block
+            size="large"
+            style={{
+              height: 55,
+              fontSize: 20,
+              fontWeight: "bold",
+              backgroundColor: PRIMARY_COLOR,
+              borderColor: PRIMARY_COLOR,
+            }}
           >
             Add Expense
           </Button>
@@ -237,66 +297,107 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
         description="Only managers can access expense management."
         type="error"
         showIcon
+        style={{ margin: 24 }}
       />
     );
   }
 
   if (loading) {
-    return <Spin tip="Loading financial data..." />;
+    return (
+      <Row justify="center" style={{ minHeight: "80vh", alignItems: "center" }}>
+        <Spin tip="Loading financial data..." size="large" />
+      </Row>
+    );
   }
 
   const activeMembers = members.filter((m) => m.role !== "pending");
 
   return (
-    <div>
-      <Title level={2} style={{ margin: "0 0 8px 0" }}>
-        <DollarOutlined /> Expense Manager
+    <div style={{ padding: "0 16px" }}>
+      <Title
+        level={2}
+        style={{ margin: "0 0 8px 0", color: PRIMARY_COLOR, fontWeight: "800" }}
+      >
+        <DollarOutlined style={{ marginRight: 8 }} /> Expense Manager
       </Title>
 
-      <p style={{ marginBottom: 16 }}>
+      <Text
+        type="secondary"
+        style={{ display: "block", marginBottom: 24, fontSize: "16px" }}
+      >
         Manage all mess expenses. Divided expenses will be split equally among{" "}
-        {activeMembers.length} active members.
-      </p>
+        <Text strong style={{ color: PRIMARY_COLOR }}>
+          {activeMembers.length}
+        </Text>{" "}
+        active members.
+      </Text>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[24, 24]}>
         <Col xs={24} lg={8}>
-          <div style={{ marginBottom: 16 }}>
-            <AddExpenseForm addExpense={addExpense} members={members} />
-          </div>
+          <AddExpenseForm addExpense={addExpense} members={members} />
 
-          <Card title="Financial Summary" size="small">
+          <Card
+            title={
+              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                Financial Summary
+              </Title>
+            }
+            size="default"
+            className="shadow-xl"
+            style={{
+              borderRadius: "10px",
+              marginBottom: 24,
+              borderTop: `4px solid ${PRIMARY_COLOR}`,
+            }}
+            styles={{
+              body: { padding: 24 },
+            }}
+          >
             <Space direction="vertical" style={{ width: "100%" }} size="middle">
               <Statistic
                 title="Total Member Contribution"
                 value={totalContribution}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ color: "#3f8600" }}
+                valueStyle={{ color: SUCCESS_COLOR, fontSize: 32 }}
               />
               <Statistic
                 title="Total Expenses"
                 value={totalOverhead}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ color: "#cf1322" }}
+                valueStyle={{ color: ERROR_COLOR, fontSize: 32 }}
               />
+              <Divider style={{ margin: "8px 0" }} />
               <Statistic
                 title="Remaining Balance"
                 value={remainingBalance}
                 prefix="৳"
                 precision={2}
                 valueStyle={{
-                  color: remainingBalance >= 0 ? "#3f8600" : "#cf1322",
+                  color: remainingBalance >= 0 ? SUCCESS_COLOR : ERROR_COLOR,
                   fontWeight: "bold",
+                  fontSize: 32,
                 }}
               />
             </Space>
           </Card>
 
           <Card
-            title="Divided Expenses Summary"
-            size="small"
-            style={{ marginTop: 16 }}
+            title={
+              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                Divided Expenses Summary
+              </Title>
+            }
+            size="default"
+            className="shadow-xl"
+            style={{
+              borderRadius: "10px",
+              borderLeft: `4px solid ${PRIMARY_COLOR}`,
+            }}
+            styles={{
+              body: { padding: 24 },
+            }}
           >
             <Space direction="vertical" style={{ width: "100%" }} size="small">
               {Object.entries(dividedSummary).map(([category, data]) => {
@@ -311,17 +412,27 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        padding: "4px 0",
+                        padding: "8px 0",
+                        borderBottom: "1px dotted #f0f0f0",
                       }}
                     >
-                      <Space size="small">
-                        {categoryConfig?.icon}
-                        <Text>{categoryConfig?.label}:</Text>
+                      <Space size="middle">
+                        <Tag
+                          color={categoryConfig?.color || "blue"}
+                          style={{ margin: 0, fontSize: 14 }}
+                        >
+                          {categoryConfig?.icon}
+                        </Tag>
+                        <Text strong style={{ fontSize: 16 }}>
+                          {categoryConfig?.label}
+                        </Text>
                       </Space>
-                      <Space size="small">
-                        <Text strong>৳{data.perMember}</Text>
-                        <Text type="secondary">per member</Text>
-                      </Space>
+                      <Text
+                        strong
+                        style={{ color: PRIMARY_COLOR, fontSize: 18 }}
+                      >
+                        ৳{data.perMember.toFixed(2)}
+                      </Text>
                     </div>
                   );
                 }
@@ -329,19 +440,38 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
               })}
               {Object.values(dividedSummary).every(
                 (data) => data.total === 0
-              ) && <Text type="secondary">No divided expenses yet</Text>}
+              ) && (
+                <Text type="secondary">
+                  No divided expenses yet this month.
+                </Text>
+              )}
             </Space>
           </Card>
         </Col>
 
         <Col xs={24} lg={16}>
-          <Card title="Expense History" size="small">
+          <Card
+            title={
+              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                <HistoryOutlined style={{ marginRight: 8 }} /> Expense History
+              </Title>
+            }
+            size="default"
+            className="shadow-xl"
+            style={{
+              borderRadius: "10px",
+              borderLeft: `4px solid ${PRIMARY_COLOR}`,
+            }}
+            styles={{
+              body: { padding: 12 },
+            }}
+          >
             <Table
               dataSource={expenses}
               rowKey="id"
               pagination={{ pageSize: 10 }}
               scroll={{ x: 800 }}
-              size="small"
+              size="large"
               locale={{
                 emptyText: (
                   <Alert
@@ -354,20 +484,24 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
             >
               <Column
                 title="Date"
-                dataIndex="date"
                 key="date"
-                width={100}
-                render={(date: any) =>
-                  date && date.toDate
-                    ? moment(date.toDate()).format("MMM DD")
-                    : "N/A"
-                }
+                width={120}
+                render={(text, record: any) => {
+                  const date = record.date;
+                  if (date && typeof date.toDate === "function") {
+                    return moment(date.toDate()).format("MMM DD, YYYY");
+                  }
+                  if (date && date.seconds) {
+                    return moment.unix(date.seconds).format("MMM DD, YYYY");
+                  }
+                  return "N/A";
+                }}
               />
               <Column
                 title="Category"
                 dataIndex="category"
                 key="category"
-                width={120}
+                width={150}
                 render={(category: string) => {
                   const categoryConfig = EXPENSE_CATEGORIES.find(
                     (cat) => cat.value === category
@@ -376,6 +510,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                     <Tag
                       color={categoryConfig?.color || "blue"}
                       icon={categoryConfig?.icon}
+                      style={{ fontSize: 14, padding: "6px 10px" }}
                     >
                       {categoryConfig?.label || category}
                     </Tag>
@@ -392,15 +527,18 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 dataIndex="title"
                 key="title"
                 ellipsis
+                render={(text: string) => (
+                  <Text style={{ fontSize: 15 }}>{text}</Text>
+                )}
               />
               <Column
                 title="Total Amount"
                 dataIndex="amount"
                 key="amount"
                 align="right"
-                width={100}
+                width={120}
                 render={(amount: number) => (
-                  <Text strong style={{ color: "#cf1322" }}>
+                  <Text strong style={{ color: ERROR_COLOR, fontSize: 16 }}>
                     ৳{amount.toFixed(2)}
                   </Text>
                 )}
@@ -411,12 +549,16 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 dataIndex="dividedAmount"
                 key="dividedAmount"
                 align="right"
-                width={100}
-                render={(dividedAmount: number, record: any) =>
-                  record.dividedAmount ? (
-                    <Text type="secondary">৳{dividedAmount.toFixed(2)}</Text>
+                width={120}
+                render={(dividedAmount: number) =>
+                  dividedAmount ? (
+                    <Text type="secondary" style={{ fontSize: 15 }}>
+                      ৳{dividedAmount.toFixed(2)}
+                    </Text>
                   ) : (
-                    <Tag color="default">Not Divided</Tag>
+                    <Tag color="default" style={{ fontSize: 13 }}>
+                      Not Divided
+                    </Tag>
                   )
                 }
               />
@@ -424,9 +566,12 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 title="Paid By"
                 dataIndex="paidByName"
                 key="paidByName"
-                width={100}
+                width={120}
                 render={(name: string) => (
-                  <Tag color="purple" style={{ margin: 0 }}>
+                  <Tag
+                    color={PRIMARY_COLOR}
+                    style={{ margin: 0, color: "white", fontSize: 14 }}
+                  >
                     {name}
                   </Tag>
                 )}
@@ -438,7 +583,15 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 width={80}
                 align="center"
                 render={(count: number) =>
-                  count && <Tag icon={<TeamOutlined />}>{count}</Tag>
+                  count && (
+                    <Tag
+                      icon={<TeamOutlined />}
+                      color="geekblue"
+                      style={{ fontSize: 14 }}
+                    >
+                      {count}
+                    </Tag>
+                  )
                 }
               />
             </Table>

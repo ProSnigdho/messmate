@@ -20,7 +20,6 @@ import {
 import {
   UserOutlined,
   FireOutlined,
-  DollarCircleOutlined,
   SwapOutlined,
   CalculatorOutlined,
   BankOutlined,
@@ -32,15 +31,26 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
 } from "@ant-design/icons";
+
+import { Bar } from "react-chartjs-2";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-} from "recharts";
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title as ChartTitle,
+  Tooltip as ChartTooltip,
+  Legend as ChartLegend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ChartTitle,
+  ChartTooltip,
+  ChartLegend
+);
 
 import {
   useOverviewData,
@@ -52,6 +62,10 @@ import moment from "moment";
 
 const { Title, Text } = Typography;
 const { Column } = Table;
+
+const PRIMARY_COLOR = "#00695C";
+const ACCENT_COLOR_PROFILE = "#00897b";
+const ACCENT_COLOR_WARNING = "#ff8f00";
 
 interface MemberChartData {
   name: string;
@@ -114,16 +128,23 @@ const useNoticeReadStatus = () => {
 };
 
 const CHART_COLORS = {
-  GroceryPaid: "#FFD666",
+  GroceryPaid: ACCENT_COLOR_WARNING,
   MealCost: "#FF7875",
-  FinalBalance: "#40A9FF",
+  FinalBalance: PRIMARY_COLOR,
+};
+
+const getStatisticFontSize = (pcSize: string, mobileSize: string) => {
+  if (typeof window !== "undefined" && window.innerWidth < 768) {
+    return mobileSize;
+  }
+  return pcSize;
 };
 
 const MemberBalanceChart: React.FC<{
   stats: OverviewStats;
   currentUserId: string | null;
 }> = ({ stats, currentUserId }) => {
-  const chartData: MemberChartData[] = stats.members.map((member, idx) => {
+  const chartDataRaw: MemberChartData[] = stats.members.map((member) => {
     const finalBalance = stats.memberFinalBalances[member.uid] || 0;
     const groceryPaid = stats.memberGroceryPaid[member.uid] || 0;
     const mealCost = (stats.memberMealCounts[member.uid] || 0) * stats.mealRate;
@@ -133,54 +154,138 @@ const MemberBalanceChart: React.FC<{
       FinalBalance: finalBalance,
       GroceryPaid: groceryPaid,
       MealCost: mealCost,
-      colorIndex: idx % 8,
+      colorIndex: 0,
     };
   });
 
+  const data = {
+    labels: chartDataRaw.map((d) => d.name.split(" (You)")[0]),
+    datasets: [
+      {
+        label: "Grocery Paid (৳)",
+        data: chartDataRaw.map((d) => d.GroceryPaid),
+        backgroundColor: CHART_COLORS.GroceryPaid,
+        borderColor: CHART_COLORS.GroceryPaid,
+        borderWidth: 1,
+      },
+      {
+        label: "Meal Cost (৳)",
+        data: chartDataRaw.map((d) => d.MealCost),
+        backgroundColor: CHART_COLORS.MealCost,
+        borderColor: CHART_COLORS.MealCost,
+        borderWidth: 1,
+      },
+      {
+        label: "Final Balance (৳)",
+        data: chartDataRaw.map((d) => d.FinalBalance),
+        backgroundColor: CHART_COLORS.FinalBalance,
+        borderColor: CHART_COLORS.FinalBalance,
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const options: any = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top" as const,
+        labels: {
+          font: {
+            size: isMobile ? 10 : 14,
+          },
+        },
+      },
+      tooltip: {
+        callbacks: {
+          title: function (context: any) {
+            return chartDataRaw[context[0].dataIndex].name;
+          },
+          label: function (context: any) {
+            let label = context.dataset.label || "";
+            if (label) {
+              label += ": ";
+            }
+            if (context.parsed.y !== null) {
+              label += "৳" + context.parsed.y.toFixed(2);
+            }
+            return label;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        stacked: false,
+        title: {
+          display: false,
+        },
+        ticks: {
+          display: isMobile ? false : true,
+          maxRotation: isMobile ? 0 : 30,
+          minRotation: isMobile ? 0 : 30,
+          font: { size: isMobile ? 10 : 12 },
+        },
+      },
+      y: {
+        stacked: false,
+        title: {
+          display: true,
+          text: "Amount (৳)",
+          font: { size: 14 },
+        },
+        ticks: {
+          callback: function (value: any) {
+            return "৳" + value;
+          },
+        },
+      },
+    },
+  };
+
+  const dynamicWidth = Math.max(stats.members.length * 150, 900);
+  const chartHeight = isMobile ? 350 : 400;
+  const containerWidth = isMobile ? "100%" : dynamicWidth;
+
   return (
-    <Card title="📊 Member Financial Comparison">
+    <Card
+      title={
+        <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+          📊 Member Financial Comparison
+        </Text>
+      }
+      style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
+    >
       <div
-        style={{ width: "100%", height: 400, minWidth: 0, overflowX: "auto" }}
+        style={{
+          width: "100%",
+          minWidth: isMobile ? "100%" : "900px",
+          height: chartHeight,
+          overflowX: isMobile ? "hidden" : "auto",
+          textAlign: "center",
+        }}
       >
-        <BarChart
-          width={Math.max(stats.members.length * 150, 600)} // Dynamic width based on member count, min 600
-          height={400}
-          data={chartData}
-          margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+        <div
+          style={{
+            width: containerWidth,
+            height: chartHeight,
+            margin: "0 auto",
+          }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis
-            dataKey="name"
-            angle={-30}
-            textAnchor="end"
-            interval={0}
-            height={120}
-          />
-          <YAxis tickFormatter={(value) => `৳${value}`} />
-          <Tooltip
-            formatter={(value: number) => `৳${value.toFixed(2)}`}
-            labelFormatter={(label: string) => label.split(" (You)")[0]}
-          />
-          <Legend wrapperStyle={{ paddingTop: 10 }} />
+          <Bar data={data} options={options} />
+        </div>
 
-          <Bar
-            dataKey="GroceryPaid"
-            name="Grocery Paid (৳)"
-            fill={CHART_COLORS.GroceryPaid}
-          />
-
-          <Bar
-            dataKey="MealCost"
-            name="Meal Cost (৳)"
-            fill={CHART_COLORS.MealCost}
-          />
-
-          <Bar
-            dataKey="FinalBalance"
-            name="Final Balance (৳)"
-            fill={CHART_COLORS.FinalBalance}
-          />
-        </BarChart>
+        {isMobile && (
+          <Text
+            type="secondary"
+            style={{ marginTop: 8, display: "block", fontSize: 12 }}
+          >
+            (Tap on a bar to see member details)
+          </Text>
+        )}
       </div>
     </Card>
   );
@@ -190,75 +295,112 @@ const MemberDetailsTable: React.FC<{
   tableData: MemberDetailRow[];
 }> = ({ tableData }) => {
   return (
-    <Card title="📋 Member Financial Details" style={{ marginTop: 16 }}>
+    <Card
+      title={
+        <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+          📋 Member Financial Details
+        </Text>
+      }
+      style={{ marginTop: 16, border: `1px solid ${PRIMARY_COLOR}33` }}
+    >
       <div style={{ width: "100%", overflowX: "auto" }}>
         <Table
           dataSource={tableData}
           pagination={false}
           scroll={{ x: 800 }}
-          size="small"
+          size="large"
+          style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
         >
           <Column
-            title="Member"
+            title={
+              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+                Member
+              </Text>
+            }
             dataIndex="name"
             key="name"
             fixed="left"
-            width={100}
+            width={150}
             render={(name) => (
-              <Text strong style={{ fontSize: 12 }}>
+              <Text strong style={{ fontSize: 16, color: PRIMARY_COLOR }}>
                 {name}
               </Text>
             )}
+            onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
           <Column
-            title="Meals"
+            title={
+              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+                Meals
+              </Text>
+            }
             dataIndex="mealsTaken"
             key="mealsTaken"
             align="center"
-            width={70}
-            render={(value) => <Text style={{ fontSize: 12 }}>{value}</Text>}
+            width={100}
+            render={(value) => <Text style={{ fontSize: 14 }}>{value}</Text>}
+            onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
           <Column
-            title="Meal Cost"
+            title={
+              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+                Meal Cost
+              </Text>
+            }
             dataIndex="mealCost"
             key="mealCost"
             align="right"
-            width={80}
-            render={(value) => <Text style={{ fontSize: 11 }}>৳{value}</Text>}
+            width={120}
+            render={(value) => (
+              <Text style={{ fontSize: 14, color: CHART_COLORS.MealCost }}>
+                ৳{value}
+              </Text>
+            )}
+            onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
           <Column
-            title="Grocery Paid"
+            title={
+              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+                Grocery Paid
+              </Text>
+            }
             dataIndex="groceryPaid"
             key="groceryPaid"
             align="right"
-            width={80}
+            width={120}
             render={(value) => (
               <Text
                 strong
-                style={{ color: CHART_COLORS.GroceryPaid, fontSize: 11 }}
+                style={{ color: CHART_COLORS.GroceryPaid, fontSize: 14 }}
               >
                 ৳{value}
               </Text>
             )}
+            onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
           <Column
-            title="Final Balance"
+            title={
+              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+                Final Balance
+              </Text>
+            }
             dataIndex="finalBalance"
             key="finalBalance"
             align="right"
             fixed="right"
-            width={90}
+            width={140}
             render={(value) => (
               <Text
                 strong
                 style={{
-                  color: value >= 0 ? "#73D13D" : "#FF4D4F",
-                  fontSize: 12,
+                  color: value >= 0 ? "#389e0d" : "#cf1322",
+                  fontSize: 16,
                 }}
               >
                 ৳{value}
               </Text>
             )}
+            onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
         </Table>
       </div>
@@ -270,7 +412,14 @@ const MemberDetailsList: React.FC<{
   tableData: MemberDetailRow[];
 }> = ({ tableData }) => {
   return (
-    <Card title="📋 Member Financial Details" style={{ marginTop: 16 }}>
+    <Card
+      title={
+        <Text style={{ fontSize: 18, color: PRIMARY_COLOR }} strong>
+          📋 Member Financial Details
+        </Text>
+      }
+      style={{ marginTop: 16 }}
+    >
       <List
         dataSource={tableData}
         renderItem={(item) => (
@@ -280,21 +429,29 @@ const MemberDetailsList: React.FC<{
               marginBottom: 12,
               borderLeft:
                 item.finalBalance >= 0
-                  ? "4px solid #73D13D"
-                  : "4px solid #FF4D4F",
+                  ? "4px solid #389e0d"
+                  : "4px solid #cf1322",
             }}
           >
             <List.Item style={{ padding: 0 }}>
               <List.Item.Meta
-                avatar={<UserOutlined style={{ fontSize: 20 }} />}
-                title={<Text strong>{item.name}</Text>}
+                avatar={
+                  <UserOutlined
+                    style={{ fontSize: 20, color: PRIMARY_COLOR }}
+                  />
+                }
+                title={
+                  <Text strong style={{ color: PRIMARY_COLOR }}>
+                    {item.name}
+                  </Text>
+                }
                 description={`Meals: ${item.mealsTaken}`}
               />
               <div style={{ textAlign: "right" }}>
                 <Text
                   strong
                   style={{
-                    color: item.finalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                    color: item.finalBalance >= 0 ? "#389e0d" : "#cf1322",
                     fontSize: 16,
                   }}
                 >
@@ -328,7 +485,7 @@ const MemberDetailsList: React.FC<{
                 <br />
                 <Text
                   style={{
-                    color: item.finalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                    color: item.finalBalance >= 0 ? "#389e0d" : "#cf1322",
                     fontSize: 12,
                   }}
                 >
@@ -376,8 +533,11 @@ const NoticesPopup: React.FC<{
     <Modal
       title={
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <BellOutlined style={{ color: "#1890ff" }} />
-          <Text strong style={{ margin: 0, fontSize: 18 }}>
+          <BellOutlined style={{ color: PRIMARY_COLOR }} />
+          <Text
+            strong
+            style={{ margin: 0, fontSize: 18, color: PRIMARY_COLOR }}
+          >
             Latest Notices
           </Text>
           {unreadCount > 0 && (
@@ -393,7 +553,12 @@ const NoticesPopup: React.FC<{
             Mark all as read
           </Button>
         ),
-        <Button key="close" type="primary" onClick={onClose}>
+        <Button
+          key="close"
+          type="primary"
+          onClick={onClose}
+          style={{ backgroundColor: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}
+        >
           Close
         </Button>,
       ].filter(Boolean)}
@@ -422,6 +587,15 @@ const NoticesPopup: React.FC<{
                   padding: "12px 0",
                   borderBottom: "1px solid #f0f0f0",
                   cursor: "pointer",
+                  borderLeft: !useNoticeReadStatus().isNoticeRead(item.id)
+                    ? `4px solid ${ACCENT_COLOR_PROFILE}`
+                    : "none",
+                  paddingLeft: !useNoticeReadStatus().isNoticeRead(item.id)
+                    ? "8px"
+                    : "0px",
+                  backgroundColor: !useNoticeReadStatus().isNoticeRead(item.id)
+                    ? "#f7fcfc"
+                    : "white",
                 }}
               >
                 <List.Item.Meta
@@ -433,7 +607,10 @@ const NoticesPopup: React.FC<{
                         alignItems: "flex-start",
                       }}
                     >
-                      <Text strong style={{ fontSize: 16 }}>
+                      <Text
+                        strong
+                        style={{ fontSize: 16, color: PRIMARY_COLOR }}
+                      >
                         {item.title}
                       </Text>
                       <Tag color="geekblue">{getTimeDisplay(item.date)}</Tag>
@@ -497,6 +674,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
       <Alert
         message="Mess ID not found. Please join or create a mess."
         type="error"
+        style={{ margin: "16px" }}
       />
     );
   }
@@ -523,7 +701,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
   });
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ padding: 20, position: "relative" }}>
       {" "}
       <div
         style={{
@@ -541,19 +719,19 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             flexWrap: "wrap",
             alignItems: "center",
             gap: 16,
-            marginRight: 60,
+            marginRight: window.innerWidth > 600 ? 60 : 0,
           }}
         >
           <Title
             level={2}
             style={{
-              color: "#004d40",
+              color: PRIMARY_COLOR,
               margin: 0,
-              fontSize: "clamp(20px, 5vw, 32px)",
+              fontSize: "clamp(20px, 5vw, 40px)",
             }}
           >
             🏠 Mess Financial Overview
-            <Text type="secondary" style={{ fontSize: 16, marginLeft: 10 }}>
+            <Text type="secondary" style={{ fontSize: 18, marginLeft: 10 }}>
               ({stats.currentMonth})
             </Text>
           </Title>
@@ -570,6 +748,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             position: "absolute",
             top: 0,
             right: 0,
+            transform: window.innerWidth < 600 ? "scale(0.8)" : "scale(1)",
           }}
         >
           <Badge count={unreadCount} size="small" offset={[-5, 5]}>
@@ -579,7 +758,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 <BellOutlined
                   style={{
                     fontSize: 24,
-                    color: unreadCount > 0 ? "#1890ff" : "#666",
+                    color: unreadCount > 0 ? ACCENT_COLOR_PROFILE : "#666",
                   }}
                 />
               }
@@ -592,98 +771,128 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 border:
-                  unreadCount > 0 ? "2px solid #1890ff" : "2px solid #d9d9d9",
-                background: unreadCount > 0 ? "#f0f8ff" : "#fafafa",
+                  unreadCount > 0
+                    ? `2px solid ${ACCENT_COLOR_PROFILE}`
+                    : "2px solid #d9d9d9",
+                background: unreadCount > 0 ? "#f7fcfc" : "#fafafa",
               }}
             />
           </Badge>
         </div>
       </div>
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
+        <Col xs={12} sm={12} md={6}>
+          <Card style={{ borderLeft: `4px solid ${PRIMARY_COLOR}` }}>
             <Statistic
               title="Total Members"
               value={totalMembers}
-              prefix={<UserOutlined />}
-              valueStyle={{ color: "#004d40" }}
+              prefix={<UserOutlined style={{ color: PRIMARY_COLOR }} />}
+              valueStyle={{
+                color: PRIMARY_COLOR,
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
+        <Col xs={12} sm={12} md={6}>
+          <Card style={{ borderLeft: `4px solid ${ACCENT_COLOR_PROFILE}` }}>
             <Statistic
               title="Total Meals"
               value={totalMonthlyMeals}
-              prefix={<FireOutlined />}
-              valueStyle={{ color: "#1890ff" }}
+              prefix={<FireOutlined style={{ color: ACCENT_COLOR_PROFILE }} />}
+              valueStyle={{
+                color: ACCENT_COLOR_PROFILE,
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
+        <Col xs={12} sm={12} md={6}>
+          <Card style={{ borderLeft: `4px solid #cf1322` }}>
             <Statistic
               title="Food Expenses"
               value={totalGroceryCost}
               prefix="৳"
               precision={0}
-              valueStyle={{ color: "#cf1322" }}
-              suffix={<ShoppingOutlined />}
+              valueStyle={{
+                color: "#cf1322",
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
+              suffix={<ShoppingOutlined style={{ color: "#cf1322" }} />}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
+        <Col xs={12} sm={12} md={6}>
+          <Card style={{ borderLeft: `4px solid ${ACCENT_COLOR_WARNING}` }}>
             <Statistic
               title="Meal Rate"
               value={currentMealRate}
               prefix="৳"
               precision={2}
-              valueStyle={{ color: "#389e0d" }}
-              suffix={<CalculatorOutlined />}
+              valueStyle={{
+                color: ACCENT_COLOR_WARNING,
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
+              suffix={
+                <CalculatorOutlined style={{ color: ACCENT_COLOR_WARNING }} />
+              }
             />
           </Card>
         </Col>
       </Row>
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={8}>
-          <Card>
+        <Col xs={12} sm={12} md={8}>
+          <Card style={{ borderLeft: `4px solid #389e0d` }}>
             <Statistic
               title="Total Deposits"
               value={stats.totalDeposits}
               prefix="৳"
               precision={0}
-              valueStyle={{ color: "#389e0d" }}
-              suffix={<BankOutlined />}
+              valueStyle={{
+                color: "#389e0d",
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
+              suffix={<BankOutlined style={{ color: "#389e0d" }} />}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card>
+        <Col xs={12} sm={12} md={8}>
+          <Card style={{ borderLeft: `4px solid #faad14` }}>
             <Statistic
               title="Utility Expenses"
               value={stats.totalUtilityCost}
               prefix="৳"
               precision={0}
-              valueStyle={{ color: "#faad14" }}
-              suffix={<SwapOutlined />}
+              valueStyle={{
+                color: "#faad14",
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
+              suffix={<SwapOutlined style={{ color: "#faad14" }} />}
             />
           </Card>
         </Col>
-        <Col xs={24} sm={8}>
-          <Card>
+        <Col xs={24} sm={24} md={8}>
+          <Card style={{ borderLeft: `4px solid #722ed1` }}>
             <Statistic
               title="Utility Per Member"
               value={stats.utilityCostPerMember}
               prefix="৳"
               precision={0}
-              valueStyle={{ color: "#722ed1" }}
-              suffix={<TeamOutlined />}
+              valueStyle={{
+                color: "#722ed1",
+                fontSize: getStatisticFontSize("36px", "20px"),
+              }}
+              suffix={<TeamOutlined style={{ color: "#722ed1" }} />}
             />
           </Card>
         </Col>
       </Row>
-      <Divider orientation="left">Financial Analysis</Divider>
+      <Divider
+        orientation="left"
+        style={{ color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}
+      >
+        Financial Analysis
+      </Divider>
       <Row gutter={[24, 24]}>
         <Col xs={24} style={{ minWidth: 0 }}>
           <MemberBalanceChart
@@ -704,13 +913,24 @@ export default function Overview({ messId, userRole }: OverviewProps) {
         </Row>
       )}
       {!isManager && (
-        <Card title="📊 Your Financial Summary" style={{ marginTop: 24 }}>
+        <Card
+          title={
+            <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+              📊 Your Financial Summary
+            </Text>
+          }
+          style={{ marginTop: 24, border: `1px solid ${PRIMARY_COLOR}33` }}
+        >
           <Row gutter={[16, 16]}>
             <Col xs={12} sm={6}>
               <Statistic
                 title="Your Meals"
                 value={stats.memberMealCounts[currentUserId || ""] || 0}
                 prefix={<FireOutlined />}
+                valueStyle={{
+                  fontSize: getStatisticFontSize("30px", "22px"),
+                  color: ACCENT_COLOR_PROFILE,
+                }}
               />
             </Col>
             <Col xs={12} sm={6}>
@@ -718,7 +938,10 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 title="Your Grocery Paid"
                 value={stats.memberGroceryPaid[currentUserId || ""] || 0}
                 prefix="৳"
-                valueStyle={{ color: CHART_COLORS.GroceryPaid }}
+                valueStyle={{
+                  color: CHART_COLORS.GroceryPaid,
+                  fontSize: getStatisticFontSize("30px", "22px"),
+                }}
               />
             </Col>
             <Col xs={12} sm={6}>
@@ -730,7 +953,10 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 }
                 prefix="৳"
                 precision={0}
-                valueStyle={{ color: CHART_COLORS.MealCost }}
+                valueStyle={{
+                  color: CHART_COLORS.MealCost,
+                  fontSize: getStatisticFontSize("30px", "22px"),
+                }}
               />
             </Col>
             <Col xs={12} sm={6}>
@@ -739,15 +965,23 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 value={stats.utilityCostPerMember}
                 prefix="৳"
                 precision={0}
-                valueStyle={{ color: "#722ed1" }}
+                valueStyle={{
+                  color: "#722ed1",
+                  fontSize: getStatisticFontSize("30px", "22px"),
+                }}
               />
             </Col>
           </Row>
-          <Divider style={{ margin: "16px 0" }} />
+          <Divider style={{ margin: "16px 0", borderColor: PRIMARY_COLOR }} />
           <div style={{ textAlign: "center", padding: "8px 0" }}>
             <Text
               strong
-              style={{ fontSize: 16, display: "block", marginBottom: 4 }}
+              style={{
+                fontSize: 20,
+                display: "block",
+                marginBottom: 4,
+                color: PRIMARY_COLOR,
+              }}
             >
               Your Final Balance (Settlement)
             </Text>
@@ -760,15 +994,15 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               }}
             >
               {currentUserFinalBalance >= 0 ? (
-                <ArrowUpOutlined style={{ color: "#73D13D", fontSize: 20 }} />
+                <ArrowUpOutlined style={{ color: "#389e0d", fontSize: 36 }} />
               ) : (
-                <ArrowDownOutlined style={{ color: "#FF4D4F", fontSize: 20 }} />
+                <ArrowDownOutlined style={{ color: "#cf1322", fontSize: 36 }} />
               )}
               <Text
                 strong
                 style={{
-                  fontSize: 24,
-                  color: currentUserFinalBalance >= 0 ? "#73D13D" : "#FF4D4F",
+                  fontSize: getStatisticFontSize("48px", "36px"),
+                  color: currentUserFinalBalance >= 0 ? "#389e0d" : "#cf1322",
                 }}
               >
                 ৳{Math.abs(currentUserFinalBalance).toFixed(2)}
@@ -776,7 +1010,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             </div>
             <Text
               type="secondary"
-              style={{ fontSize: 12, display: "block", marginTop: 4 }}
+              style={{ fontSize: 14, display: "block", marginTop: 4 }}
             >
               {currentUserFinalBalance >= 0
                 ? "You will receive this amount"
@@ -792,6 +1026,19 @@ export default function Overview({ messId, userRole }: OverviewProps) {
         unreadCount={unreadCount}
         onMarkAllAsRead={() => markAllAsRead(allNoticeIds)}
       />
+      <style jsx global>{`
+        .ant-table-wrapper .ant-table-thead > tr > th {
+          background-color: ${PRIMARY_COLOR} !important;
+          color: #fff !important;
+          font-size: 16px !important;
+        }
+
+        @media (max-width: 768px) {
+          .ant-table-wrapper .ant-table-thead > tr > th {
+            font-size: 14px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

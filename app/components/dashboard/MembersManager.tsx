@@ -16,15 +16,17 @@ import {
   InputNumber,
   Modal,
   Form,
-  Input,
+  Row,
+  Col,
+  Statistic,
 } from "antd";
 import {
   TeamOutlined,
   UserOutlined,
   CrownOutlined,
   HomeOutlined,
-  EditOutlined,
   DollarOutlined,
+  CalculatorOutlined,
 } from "@ant-design/icons";
 import { useMembers } from "../../lib/hooks/useMembers";
 import { useAuth } from "../../lib/auth-context";
@@ -32,6 +34,9 @@ import { useAuth } from "../../lib/auth-context";
 const { Title, Text } = Typography;
 const { Column } = Table;
 const { Option } = Select;
+
+const PRIMARY_COLOR = "#00695C";
+const SECONDARY_COLOR = "#00bfa5";
 
 interface MembersManagerProps {
   messId: string;
@@ -86,7 +91,9 @@ export default function MembersManager({ messId }: MembersManagerProps) {
         `Successfully changed ${currentName}'s role to ${newRole}.`
       );
     } else {
-      message.error("Failed to change role. You may not have permission.");
+      message.error(
+        "Failed to change role. You might not have permission or there must be at least one manager."
+      );
     }
   };
 
@@ -105,10 +112,13 @@ export default function MembersManager({ messId }: MembersManagerProps) {
   }) => {
     if (!selectedMember) return;
 
+    const monthlyRent = Math.max(0, values.monthlyRent || 0);
+    const customRent = Math.max(0, values.customRent || 0);
+
     const success = await updateMemberRent(
       selectedMember.uid,
-      values.monthlyRent,
-      values.customRent
+      monthlyRent,
+      customRent
     );
     if (success) {
       message.success(
@@ -128,77 +138,142 @@ export default function MembersManager({ messId }: MembersManagerProps) {
     0
   );
 
+  const totalMembers = members.length;
+
   return (
     <>
+      <Title
+        level={2}
+        style={{
+          margin: "20px 0 10px 0",
+          color: PRIMARY_COLOR,
+          fontWeight: "bold",
+          fontSize: "2rem",
+        }}
+      >
+        <TeamOutlined style={{ marginRight: 10 }} /> Mess Member Management
+      </Title>
+
+      <Text
+        type="secondary"
+        style={{ marginBottom: 20, display: "block", fontSize: "1.1rem" }}
+      >
+        Mess ID:{" "}
+        <Text code copyable style={{ fontSize: "1rem" }}>
+          {messId}
+        </Text>
+      </Text>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={12} md={6}>
+          <Card
+            size="small"
+            className="shadow-md"
+            style={{ borderLeft: `5px solid ${PRIMARY_COLOR}` }}
+          >
+            <Statistic
+              title="Total Members"
+              value={totalMembers}
+              prefix={<TeamOutlined style={{ color: PRIMARY_COLOR }} />}
+              valueStyle={{ color: PRIMARY_COLOR, fontWeight: "bold" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card
+            size="small"
+            className="shadow-md"
+            style={{ borderLeft: "5px solid #cf1322" }}
+          >
+            <Statistic
+              title="Managers"
+              value={managerCount}
+              prefix={<CrownOutlined style={{ color: "#cf1322" }} />}
+              valueStyle={{ color: "#cf1322", fontWeight: "bold" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card
+            size="small"
+            className="shadow-md"
+            style={{ borderLeft: "5px solid #389e0d" }}
+          >
+            <Statistic
+              title="Basic Members"
+              value={memberCount}
+              prefix={<UserOutlined style={{ color: "#389e0d" }} />}
+              valueStyle={{ color: "#389e0d", fontWeight: "bold" }}
+            />
+          </Card>
+        </Col>
+        <Col xs={12} md={6}>
+          <Card
+            size="small"
+            className="shadow-md"
+            style={{ borderLeft: "5px solid #fa8c16" }}
+          >
+            <Statistic
+              title="Total Monthly Rent"
+              value={totalRent}
+              prefix="৳"
+              valueStyle={{ color: "#fa8c16", fontWeight: "bold" }}
+              precision={0}
+            />
+          </Card>
+        </Col>
+      </Row>
+
       <Card
         className="shadow-lg"
-        style={{ margin: "20px 0" }}
-        styles={{ body: { padding: "24px" } }}
+        styles={{ body: { padding: "0" } }}
+        style={{ borderRadius: "8px", borderTop: `4px solid ${PRIMARY_COLOR}` }}
       >
-        <Title
-          level={2}
-          style={{
-            margin: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 8,
-          }}
-        >
-          <TeamOutlined style={{ color: "#1890ff" }} />
-          Mess Member Management
-        </Title>
-
-        <Space direction="vertical" style={{ width: "100%", marginBottom: 24 }}>
-          <Text type="secondary" style={{ fontSize: "16px" }}>
-            Total Members: <Text strong>{members.length}</Text>
-            {" | "} Managers: <Tag color="volcano">{managerCount}</Tag>
-            {" | "} Members: <Tag color="green">{memberCount}</Tag>
-            {" | "} Total Monthly Rent: <Tag color="orange">৳{totalRent}</Tag>
-          </Text>
-          <Text type="secondary">
-            Mess ID:{" "}
-            <Text code copyable>
-              {messId}
-            </Text>
-          </Text>
-        </Space>
-
         <Table
           dataSource={members}
           rowKey="uid"
           pagination={{
             pageSize: 10,
-            showSizeChanger: true,
+            showSizeChanger: false,
             showQuickJumper: true,
             showTotal: (total, range) =>
               `Showing ${range[0]}-${range[1]} of ${total} members`,
           }}
-          scroll={{ x: 1000 }}
+          scroll={{ x: 700 }}
           loading={loading}
           locale={{
             emptyText: "No members found in your mess",
           }}
+          size="middle"
         >
           <Column
             title="Member"
             dataIndex="displayName"
             key="displayName"
-            width="25%"
+            width={150}
             render={(name: string, record: Member) => (
               <Space>
                 {record.role === "manager" ? (
                   <CrownOutlined
-                    style={{ color: "#ff7a45", fontSize: "16px" }}
+                    style={{ color: PRIMARY_COLOR, fontSize: "16px" }}
                   />
                 ) : (
                   <UserOutlined
-                    style={{ color: "#1890ff", fontSize: "16px" }}
+                    style={{ color: SECONDARY_COLOR, fontSize: "16px" }}
                   />
                 )}
-                <Text strong>{name}</Text>
+                <Text strong style={{ color: PRIMARY_COLOR }}>
+                  {name}
+                </Text>
                 {user && record.uid === user.uid && (
-                  <Tag color="blue" style={{ margin: 0 }}>
+                  <Tag
+                    color="blue"
+                    style={{
+                      margin: 0,
+                      fontSize: "11px",
+                      padding: "2px 6px",
+                    }}
+                  >
                     You
                   </Tag>
                 )}
@@ -213,51 +288,20 @@ export default function MembersManager({ messId }: MembersManagerProps) {
             title="Email"
             dataIndex="email"
             key="email"
-            width="30%"
+            responsive={["md"]}
+            width={200}
             sorter={(a: Member, b: Member) => a.email.localeCompare(b.email)}
-          />
-
-          <Column
-            title="Monthly Rent"
-            dataIndex="monthlyRent"
-            key="monthlyRent"
-            width="15%"
-            render={(rent: number, record: Member) => (
-              <Space>
-                <DollarOutlined style={{ color: "#52c41a" }} />
-                <Text strong>{rent || 0} ৳</Text>
-              </Space>
-            )}
-            sorter={(a: Member, b: Member) =>
-              (a.monthlyRent || 0) - (b.monthlyRent || 0)
-            }
-          />
-
-          <Column
-            title="Custom Rent"
-            dataIndex="customRent"
-            key="customRent"
-            width="15%"
-            render={(customRent: number, record: Member) => (
-              <Space>
-                <HomeOutlined style={{ color: "#fa8c16" }} />
-                <Text strong>{customRent || 0} ৳</Text>
-              </Space>
-            )}
-            sorter={(a: Member, b: Member) =>
-              (a.customRent || 0) - (b.customRent || 0)
-            }
           />
 
           <Column
             title="Total Rent"
             key="totalRent"
-            width="15%"
+            width={100}
             render={(_: any, record: Member) => {
               const total =
                 (record.monthlyRent || 0) + (record.customRent || 0);
               return (
-                <Tag color="green" style={{ margin: 0 }}>
+                <Tag color="green" style={{ margin: 0, fontWeight: "bold" }}>
                   ৳{total}
                 </Tag>
               );
@@ -270,15 +314,43 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           />
 
           <Column
+            title="Base Rent"
+            dataIndex="monthlyRent"
+            key="monthlyRent"
+            responsive={["lg"]}
+            width={100}
+            render={(rent: number) => (
+              <Text type="secondary">৳{rent || 0}</Text>
+            )}
+            sorter={(a: Member, b: Member) =>
+              (a.monthlyRent || 0) - (b.monthlyRent || 0)
+            }
+          />
+
+          <Column
+            title="Custom Rent"
+            dataIndex="customRent"
+            key="customRent"
+            responsive={["lg"]}
+            width={100}
+            render={(customRent: number) => (
+              <Text type="secondary">৳{customRent || 0}</Text>
+            )}
+            sorter={(a: Member, b: Member) =>
+              (a.customRent || 0) - (b.customRent || 0)
+            }
+          />
+
+          <Column
             title="Role"
             dataIndex="role"
             key="role"
-            width="15%"
-            render={(role: string, record: Member) => (
+            width={120}
+            render={(role: string) => (
               <Tag
-                color={role === "manager" ? "volcano" : "green"}
+                color={role === "manager" ? "volcano" : PRIMARY_COLOR}
                 icon={role === "manager" ? <CrownOutlined /> : <UserOutlined />}
-                style={{ fontSize: "12px", padding: "4px 8px" }}
+                style={{ fontSize: "11px", padding: "4px 6px" }}
               >
                 {role.toUpperCase()}
               </Tag>
@@ -293,7 +365,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           <Column
             title="Actions"
             key="action"
-            width="20%"
+            width={150}
             render={(_: any, record: Member) => {
               const isCurrentUser = user && record.uid === user.uid;
               const managerMembers = members.filter(
@@ -303,39 +375,51 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                 record.role === "manager" && managerMembers.length === 1;
 
               return (
-                <Space>
-                  <Tooltip title="Change member role">
+                <Space size="small">
+                  <Tooltip
+                    title={
+                      isCurrentUser
+                        ? "You cannot change your own role"
+                        : isOnlyManager
+                        ? "Must have at least one manager"
+                        : "Change member role"
+                    }
+                  >
                     <Select
                       value={record.role}
                       onChange={(value: "manager" | "member") =>
                         handleRoleChange(record.uid, value, record.displayName)
                       }
-                      style={{ width: 100 }}
+                      style={{ width: 85 }}
                       disabled={isCurrentUser || isOnlyManager}
                       size="small"
                     >
                       <Option value="manager">
-                        <Space size="small">
-                          <CrownOutlined />
-                          Manager
+                        <Space size={4}>
+                          <CrownOutlined /> Manager
                         </Space>
                       </Option>
                       <Option value="member">
-                        <Space size="small">
-                          <UserOutlined />
-                          Member
+                        <Space size={4}>
+                          <UserOutlined /> Member
                         </Space>
                       </Option>
                     </Select>
                   </Tooltip>
 
-                  <Tooltip title="Edit Rent">
+                  <Tooltip title="Edit Rent Contribution">
                     <Button
-                      type="link"
-                      icon={<EditOutlined />}
+                      type="default"
+                      icon={<DollarOutlined />}
                       onClick={() => handleRentEdit(record)}
                       size="small"
-                    />
+                      style={{
+                        color: PRIMARY_COLOR,
+                        borderColor: PRIMARY_COLOR,
+                      }}
+                    >
+                      Rent
+                    </Button>
                   </Tooltip>
                 </Space>
               );
@@ -346,10 +430,9 @@ export default function MembersManager({ messId }: MembersManagerProps) {
 
       <Modal
         title={
-          <Space>
-            <HomeOutlined />
-            Edit Rent for {selectedMember?.displayName}
-          </Space>
+          <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+            <HomeOutlined /> Edit Rent for {selectedMember?.displayName}
+          </Title>
         }
         open={rentModalVisible}
         onCancel={() => {
@@ -357,8 +440,14 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           form.resetFields();
         }}
         footer={null}
+        width={400}
       >
-        <Form form={form} layout="vertical" onFinish={handleRentUpdate}>
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleRentUpdate}
+          style={{ paddingTop: 20 }}
+        >
           <Form.Item
             name="monthlyRent"
             label="Monthly Base Rent (৳)"
@@ -369,26 +458,32 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               style={{ width: "100%" }}
               placeholder="Enter monthly rent"
               prefix="৳"
+              step={10}
             />
           </Form.Item>
 
           <Form.Item
             name="customRent"
             label="Additional/Custom Rent (৳)"
-            tooltip="Additional rent for special arrangements"
+            tooltip="Additional rent for special arrangements (e.g., specific room, furniture)."
           >
             <InputNumber
               min={0}
               style={{ width: "100%" }}
-              placeholder="Enter additional rent"
+              placeholder="Enter additional rent (e.g., utilities, service charges)"
               prefix="৳"
+              step={10}
             />
           </Form.Item>
 
-          <Form.Item>
+          <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
             <Space>
-              <Button type="primary" htmlType="submit">
-                Update Rent
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+              >
+                <CalculatorOutlined /> Update Rent
               </Button>
               <Button
                 onClick={() => {

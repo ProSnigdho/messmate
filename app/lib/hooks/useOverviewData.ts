@@ -35,6 +35,7 @@ interface Meal {
   breakfast: boolean;
   lunch: boolean;
   dinner: boolean;
+  guestMeals?: number;
   date: string;
 }
 
@@ -229,7 +230,11 @@ export const useOverviewData = () => {
 
     meals.forEach((meal) => {
       const mealCount =
-        (meal.breakfast ? 1 : 0) + (meal.lunch ? 1 : 0) + (meal.dinner ? 1 : 0);
+        (meal.breakfast ? 1 : 0) +
+        (meal.lunch ? 1 : 0) +
+        (meal.dinner ? 1 : 0) +
+        (meal.guestMeals || 0);
+
       totalMeals += mealCount;
       memberMealCounts[meal.userId] =
         (memberMealCounts[meal.userId] || 0) + mealCount;

@@ -14,6 +14,9 @@ import {
   Select,
   Tag,
   Button,
+  InputNumber,
+  Row,
+  Col,
 } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import {
@@ -45,6 +48,7 @@ interface FullMealHistoryEntry {
   breakfast: boolean;
   lunch: boolean;
   dinner: boolean;
+  guestMeals: number;
   total: number;
 }
 
@@ -57,6 +61,9 @@ interface BillingSummaryProps {
   };
   loading: boolean;
 }
+
+const PRIMARY_COLOR = "#00695C";
+const ACCENT_COLOR_WARNING = "#ff8f00";
 
 const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
   userMealData,
@@ -78,66 +85,84 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
       key: data.user.uid,
       name: data.user.displayName,
       totalMeals: totalMealsValue,
-      totalPaid: totalPaid.toFixed(2),
-      mealCost: mealCost.toFixed(2),
-      paidVsDue: paidVsDue.toFixed(2),
+      totalPaid: totalPaid,
+      mealCost: mealCost,
+      paidVsDue: paidVsDue,
     };
   });
 
-  const columns = [
-    { title: "Member", dataIndex: "name", key: "name", width: 100 },
+  const mobileColumns = [
     {
-      title: "Total Meals (Monthly)",
+      title: "Member",
+      dataIndex: "name",
+      key: "name",
+      width: 80,
+      render: (text: string) => (
+        <div
+          style={{ fontSize: "12px", lineHeight: "1.2", color: PRIMARY_COLOR }}
+        >
+          {text.length > 8 ? `${text.substring(0, 8)}...` : text}
+        </div>
+      ),
+    },
+    {
+      title: "Meals",
       dataIndex: "totalMeals",
       key: "totalMeals",
       align: "center" as const,
-      width: 120,
-    },
-    {
-      title: "Total Paid (Grocery)",
-      dataIndex: "totalPaid",
-      key: "totalPaid",
-      align: "right" as const,
-      width: 130,
-      render: (text: string) => (
-        <Text strong type="warning">
-          {text} ৳
+      width: 50,
+      render: (text: number) => (
+        <Text strong style={{ fontSize: "12px", color: PRIMARY_COLOR }}>
+          {text}
         </Text>
       ),
     },
     {
-      title: "Actual Meal Cost",
-      dataIndex: "mealCost",
-      key: "mealCost",
+      title: "Paid",
+      dataIndex: "totalPaid",
+      key: "totalPaid",
       align: "right" as const,
-      width: 120,
-      render: (text: string) => <Text>{text} ৳</Text>,
+      width: 60,
+      render: (text: number) => (
+        <Text strong style={{ fontSize: "12px", color: ACCENT_COLOR_WARNING }}>
+          {text.toFixed(2)}৳
+        </Text>
+      ),
     },
     {
-      title: "Final Balance (Settlement)",
+      title: "Balance",
       dataIndex: "paidVsDue",
       key: "paidVsDue",
-      align: "right" as const,
-      width: 150,
-      render: (text: string) => {
-        const amount = parseFloat(text);
+      align: "center" as const,
+      width: 80,
+      render: (text: number) => {
+        const amount = text;
 
         if (amount > 0.01) {
           return (
-            <Tag color="green" style={{ fontSize: 14 }}>
-              Pabe: {text} ৳
+            <Tag
+              color="green"
+              style={{ fontSize: "10px", padding: "1px 3px", margin: 0 }}
+            >
+              +{amount.toFixed(2)}৳
             </Tag>
           );
         } else if (amount < -0.01) {
           return (
-            <Tag color="red" style={{ fontSize: 14 }}>
-              Dite Hobe: {Math.abs(amount).toFixed(2)} ৳
+            <Tag
+              color="red"
+              style={{ fontSize: "10px", padding: "1px 3px", margin: 0 }}
+            >
+              -{Math.abs(amount).toFixed(2)}৳
             </Tag>
           );
         } else {
           return (
-            <Tag color="blue" style={{ fontSize: 14 }}>
-              Settled (0.00 ৳)
+            <Tag
+              color="blue"
+              style={{ fontSize: "10px", padding: "1px 3px", margin: 0 }}
+            >
+              0.00৳
             </Tag>
           );
         }
@@ -145,51 +170,114 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
     },
   ];
 
+  const desktopColumns = [
+    { title: "Member", dataIndex: "name", key: "name", width: 90 },
+    {
+      title: "Total Meals",
+      dataIndex: "totalMeals",
+      key: "totalMeals",
+      align: "center" as const,
+      width: 90,
+    },
+    {
+      title: "Total Paid",
+      dataIndex: "totalPaid",
+      key: "totalPaid",
+      align: "right" as const,
+      width: 90,
+      render: (text: number) => (
+        <Text strong style={{ color: ACCENT_COLOR_WARNING }}>
+          {text.toFixed(2)} ৳
+        </Text>
+      ),
+    },
+    {
+      title: "Meal Cost",
+      dataIndex: "mealCost",
+      key: "mealCost",
+      align: "right" as const,
+      width: 90,
+      render: (text: number) => <Text>{text.toFixed(2)} ৳</Text>,
+    },
+    {
+      title: "Final Balance",
+      dataIndex: "paidVsDue",
+      key: "paidVsDue",
+      align: "right" as const,
+      width: 140,
+      render: (text: number) => {
+        const amount = text;
+
+        if (amount > 0.01) {
+          return (
+            <Tag color="green" style={{ padding: "2px 4px" }}>
+              will get: {amount.toFixed(2)} ৳
+            </Tag>
+          );
+        } else if (amount < -0.01) {
+          return (
+            <Tag color="red" style={{ padding: "2px 4px" }}>
+              have to give: {Math.abs(amount).toFixed(2)} ৳
+            </Tag>
+          );
+        } else {
+          return (
+            <Tag color="blue" style={{ padding: "2px 4px" }}>
+              Settled
+            </Tag>
+          );
+        }
+      },
+    },
+  ];
+
+  const columns = window.innerWidth < 768 ? mobileColumns : desktopColumns;
+
   return (
     <Card
       title={
-        <Title level={4} style={{ margin: 0 }}>
-          💰 Monthly Billing Summary & Final Settlement
+        <Title
+          level={4}
+          style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+        >
+          💰 Monthly Billing Summary
         </Title>
       }
-      style={{ marginTop: 20 }}
+      style={{ marginTop: 16 }}
       loading={loading}
     >
       <div
         style={{
-          marginBottom: 15,
-          border: "1px solid #e8e8e8",
-          padding: "10px",
+          marginBottom: 12,
+          border: `1px solid ${PRIMARY_COLOR}33`,
+          padding: "8px",
           borderRadius: "4px",
+          backgroundColor: "#f7fcfc",
         }}
       >
-        <Text strong>📊 Summary for the Month:</Text>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 8,
-            justifyContent: "space-between",
-            marginTop: 8,
-          }}
-        >
-          <Text>
-            Total Meals in Mess:{" "}
-            <Text strong type="success">
+        <Row gutter={[8, 4]} justify="space-between">
+          <Col xs={24} sm={8}>
+            <Text style={{ fontSize: "14px" }}>Total Meals: </Text>
+            <Text strong style={{ fontSize: "14px", color: PRIMARY_COLOR }}>
               {totalMeals}
             </Text>
-          </Text>
-          <Text>
-            Total Grocery Cost:{" "}
-            <Text strong>{totalGroceryCost.toFixed(2)} ৳</Text>
-          </Text>
-          <Text>
-            Meal Rate:{" "}
-            <Text strong type="warning">
-              {mealRate.toFixed(2)} ৳ / Meal
+          </Col>
+          <Col xs={24} sm={8}>
+            <Text style={{ fontSize: "14px" }}>Total Cost: </Text>
+            <Text strong style={{ fontSize: "14px" }}>
+              {totalGroceryCost.toFixed(2)}৳
             </Text>
-          </Text>
-        </div>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Text style={{ fontSize: "14px" }}>Meal Rate: </Text>
+            <Text
+              strong
+              style={{ fontSize: "14px", color: ACCENT_COLOR_WARNING }}
+            >
+              {mealRate.toFixed(2)}৳
+            </Text>
+          </Col>
+        </Row>
       </div>
 
       <Table
@@ -198,8 +286,9 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
         rowKey="key"
         pagination={false}
         bordered
-        size="middle"
-        scroll={{ x: 720 }}
+        size={window.innerWidth < 768 ? "small" : "middle"}
+        scroll={window.innerWidth < 768 ? { x: 300 } : { x: "max-content" }}
+        style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
       />
     </Card>
   );
@@ -219,7 +308,14 @@ const convertToCSV = (
   csv += `Meal History for: ${memberName}\n`;
   csv += `Date Range: ${rangeStart} to ${rangeEnd}\n\n`;
 
-  const headers = ["Date", "Breakfast", "Lunch", "Dinner", "Daily Total"];
+  const headers = [
+    "Date",
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Guest Meals",
+    "Daily Total",
+  ];
   csv += headers.join(",") + "\n";
 
   data.forEach((item) => {
@@ -228,6 +324,7 @@ const convertToCSV = (
       item.breakfast ? "1" : "0",
       item.lunch ? "1" : "0",
       item.dinner ? "1" : "0",
+      item.guestMeals.toString(),
       item.total.toString(),
     ];
     csv += row.join(",") + "\n";
@@ -305,10 +402,13 @@ const MonthlyMealHistory: React.FC<{
         const snapshot = await getDocs(q);
         const data: FullMealHistoryEntry[] = snapshot.docs.map((doc) => {
           const meal = doc.data() as Meal;
+          const guestMeals = meal.guestMeals || 0;
+
           const total =
             (meal.breakfast ? 1 : 0) +
             (meal.lunch ? 1 : 0) +
-            (meal.dinner ? 1 : 0);
+            (meal.dinner ? 1 : 0) +
+            guestMeals;
 
           return {
             key: doc.id,
@@ -316,6 +416,7 @@ const MonthlyMealHistory: React.FC<{
             breakfast: meal.breakfast || false,
             lunch: meal.lunch || false,
             dinner: meal.dinner || false,
+            guestMeals: guestMeals,
             total,
           };
         });
@@ -352,14 +453,25 @@ const MonthlyMealHistory: React.FC<{
     message.success("CSV file generated and downloaded!");
   };
 
-  const historyColumns = [
-    { title: "Date", dataIndex: "date", key: "date", width: 120 },
+  const mobileHistoryColumns = [
     {
-      title: "Breakfast",
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      width: 80,
+      render: (text: string) => {
+        const parts = text.split("-"); // YYYY-MM-DD
+        const date = parts[2];
+        const month = parts[1];
+        return <div style={{ fontSize: "11px" }}>{`${date}/${month}`}</div>;
+      },
+    },
+    {
+      title: "B/F",
       dataIndex: "breakfast",
       key: "breakfast",
       align: "center" as const,
-      width: 90,
+      width: 40,
       render: (e: boolean) => (e ? "✅" : "❌"),
     },
     {
@@ -367,7 +479,7 @@ const MonthlyMealHistory: React.FC<{
       dataIndex: "lunch",
       key: "lunch",
       align: "center" as const,
-      width: 90,
+      width: 40,
       render: (e: boolean) => (e ? "✅" : "❌"),
     },
     {
@@ -375,23 +487,88 @@ const MonthlyMealHistory: React.FC<{
       dataIndex: "dinner",
       key: "dinner",
       align: "center" as const,
-      width: 90,
+      width: 40,
       render: (e: boolean) => (e ? "✅" : "❌"),
+    },
+    {
+      title: "Guest",
+      dataIndex: "guestMeals",
+      key: "guestMeals",
+      align: "center" as const,
+      width: 40,
+    },
+    {
+      title: "Total",
+      dataIndex: "total",
+      key: "total",
+      align: "center" as const,
+      width: 40,
+      render: (text: number) => (
+        <Text strong style={{ fontSize: "11px", color: PRIMARY_COLOR }}>
+          {text}
+        </Text>
+      ),
+    },
+  ];
+
+  const desktopHistoryColumns = [
+    { title: "Date", dataIndex: "date", key: "date", width: 100 },
+    {
+      title: "Breakfast",
+      dataIndex: "breakfast",
+      key: "breakfast",
+      align: "center" as const,
+      width: 80,
+      render: (e: boolean) => (e ? "✅" : "❌"),
+    },
+    {
+      title: "Lunch",
+      dataIndex: "lunch",
+      key: "lunch",
+      align: "center" as const,
+      width: 80,
+      render: (e: boolean) => (e ? "✅" : "❌"),
+    },
+    {
+      title: "Dinner",
+      dataIndex: "dinner",
+      key: "dinner",
+      align: "center" as const,
+      width: 80,
+      render: (e: boolean) => (e ? "✅" : "❌"),
+    },
+    {
+      title: "Guest Meals",
+      dataIndex: "guestMeals",
+      key: "guestMeals",
+      align: "center" as const,
+      width: 100,
     },
     {
       title: "Daily Total",
       dataIndex: "total",
       key: "total",
       align: "center" as const,
-      width: 90,
+      width: 100,
+      render: (text: number) => (
+        <Text strong style={{ color: PRIMARY_COLOR }}>
+          {text}
+        </Text>
+      ),
     },
   ];
+
+  const columns =
+    window.innerWidth < 768 ? mobileHistoryColumns : desktopHistoryColumns;
 
   return (
     <Card
       title={
-        <Title level={4} style={{ margin: 0 }}>
-          🗓️ Monthly Meal History (Manager View)
+        <Title
+          level={4}
+          style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+        >
+          🗓️ Monthly Meal History
         </Title>
       }
       extra={
@@ -400,57 +577,76 @@ const MonthlyMealHistory: React.FC<{
           icon={<DownloadOutlined />}
           onClick={handleDownloadCSV}
           disabled={historyLoading || historyData.length === 0}
+          size={window.innerWidth < 768 ? "small" : "middle"}
+          style={{ backgroundColor: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}
         >
-          Download CSV
+          {window.innerWidth < 768 ? "" : "Download CSV"}
         </Button>
       }
-      style={{ marginTop: 20 }}
+      style={{ marginTop: 16 }}
     >
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "20px",
-          marginBottom: "20px",
-          alignItems: "center",
-        }}
-      >
-        <Text strong>Select Member:</Text>
-        <Select
-          style={{ flexGrow: 1, minWidth: 150 }}
-          placeholder="Select a member"
-          options={memberOptions}
-          value={selectedMemberId}
-          onChange={setSelectedMemberId}
-          disabled={historyLoading}
-        />
-
-        <Text strong>Select Date Range (DD-MM-YYYY):</Text>
-        <RangePicker
-          style={{ flexGrow: 1, minWidth: 200 }}
-          value={dateRange}
-          onChange={(dates) => setDateRange(dates as RangeValue)}
-          format="DD-MM-YYYY"
-          disabled={historyLoading}
-        />
-      </div>
+      <Row gutter={[8, 8]} style={{ marginBottom: 16 }}>
+        <Col xs={24} md={12}>
+          <Text
+            strong
+            style={{ display: "block", marginBottom: 4, color: PRIMARY_COLOR }}
+          >
+            Select Member:
+          </Text>
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Select a member"
+            options={memberOptions}
+            value={selectedMemberId}
+            onChange={setSelectedMemberId}
+            disabled={historyLoading}
+            size={window.innerWidth < 768 ? "small" : "middle"}
+          />
+        </Col>
+        <Col xs={24} md={12}>
+          <Text
+            strong
+            style={{ display: "block", marginBottom: 4, color: PRIMARY_COLOR }}
+          >
+            Date Range:
+          </Text>
+          <RangePicker
+            style={{ width: "100%" }}
+            value={dateRange}
+            onChange={(dates) => setDateRange(dates as RangeValue)}
+            format="DD-MM-YY"
+            disabled={historyLoading}
+            size={window.innerWidth < 768 ? "small" : "middle"}
+          />
+        </Col>
+      </Row>
 
       <Table
         dataSource={historyData}
-        columns={historyColumns}
+        columns={columns}
         rowKey="key"
         loading={historyLoading}
-        pagination={{ pageSize: 10 }}
+        pagination={{ pageSize: 7, size: "small" }}
         bordered
-        size="middle"
-        scroll={{ x: 600 }}
+        size={window.innerWidth < 768 ? "small" : "middle"}
+        scroll={window.innerWidth < 768 ? { x: 300 } : { x: "max-content" }}
+        style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
       />
 
-      <div style={{ marginTop: 16, textAlign: "right" }}>
-        <Text strong style={{ fontSize: "16px" }}>
+      <div style={{ marginTop: 12, textAlign: "right" }}>
+        <Text
+          strong
+          style={{ fontSize: window.innerWidth < 768 ? "12px" : "14px" }}
+        >
           Selected Range Total Meals:{" "}
         </Text>
-        <Text strong type="success" style={{ fontSize: "16px" }}>
+        <Text
+          strong
+          style={{
+            fontSize: window.innerWidth < 768 ? "12px" : "14px",
+            color: PRIMARY_COLOR,
+          }}
+        >
           {grandTotal}
         </Text>
       </div>
@@ -479,9 +675,63 @@ const MealTracker: React.FC = () => {
         description="Please create or join a mess to track meals."
         type="warning"
         showIcon
-        style={{ margin: "20px 0" }}
+        style={{ margin: "16px 8px" }}
       />
     );
+
+  const handleGuestMealChange = async (
+    record: any,
+    value: number | null | undefined
+  ) => {
+    if (isUpdating) return;
+
+    const guestMealsCount =
+      value === null || value === undefined || isNaN(value) || value < 0
+        ? 0
+        : value;
+
+    if (!isManager && record.user.uid !== currentUser.uid) {
+      message.error("You can only update your own meals.");
+      return;
+    }
+
+    setIsUpdating(true);
+
+    try {
+      const userId = record.user.uid;
+      const existingMealId = record.meals.id;
+      const userName = record.user.displayName || "Unknown User";
+
+      if (existingMealId) {
+        await updateMeal(existingMealId, {
+          guestMeals: guestMealsCount,
+        } as Partial<Meal>);
+        message.success(
+          `${userName}'s guest meals updated to ${guestMealsCount}!`
+        );
+      } else {
+        const docRef = doc(collection(db, "meals"));
+        await setDoc(docRef, {
+          messId: messId,
+          userId: userId,
+          userName: userName,
+          date: currentDate,
+          breakfast: record.meals.breakfast || false,
+          lunch: record.meals.lunch || false,
+          dinner: record.meals.dinner || false,
+          guestMeals: guestMealsCount,
+          createdAt: Timestamp.now(),
+        } as Omit<Meal, "id">);
+
+        message.success(`${userName}'s meal record created with guest meals!`);
+      }
+    } catch (error) {
+      console.error("Guest meal update failed:", error);
+      message.error(`Failed to update guest meal: ${(error as Error).message}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleMealToggle = async (
     record: any,
@@ -502,14 +752,16 @@ const MealTracker: React.FC = () => {
       const existingMealId = record.meals.id;
       const userName = record.user.displayName || "Unknown User";
 
+      const updatedFields: Partial<Meal> = {
+        [mealType]: checked,
+        guestMeals: record.meals.guestMeals || 0,
+      };
+
       if (existingMealId) {
-        await updateMeal(existingMealId, {
-          [mealType]: checked,
-        } as Partial<Meal>);
+        await updateMeal(existingMealId, updatedFields);
         message.success(`${userName}'s ${mealType} updated!`);
       } else {
         const docRef = doc(collection(db, "meals"));
-
         await setDoc(docRef, {
           messId: messId,
           userId: userId,
@@ -518,6 +770,7 @@ const MealTracker: React.FC = () => {
           breakfast: mealType === "breakfast" ? checked : false,
           lunch: mealType === "lunch" ? checked : false,
           dinner: mealType === "dinner" ? checked : false,
+          guestMeals: record.meals.guestMeals || 0,
           createdAt: Timestamp.now(),
         } as Omit<Meal, "id">);
 
@@ -534,14 +787,141 @@ const MealTracker: React.FC = () => {
   const getDisabledState = (record: any) =>
     isUpdating || (!isManager && record.user.uid !== currentUser.uid);
 
-  const columns = [
+  const calculateDailyTotal = (meals: any) =>
+    (meals.breakfast ? 1 : 0) +
+    (meals.lunch ? 1 : 0) +
+    (meals.dinner ? 1 : 0) +
+    (meals.guestMeals || 0);
+
+  const mobileColumns = [
+    {
+      title: "Member",
+      dataIndex: ["user", "displayName"],
+      key: "displayName",
+      width: 70,
+      render: (_: string, record: any) => (
+        <div
+          style={{ fontSize: "11px", lineHeight: "1.2", color: PRIMARY_COLOR }}
+        >
+          {record.user.displayName.length > 6
+            ? `${record.user.displayName.substring(0, 6)}...`
+            : record.user.displayName}
+          {record.user.uid === currentUser.uid && " (You)"}
+        </div>
+      ),
+    },
+    {
+      title: "B/F",
+      dataIndex: ["meals", "breakfast"],
+      key: "breakfast",
+      align: "center" as const,
+      width: 40,
+      render: (value: boolean, record: any) => (
+        <Checkbox
+          checked={value}
+          onChange={(e) =>
+            handleMealToggle(record, "breakfast", e.target.checked)
+          }
+          disabled={getDisabledState(record)}
+          style={{ transform: "scale(0.8)" }}
+        />
+      ),
+    },
+    {
+      title: "Lunch",
+      dataIndex: ["meals", "lunch"],
+      key: "lunch",
+      align: "center" as const,
+      width: 40,
+      render: (value: boolean, record: any) => (
+        <Checkbox
+          checked={value}
+          onChange={(e) => handleMealToggle(record, "lunch", e.target.checked)}
+          disabled={getDisabledState(record)}
+          style={{ transform: "scale(0.8)" }}
+        />
+      ),
+    },
+    {
+      title: "Dinner",
+      dataIndex: ["meals", "dinner"],
+      key: "dinner",
+      align: "center" as const,
+      width: 40,
+      render: (value: boolean, record: any) => (
+        <Checkbox
+          checked={value}
+          onChange={(e) => handleMealToggle(record, "dinner", e.target.checked)}
+          disabled={getDisabledState(record)}
+          style={{ transform: "scale(0.8)" }}
+        />
+      ),
+    },
+    {
+      title: "Guest",
+      dataIndex: ["meals", "guestMeals"],
+      key: "guestMeals",
+      align: "center" as const,
+      width: 50,
+      render: (value: number, record: any) => (
+        <InputNumber
+          min={0}
+          value={value}
+          onChange={(val) => handleGuestMealChange(record, val)}
+          onBlur={(e) => {
+            handleGuestMealChange(record, parseFloat(e.target.value));
+          }}
+          style={{ width: "45px", fontSize: "11px", padding: "1px" }}
+          disabled={getDisabledState(record)}
+          size="small"
+        />
+      ),
+    },
+    {
+      title: "Daily Total",
+      key: "dailyTotal",
+      align: "center" as const,
+      width: 50,
+      render: (_: any, record: any) => (
+        <Text strong style={{ fontSize: "11px", color: PRIMARY_COLOR }}>
+          {calculateDailyTotal(record.meals)}
+        </Text>
+      ),
+    },
+    {
+      title: "M.Total",
+      dataIndex: "monthlyTotalMeals",
+      key: "monthlyTotalMeals",
+      align: "center" as const,
+      width: 40,
+      render: (value: number, record: any) => {
+        if (isManager || record.user.uid === currentUser.uid) {
+          return (
+            <Text strong style={{ fontSize: "11px", color: PRIMARY_COLOR }}>
+              {value}
+            </Text>
+          );
+        }
+        return (
+          <Text type="secondary" style={{ fontSize: "11px" }}>
+            N/A
+          </Text>
+        );
+      },
+    },
+  ];
+
+  const desktopColumns = [
     {
       title: "Member",
       dataIndex: ["user", "displayName"],
       key: "displayName",
       width: 120,
       render: (_: string, record: any) => (
-        <Text strong={record.user.uid === currentUser.uid}>
+        <Text
+          strong={record.user.uid === currentUser.uid}
+          style={{ color: PRIMARY_COLOR }}
+        >
           {record.user.displayName}{" "}
           {record.user.uid === currentUser.uid && "(You)"}
         </Text>
@@ -553,7 +933,12 @@ const MealTracker: React.FC = () => {
       key: "role",
       width: 80,
       render: (role: string) => (
-        <Text type={role === "manager" ? "warning" : "secondary"}>
+        <Text
+          strong
+          style={{
+            color: role === "manager" ? ACCENT_COLOR_WARNING : "inherit",
+          }}
+        >
           {role.toUpperCase()}
         </Text>
       ),
@@ -563,7 +948,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "breakfast"],
       key: "breakfast",
       align: "center" as const,
-      width: 80,
+      width: 90,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -579,7 +964,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "lunch"],
       key: "lunch",
       align: "center" as const,
-      width: 70,
+      width: 90,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -593,7 +978,7 @@ const MealTracker: React.FC = () => {
       dataIndex: ["meals", "dinner"],
       key: "dinner",
       align: "center" as const,
-      width: 70,
+      width: 90,
       render: (value: boolean, record: any) => (
         <Checkbox
           checked={value}
@@ -603,29 +988,45 @@ const MealTracker: React.FC = () => {
       ),
     },
     {
+      title: "Guest Meals",
+      dataIndex: ["meals", "guestMeals"],
+      key: "guestMeals",
+      align: "center" as const,
+      width: 100,
+      render: (value: number, record: any) => (
+        <InputNumber
+          min={0}
+          value={value}
+          onChange={(val) => handleGuestMealChange(record, val)}
+          onBlur={(e) => {
+            handleGuestMealChange(record, parseFloat(e.target.value));
+          }}
+          style={{ width: "80px", padding: "2px" }}
+          disabled={getDisabledState(record)}
+        />
+      ),
+    },
+    {
       title: "Daily Total",
       key: "dailyTotal",
       align: "center" as const,
-      width: 80,
-      render: (_: any, record: any) => {
-        const meals = record.meals;
-        return (
-          (meals.breakfast ? 1 : 0) +
-          (meals.lunch ? 1 : 0) +
-          (meals.dinner ? 1 : 0)
-        );
-      },
+      width: 90,
+      render: (_: any, record: any) => (
+        <Text strong style={{ color: PRIMARY_COLOR }}>
+          {calculateDailyTotal(record.meals)}
+        </Text>
+      ),
     },
     {
       title: "Monthly Total",
       dataIndex: "monthlyTotalMeals",
       key: "monthlyTotalMeals",
       align: "center" as const,
-      width: 90,
+      width: 100,
       render: (value: number, record: any) => {
         if (isManager || record.user.uid === currentUser.uid) {
           return (
-            <Text strong type="success">
+            <Text strong style={{ color: PRIMARY_COLOR }}>
               {value}
             </Text>
           );
@@ -635,21 +1036,33 @@ const MealTracker: React.FC = () => {
     },
   ];
 
+  const columns = window.innerWidth < 768 ? mobileColumns : desktopColumns;
+
   const allMembersList = userMealData.map((data) => ({
     uid: data.user.uid,
     displayName: data.user.displayName,
   }));
 
   return (
-    <>
+    <div style={{ padding: window.innerWidth < 768 ? "8px" : "20px" }}>
       <Card
         title={
-          <Title level={4} style={{ margin: 0 }}>
-            Daily Meal Tracker
+          <Title
+            level={4}
+            style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+          >
+            🍚 Daily Meal Tracker
           </Title>
         }
-        extra={<Text type="secondary">Date: {formattedDate}</Text>}
-        style={{ margin: "20px 0" }}
+        extra={
+          <Text
+            type="secondary"
+            style={{ fontSize: window.innerWidth < 768 ? "12px" : "14px" }}
+          >
+            Date: {formattedDate}
+          </Text>
+        }
+        style={{ marginBottom: 16 }}
       >
         <Table
           dataSource={userMealData}
@@ -658,15 +1071,16 @@ const MealTracker: React.FC = () => {
           loading={loading || isUpdating}
           pagination={false}
           bordered
-          size="middle"
-          scroll={{ x: 700 }}
+          size={window.innerWidth < 768 ? "small" : "middle"}
+          scroll={window.innerWidth < 768 ? { x: 400 } : { x: "max-content" }}
+          style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
         />
-        {loading && (
-          <Spin tip="Loading real-time data..." style={{ marginTop: 20 }} />
+        {(loading || isUpdating) && (
+          <Spin tip="Loading real-time data..." style={{ marginTop: 16 }} />
         )}
       </Card>
 
-      <Divider />
+      <Divider style={{ margin: "16px 0", borderColor: PRIMARY_COLOR }} />
 
       <MonthlyBillingSummary
         userMealData={userMealData}
@@ -674,14 +1088,76 @@ const MealTracker: React.FC = () => {
         loading={loading}
       />
 
-      <Divider />
+      <Divider style={{ margin: "16px 0", borderColor: PRIMARY_COLOR }} />
 
       <MonthlyMealHistory
         messId={messId}
         allMembers={allMembersList}
         isManager={isManager}
       />
-    </>
+
+      <style jsx global>{`
+        @media (max-width: 768px) {
+          .ant-table-cell {
+            padding: 6px 4px !important;
+          }
+
+          .ant-checkbox-inner {
+            width: 14px;
+            height: 14px;
+          }
+
+          .ant-input-number-input {
+            padding: 0 4px;
+            font-size: 11px;
+          }
+          .ant-card-head-extra {
+            padding: 12px 0;
+          }
+          .ant-card-body {
+            padding: 12px !important;
+          }
+        }
+
+        @media (min-width: 769px) {
+          .ant-table-wrapper .ant-table-thead > tr > th,
+          .ant-table-wrapper .ant-table-tbody > tr > td {
+            padding: 14px 12px !important;
+            font-size: 16px !important;
+          }
+
+          .ant-table-wrapper .ant-table-thead > tr > th {
+            font-size: 18px !important;
+            color: #fff;
+            background-color: ${PRIMARY_COLOR};
+          }
+
+          .ant-table-wrapper .ant-table-thead > tr > th .ant-typography {
+            color: #fff !important;
+          }
+
+          .ant-typography,
+          .ant-select-selection-item,
+          .ant-input-number-input {
+            font-size: 16px !important;
+          }
+
+          .ant-card-body .ant-row .ant-col .ant-typography {
+            font-size: 16px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .ant-card-head-title {
+            font-size: 14px !important;
+          }
+
+          .ant-divider {
+            margin: 12px 0 !important;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

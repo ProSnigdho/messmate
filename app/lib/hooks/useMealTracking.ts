@@ -91,7 +91,8 @@ export const useMealTracking = () => {
             total +
             (meal.breakfast ? 1 : 0) +
             (meal.lunch ? 1 : 0) +
-            (meal.dinner ? 1 : 0),
+            (meal.dinner ? 1 : 0) +
+            (meal.guestMeals || 0),
           0
         );
     };
@@ -102,7 +103,8 @@ export const useMealTracking = () => {
           total +
           (meal.breakfast ? 1 : 0) +
           (meal.lunch ? 1 : 0) +
-          (meal.dinner ? 1 : 0),
+          (meal.dinner ? 1 : 0) +
+          (meal.guestMeals || 0),
         0
       );
 
@@ -144,6 +146,7 @@ export const useMealTracking = () => {
           breakfast: false,
           lunch: false,
           dinner: false,
+          guestMeals: 0, // Default to 0 guest meals
         };
 
         return {
