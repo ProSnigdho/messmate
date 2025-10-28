@@ -48,6 +48,7 @@ const { Title, Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 const DESKTOP_SIDER_WIDTH = 280;
+const DESKTOP_SIDER_WIDTH_MIN = 220;
 const COLLAPSED_SIDER_WIDTH = 80;
 
 export default function DashboardPage() {
@@ -599,7 +600,6 @@ export default function DashboardPage() {
           padding: 8px;
         }
 
-        /* =========== Mobile Styles (max-width: 768px) =========== */
         @media (max-width: 768px) {
           .desktop-sider {
             display: none !important;
@@ -660,7 +660,6 @@ export default function DashboardPage() {
           }
         }
 
-        /* =========== PC VIEW IMPROVEMENTS (min-width: 769px) =========== */
         @media (min-width: 769px) {
           .mobile-drawer {
             display: none !important;
@@ -676,7 +675,7 @@ export default function DashboardPage() {
             width: ${DESKTOP_SIDER_WIDTH}px !important;
             flex: 0 0 ${DESKTOP_SIDER_WIDTH}px !important;
             max-width: ${DESKTOP_SIDER_WIDTH}px !important;
-            min-width: ${DESKTOP_SIDER_WIDTH}px !important;
+            min-width: ${DESKTOP_SIDER_WIDTH_MIN}px !important;
           }
 
           .main-layout {
@@ -685,7 +684,6 @@ export default function DashboardPage() {
               : DESKTOP_SIDER_WIDTH}px !important;
           }
 
-          /* 1. Sidebar Menu Item Size/Font */
           .desktop-sider .ant-menu-item {
             height: 56px !important;
             line-height: 56px !important;
@@ -698,7 +696,6 @@ export default function DashboardPage() {
             margin-right: 12px !important;
           }
 
-          /* 2. Sidebar Mess ID and User Info Text Size */
           .desktop-sider .ant-layout-sider-children .ant-typography {
             font-size: 16px !important;
           }
@@ -706,23 +703,19 @@ export default function DashboardPage() {
             font-size: 14px !important;
           }
 
-          /* MessMate Title Text Size */
           .desktop-sider h3.ant-typography {
             font-size: 30px !important;
           }
 
-          /* 3. Main Content Padding/Margin */
           .dashboard-content {
             margin: 30px !important;
             padding: 30px !important;
           }
 
-          /* 4. Header Text Size (Current Page Title) */
           .dashboard-header h4.ant-typography {
             font-size: 24px !important;
           }
 
-          /* 5. Header User Info Size */
           .dashboard-header {
             height: 64px !important;
             padding: 0 24px !important;
@@ -755,7 +748,6 @@ export default function DashboardPage() {
             font-size: 14px !important;
           }
 
-          /* 6. Logout Button Size */
           .dashboard-header .ant-btn.ant-btn-primary {
             height: 44px !important;
             padding: 10px 20px !important;
