@@ -48,7 +48,6 @@ const { Title, Text } = Typography;
 type MenuItem = Required<MenuProps>["items"][number];
 
 const DESKTOP_SIDER_WIDTH = 280;
-const DESKTOP_SIDER_WIDTH_MIN = 220;
 const COLLAPSED_SIDER_WIDTH = 80;
 
 export default function DashboardPage() {
@@ -675,7 +674,7 @@ export default function DashboardPage() {
             width: ${DESKTOP_SIDER_WIDTH}px !important;
             flex: 0 0 ${DESKTOP_SIDER_WIDTH}px !important;
             max-width: ${DESKTOP_SIDER_WIDTH}px !important;
-            min-width: ${DESKTOP_SIDER_WIDTH_MIN}px !important;
+            min-width: ${DESKTOP_SIDER_WIDTH}px !important;
           }
 
           .main-layout {
@@ -684,17 +683,19 @@ export default function DashboardPage() {
               : DESKTOP_SIDER_WIDTH}px !important;
           }
 
+          /* 🛠️ FIX APPLIED HERE: Reduced menu item size */
           .desktop-sider .ant-menu-item {
-            height: 56px !important;
-            line-height: 56px !important;
-            padding: 0 32px !important;
-            font-size: 18px;
+            height: 48px !important; /* Reduced from 56px */
+            line-height: 48px !important; /* Reduced from 56px */
+            padding: 0 24px !important; /* Reduced from 32px */
+            font-size: 16px; /* Reduced from 18px */
           }
 
           .desktop-sider .ant-menu-item > span.anticon {
-            font-size: 20px !important;
-            margin-right: 12px !important;
+            font-size: 18px !important; /* Reduced from 20px */
+            margin-right: 10px !important; /* Reduced from 12px */
           }
+          /* ------------------------------------------- */
 
           .desktop-sider .ant-layout-sider-children .ant-typography {
             font-size: 16px !important;
