@@ -45,6 +45,7 @@ export interface Meal {
   lunch: boolean;
   dinner: boolean;
   createdAt: Timestamp;
+  guestMeals?: number;
 }
 
 export type ExpenseCategory =
