@@ -152,7 +152,7 @@ const RecordPurchaseForm: React.FC<{
             <Form.Item
               name="totalCost"
               label={
-                <span style={{ fontWeight: "600" }}>Total Cost (Taka - ৳)</span>
+                <span style={{ fontWeight: "600" }}>Total Cost (Taka)</span>
               }
               rules={[
                 { required: true, message: "Enter the total bill amount" },
