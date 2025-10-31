@@ -131,11 +131,11 @@ const AddExpenseForm: React.FC<{
   return (
     <Card
       title={
-        <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+        <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
           <PlusOutlined style={{ marginRight: 8 }} /> Add New Expense
         </Title>
       }
-      size="default"
+      size="small"
       className="shadow-xl"
       style={{
         marginBottom: 24,
@@ -144,7 +144,7 @@ const AddExpenseForm: React.FC<{
         borderRadius: "10px",
       }}
       styles={{
-        body: { padding: 24 },
+        body: { padding: 16 },
       }}
     >
       <Form
@@ -156,16 +156,18 @@ const AddExpenseForm: React.FC<{
         <Form.Item
           name="category"
           label={
-            <Text strong style={{ fontSize: "1rem" }}>
+            <Text strong style={{ fontSize: "0.9rem" }}>
               Expense Category
             </Text>
           }
           rules={[{ required: true, message: "Please select a category" }]}
         >
-          <Select placeholder="Select category" size="large">
+          <Select placeholder="Select category" size="middle">
+            {" "}
             {EXPENSE_CATEGORIES.map((category) => (
               <Option key={category.value} value={category.value}>
-                <Space style={{ fontSize: "1rem" }}>
+                <Space style={{ fontSize: "0.9rem" }}>
+                  {" "}
                   {category.icon}
                   {category.label}
                 </Space>
@@ -177,7 +179,8 @@ const AddExpenseForm: React.FC<{
         <Form.Item
           name="description"
           label={
-            <Text strong style={{ fontSize: "1rem" }}>
+            <Text strong style={{ fontSize: "0.9rem" }}>
+              {" "}
               Description
             </Text>
           }
@@ -185,14 +188,15 @@ const AddExpenseForm: React.FC<{
         >
           <Input
             placeholder={`e.g., Monthly ${categoryConfig?.label}`}
-            size="large"
+            size="middle"
           />
         </Form.Item>
 
         <Form.Item
           name="amount"
           label={
-            <Text strong style={{ fontSize: "1rem" }}>
+            <Text strong style={{ fontSize: "0.9rem" }}>
+              {" "}
               Total Amount (৳)
             </Text>
           }
@@ -200,8 +204,8 @@ const AddExpenseForm: React.FC<{
         >
           <InputNumber
             min={1}
-            size="large"
-            style={{ width: "100%", fontSize: "1rem" }}
+            size="middle"
+            style={{ width: "100%", fontSize: "0.9rem" }}
             placeholder="Total bill amount"
             formatter={(value) =>
               `৳ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
@@ -216,22 +220,24 @@ const AddExpenseForm: React.FC<{
         {categoryConfig && (
           <div
             style={{
-              padding: "16px",
+              padding: "12px",
               background: "#e0f2f1",
               borderRadius: "8px",
-              marginBottom: "24px",
+              marginBottom: "16px",
               border: `1px solid ${PRIMARY_COLOR}`,
             }}
           >
-            <Text type="secondary" style={{ display: "block", fontSize: 14 }}>
+            <Text type="secondary" style={{ display: "block", fontSize: 13 }}>
+              {" "}
               <CalculatorOutlined
                 style={{ marginRight: 5, color: PRIMARY_COLOR }}
               />
               This **{categoryConfig.label}** will be divided among **
               {activeMembers.length}** active members.
             </Text>
-            <Divider style={{ margin: "8px 0" }} />
-            <Text strong style={{ color: PRIMARY_COLOR, fontSize: 18 }}>
+            <Divider style={{ margin: "6px 0" }} />{" "}
+            <Text strong style={{ color: PRIMARY_COLOR, fontSize: 16 }}>
+              {" "}
               Each member's share:
               <span style={{ float: "right" }}>
                 ৳{perMemberCost.toFixed(2)}
@@ -247,10 +253,10 @@ const AddExpenseForm: React.FC<{
             loading={submitting}
             icon={<PlusOutlined />}
             block
-            size="large"
+            size="middle"
             style={{
-              height: 55,
-              fontSize: 20,
+              height: 40,
+              fontSize: 16,
               fontWeight: "bold",
               backgroundColor: PRIMARY_COLOR,
               borderColor: PRIMARY_COLOR,
@@ -315,7 +321,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
   return (
     <div style={{ padding: "0 16px" }}>
       <Title
-        level={2}
+        level={3}
         style={{ margin: "0 0 8px 0", color: PRIMARY_COLOR, fontWeight: "800" }}
       >
         <DollarOutlined style={{ marginRight: 8 }} /> Expense Manager
@@ -323,7 +329,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
 
       <Text
         type="secondary"
-        style={{ display: "block", marginBottom: 24, fontSize: "16px" }}
+        style={{ display: "block", marginBottom: 20, fontSize: "14px" }} // Reduced font size and margin
       >
         Manage all mess expenses. Divided expenses will be split equally among{" "}
         <Text strong style={{ color: PRIMARY_COLOR }}>
@@ -332,43 +338,46 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
         active members.
       </Text>
 
-      <Row gutter={[24, 24]}>
+      <Row gutter={[20, 20]}>
+        {" "}
         <Col xs={24} lg={8}>
           <AddExpenseForm addExpense={addExpense} members={members} />
 
           <Card
             title={
-              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+              <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                {" "}
                 Financial Summary
               </Title>
             }
-            size="default"
+            size="small"
             className="shadow-xl"
             style={{
               borderRadius: "10px",
-              marginBottom: 24,
+              marginBottom: 20,
               borderTop: `4px solid ${PRIMARY_COLOR}`,
             }}
             styles={{
-              body: { padding: 24 },
+              body: { padding: 16 },
             }}
           >
-            <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            <Space direction="vertical" style={{ width: "100%" }} size="small">
+              {" "}
               <Statistic
                 title="Total Member Contribution"
                 value={totalContribution}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ color: SUCCESS_COLOR, fontSize: 32 }}
+                valueStyle={{ color: SUCCESS_COLOR, fontSize: 28 }}
               />
               <Statistic
                 title="Total Expenses"
                 value={totalOverhead}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ color: ERROR_COLOR, fontSize: 32 }}
+                valueStyle={{ color: ERROR_COLOR, fontSize: 28 }}
               />
-              <Divider style={{ margin: "8px 0" }} />
+              <Divider style={{ margin: "6px 0" }} />{" "}
               <Statistic
                 title="Remaining Balance"
                 value={remainingBalance}
@@ -377,7 +386,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 valueStyle={{
                   color: remainingBalance >= 0 ? SUCCESS_COLOR : ERROR_COLOR,
                   fontWeight: "bold",
-                  fontSize: 32,
+                  fontSize: 28,
                 }}
               />
             </Space>
@@ -385,18 +394,19 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
 
           <Card
             title={
-              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+              <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                {" "}
                 Divided Expenses Summary
               </Title>
             }
-            size="default"
+            size="small"
             className="shadow-xl"
             style={{
               borderRadius: "10px",
               borderLeft: `4px solid ${PRIMARY_COLOR}`,
             }}
             styles={{
-              body: { padding: 24 },
+              body: { padding: 16 },
             }}
           >
             <Space direction="vertical" style={{ width: "100%" }} size="small">
@@ -412,24 +422,25 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
-                        padding: "8px 0",
+                        padding: "6px 0",
                         borderBottom: "1px dotted #f0f0f0",
                       }}
                     >
                       <Space size="middle">
                         <Tag
                           color={categoryConfig?.color || "blue"}
-                          style={{ margin: 0, fontSize: 14 }}
+                          style={{ margin: 0, fontSize: 13 }}
                         >
                           {categoryConfig?.icon}
                         </Tag>
-                        <Text strong style={{ fontSize: 16 }}>
+                        <Text strong style={{ fontSize: 14 }}>
+                          {" "}
                           {categoryConfig?.label}
                         </Text>
                       </Space>
                       <Text
                         strong
-                        style={{ color: PRIMARY_COLOR, fontSize: 18 }}
+                        style={{ color: PRIMARY_COLOR, fontSize: 16 }}
                       >
                         ৳{data.perMember.toFixed(2)}
                       </Text>
@@ -448,30 +459,30 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
             </Space>
           </Card>
         </Col>
-
         <Col xs={24} lg={16}>
           <Card
             title={
-              <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+              <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
+                {" "}
                 <HistoryOutlined style={{ marginRight: 8 }} /> Expense History
               </Title>
             }
-            size="default"
+            size="small"
             className="shadow-xl"
             style={{
               borderRadius: "10px",
               borderLeft: `4px solid ${PRIMARY_COLOR}`,
             }}
             styles={{
-              body: { padding: 12 },
+              body: { padding: 8 },
             }}
           >
             <Table
               dataSource={expenses}
               rowKey="id"
-              pagination={{ pageSize: 10 }}
+              pagination={{ pageSize: 10, size: "small" }}
               scroll={{ x: 800 }}
-              size="large"
+              size="middle"
               locale={{
                 emptyText: (
                   <Alert
@@ -485,7 +496,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
               <Column
                 title="Date"
                 key="date"
-                width={120}
+                width={110}
                 render={(text, record: any) => {
                   const date = record.date;
                   if (date && typeof date.toDate === "function") {
@@ -501,7 +512,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 title="Category"
                 dataIndex="category"
                 key="category"
-                width={150}
+                width={140}
                 render={(category: string) => {
                   const categoryConfig = EXPENSE_CATEGORIES.find(
                     (cat) => cat.value === category
@@ -510,7 +521,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                     <Tag
                       color={categoryConfig?.color || "blue"}
                       icon={categoryConfig?.icon}
-                      style={{ fontSize: 14, padding: "6px 10px" }}
+                      style={{ fontSize: 12, padding: "4px 8px" }}
                     >
                       {categoryConfig?.label || category}
                     </Tag>
@@ -528,7 +539,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 key="title"
                 ellipsis
                 render={(text: string) => (
-                  <Text style={{ fontSize: 15 }}>{text}</Text>
+                  <Text style={{ fontSize: 14 }}>{text}</Text>
                 )}
               />
               <Column
@@ -536,10 +547,11 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 dataIndex="amount"
                 key="amount"
                 align="right"
-                width={120}
+                width={110}
                 render={(amount: number) => (
-                  <Text strong style={{ color: ERROR_COLOR, fontSize: 16 }}>
-                    ৳{amount.toFixed(2)}
+                  <Text strong style={{ color: ERROR_COLOR, fontSize: 15 }}>
+                    {" "}
+                    // Reduced font size ৳{amount.toFixed(2)}
                   </Text>
                 )}
                 sorter={(a, b) => a.amount - b.amount}
@@ -549,15 +561,17 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 dataIndex="dividedAmount"
                 key="dividedAmount"
                 align="right"
-                width={120}
+                width={110}
                 render={(dividedAmount: number) =>
                   dividedAmount ? (
-                    <Text type="secondary" style={{ fontSize: 15 }}>
-                      ৳{dividedAmount.toFixed(2)}
+                    <Text type="secondary" style={{ fontSize: 14 }}>
+                      {" "}
+                      // Reduced font size ৳{dividedAmount.toFixed(2)}
                     </Text>
                   ) : (
-                    <Tag color="default" style={{ fontSize: 13 }}>
-                      Not Divided
+                    <Tag color="default" style={{ fontSize: 12 }}>
+                      {" "}
+                      // Reduced font size Not Divided
                     </Tag>
                   )
                 }
@@ -566,11 +580,11 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 title="Paid By"
                 dataIndex="paidByName"
                 key="paidByName"
-                width={120}
+                width={110}
                 render={(name: string) => (
                   <Tag
                     color={PRIMARY_COLOR}
-                    style={{ margin: 0, color: "white", fontSize: 14 }}
+                    style={{ margin: 0, color: "white", fontSize: 13 }}
                   >
                     {name}
                   </Tag>
@@ -587,7 +601,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                     <Tag
                       icon={<TeamOutlined />}
                       color="geekblue"
-                      style={{ fontSize: 14 }}
+                      style={{ fontSize: 13 }}
                     >
                       {count}
                     </Tag>

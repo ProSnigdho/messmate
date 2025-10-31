@@ -140,40 +140,47 @@ const ModernCard: React.FC<{
   icon,
   gradient = `linear-gradient(135deg, ${THEME_COLOR}, ${THEME_COLOR_DARK})`,
   className = "",
-}) => (
-  <Card
-    className={`modern-card ${className}`}
-    title={
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {icon}
-        <Text strong style={{ color: "#fff", fontSize: "16px" }}>
-          {title}
-        </Text>
-      </div>
-    }
-    style={{
-      background: gradient,
-      border: "none",
-      borderRadius: "16px",
-      boxShadow: "0 8px 32px rgba(0, 77, 64, 0.15)",
-      overflow: "hidden",
-    }}
-    styles={{
-      header: {
-        borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
-        padding: "16px 20px",
-        background: "rgba(255, 255, 255, 0.1)",
-      },
-      body: {
-        padding: "20px",
-        background: "#fff",
-        minHeight: "200px",
-      },
-    }}
-  >
-    {children}
-  </Card>
-);
+}) => {
+  const screens = useBreakpoint();
+
+  return (
+    <Card
+      className={`modern-card ${className}`}
+      title={
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {icon}
+          <Text
+            strong
+            style={{ color: "#fff", fontSize: screens.xs ? "14px" : "16px" }}
+          >
+            {title}
+          </Text>
+        </div>
+      }
+      style={{
+        background: gradient,
+        border: "none",
+        borderRadius: screens.xs ? "12px" : "16px",
+        boxShadow: "0 8px 32px rgba(0, 77, 64, 0.15)",
+        overflow: "hidden",
+      }}
+      styles={{
+        header: {
+          borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
+          padding: screens.xs ? "12px 16px" : "16px 20px",
+          background: "rgba(255, 255, 255, 0.1)",
+        },
+        body: {
+          padding: screens.xs ? "16px" : "20px",
+          background: "#fff",
+          minHeight: screens.xs ? "auto" : "200px",
+        },
+      }}
+    >
+      {children}
+    </Card>
+  );
+};
 
 const StatCard: React.FC<{
   title: string;
@@ -193,91 +200,111 @@ const StatCard: React.FC<{
   trend,
   icon,
   color = THEME_COLOR,
-}) => (
-  <div
-    style={{
-      background: "#fff",
-      padding: "20px",
-      borderRadius: "12px",
-      border: `1px solid ${THEME_COLOR_LIGHT}`,
-      boxShadow: "0 2px 8px rgba(0, 77, 64, 0.08)",
-      transition: "all 0.3s ease",
-    }}
-    className="hover:shadow-lg"
-  >
+}) => {
+  const screens = useBreakpoint();
+
+  return (
     <div
       style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        marginBottom: "8px",
+        background: "#fff",
+        padding: screens.xs ? "16px" : "20px",
+        borderRadius: screens.xs ? "8px" : "12px",
+        border: `1px solid ${THEME_COLOR_LIGHT}`,
+        boxShadow: "0 2px 8px rgba(0, 77, 64, 0.08)",
+        transition: "all 0.3s ease",
+        height: "100%",
       }}
+      className="hover:shadow-lg"
     >
-      <Text type="secondary" style={{ fontSize: "14px", fontWeight: 500 }}>
-        {title}
-      </Text>
-      {icon && (
-        <div
-          style={{
-            background: `${THEME_COLOR_LIGHT}`,
-            padding: "6px",
-            borderRadius: "8px",
-            color: THEME_COLOR,
-            fontSize: "16px",
-          }}
-        >
-          {icon}
-        </div>
-      )}
-    </div>
-    <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
-      <Text
-        style={{
-          fontSize: "28px",
-          fontWeight: 700,
-          color: THEME_COLOR,
-          lineHeight: 1,
-        }}
-      >
-        {prefix}
-        {typeof value === "number" ? value.toFixed(precision || 0) : value}
-      </Text>
-      {suffix && (
-        <Text style={{ fontSize: "16px", color: "#6b7280", fontWeight: 500 }}>
-          {suffix}
-        </Text>
-      )}
-    </div>
-    {trend !== undefined && (
       <div
         style={{
           display: "flex",
-          alignItems: "center",
-          gap: "4px",
-          marginTop: "8px",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: "8px",
         }}
       >
-        {trend >= 0 ? (
-          <ArrowUpOutlined style={{ color: "#10b981", fontSize: "12px" }} />
-        ) : (
-          <ArrowDownOutlined style={{ color: "#ef4444", fontSize: "12px" }} />
-        )}
         <Text
+          type="secondary"
           style={{
-            color: trend >= 0 ? "#10b981" : "#ef4444",
-            fontSize: "12px",
-            fontWeight: 600,
+            fontSize: screens.xs ? "12px" : "14px",
+            fontWeight: 500,
           }}
         >
-          {Math.abs(trend)}%
+          {title}
         </Text>
-        <Text type="secondary" style={{ fontSize: "12px" }}>
-          vs last month
-        </Text>
+        {icon && (
+          <div
+            style={{
+              background: `${THEME_COLOR_LIGHT}`,
+              padding: screens.xs ? "4px" : "6px",
+              borderRadius: "6px",
+              color: THEME_COLOR,
+              fontSize: screens.xs ? "14px" : "16px",
+            }}
+          >
+            {icon}
+          </div>
+        )}
       </div>
-    )}
-  </div>
-);
+      <div style={{ display: "flex", alignItems: "baseline", gap: "4px" }}>
+        <Text
+          style={{
+            fontSize: screens.xs ? "20px" : "28px",
+            fontWeight: 700,
+            color: THEME_COLOR,
+            lineHeight: 1,
+          }}
+        >
+          {prefix}
+          {typeof value === "number" ? value.toFixed(precision || 0) : value}
+        </Text>
+        {suffix && (
+          <Text
+            style={{
+              fontSize: screens.xs ? "12px" : "16px",
+              color: "#6b7280",
+              fontWeight: 500,
+            }}
+          >
+            {suffix}
+          </Text>
+        )}
+      </div>
+      {trend !== undefined && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            marginTop: "8px",
+          }}
+        >
+          {trend >= 0 ? (
+            <ArrowUpOutlined style={{ color: "#10b981", fontSize: "10px" }} />
+          ) : (
+            <ArrowDownOutlined style={{ color: "#ef4444", fontSize: "10px" }} />
+          )}
+          <Text
+            style={{
+              color: trend >= 0 ? "#10b981" : "#ef4444",
+              fontSize: screens.xs ? "10px" : "12px",
+              fontWeight: 600,
+            }}
+          >
+            {Math.abs(trend)}%
+          </Text>
+          <Text
+            type="secondary"
+            style={{ fontSize: screens.xs ? "10px" : "12px" }}
+          >
+            vs last month
+          </Text>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const RentPaymentForm: React.FC<{
   members: UserProfile[];
@@ -341,7 +368,7 @@ const RentPaymentForm: React.FC<{
           <Select
             placeholder="Select member for rent payment"
             onChange={setSelectedMember}
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             style={{ borderRadius: "8px" }}
           >
             {members.map((member) => (
@@ -353,8 +380,13 @@ const RentPaymentForm: React.FC<{
                     alignItems: "center",
                   }}
                 >
-                  <Text>{member.displayName}</Text>
-                  <Text type="secondary" style={{ fontSize: "12px" }}>
+                  <Text style={{ fontSize: screens.xs ? "12px" : "14px" }}>
+                    {member.displayName}
+                  </Text>
+                  <Text
+                    type="secondary"
+                    style={{ fontSize: screens.xs ? "10px" : "12px" }}
+                  >
                     Rent: ৳
                     {(member.monthlyRent || 0) + (member.customRent || 0)}
                   </Text>
@@ -368,9 +400,9 @@ const RentPaymentForm: React.FC<{
           <div
             style={{
               marginBottom: 16,
-              padding: 16,
+              padding: screens.xs ? "12px" : "16px",
               background: THEME_COLOR_LIGHT,
-              borderRadius: "12px",
+              borderRadius: "8px",
               border: `1px solid ${THEME_COLOR}33`,
             }}
           >
@@ -379,22 +411,31 @@ const RentPaymentForm: React.FC<{
               style={{
                 display: "block",
                 marginBottom: 12,
-                fontSize: "14px",
+                fontSize: screens.xs ? "12px" : "14px",
                 color: THEME_COLOR,
               }}
             >
               🏠 Rent Status for {selectedMemberData.displayName}
             </Text>
-            <Row gutter={16}>
+            <Row gutter={screens.xs ? 8 : 16}>
               <Col span={8}>
                 <div style={{ textAlign: "center" }}>
                   <Text
                     type="secondary"
-                    style={{ fontSize: "12px", display: "block" }}
+                    style={{
+                      fontSize: screens.xs ? "10px" : "12px",
+                      display: "block",
+                    }}
                   >
                     Total Rent
                   </Text>
-                  <Text strong style={{ fontSize: "16px", color: THEME_COLOR }}>
+                  <Text
+                    strong
+                    style={{
+                      fontSize: screens.xs ? "12px" : "16px",
+                      color: THEME_COLOR,
+                    }}
+                  >
                     ৳{rentStatus.totalRent}
                   </Text>
                 </div>
@@ -403,11 +444,20 @@ const RentPaymentForm: React.FC<{
                 <div style={{ textAlign: "center" }}>
                   <Text
                     type="secondary"
-                    style={{ fontSize: "12px", display: "block" }}
+                    style={{
+                      fontSize: screens.xs ? "10px" : "12px",
+                      display: "block",
+                    }}
                   >
                     Paid
                   </Text>
-                  <Text strong style={{ fontSize: "16px", color: "#10b981" }}>
+                  <Text
+                    strong
+                    style={{
+                      fontSize: screens.xs ? "12px" : "16px",
+                      color: "#10b981",
+                    }}
+                  >
                     ৳{rentStatus.paid}
                   </Text>
                 </div>
@@ -416,14 +466,17 @@ const RentPaymentForm: React.FC<{
                 <div style={{ textAlign: "center" }}>
                   <Text
                     type="secondary"
-                    style={{ fontSize: "12px", display: "block" }}
+                    style={{
+                      fontSize: screens.xs ? "10px" : "12px",
+                      display: "block",
+                    }}
                   >
                     Remaining
                   </Text>
                   <Text
                     strong
                     style={{
-                      fontSize: "16px",
+                      fontSize: screens.xs ? "12px" : "16px",
                       color: rentStatus.remaining > 0 ? "#ef4444" : "#10b981",
                     }}
                   >
@@ -464,13 +517,13 @@ const RentPaymentForm: React.FC<{
               );
             }}
             style={{ width: "100%" }}
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             suffixIcon={<CalendarOutlined style={{ color: THEME_COLOR }} />}
           />
         </Form.Item>
 
-        <Row gutter={12}>
-          <Col span={12}>
+        <Row gutter={screens.xs ? 8 : 12}>
+          <Col span={screens.xs ? 24 : 12}>
             <Form.Item
               name="amount"
               label="Amount (৳)"
@@ -480,17 +533,17 @@ const RentPaymentForm: React.FC<{
                 min={1}
                 style={{ width: "100%", borderRadius: "8px" }}
                 placeholder="Rent amount"
-                size="large"
+                size={screens.xs ? "middle" : "large"}
                 prefix="৳"
                 controls={false}
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={screens.xs ? 24 : 12}>
             <Form.Item name="description" label="Details">
               <Input
                 placeholder="e.g., November Rent, Advance Rent"
-                size="large"
+                size={screens.xs ? "middle" : "large"}
                 style={{ borderRadius: "8px" }}
               />
             </Form.Item>
@@ -504,14 +557,14 @@ const RentPaymentForm: React.FC<{
             loading={submitting}
             icon={<HomeOutlined />}
             block
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             style={{
-              height: "48px",
+              height: screens.xs ? "40px" : "48px",
               borderRadius: "8px",
               background: `linear-gradient(135deg, ${THEME_COLOR}, ${THEME_COLOR_DARK})`,
               border: "none",
               fontWeight: 600,
-              fontSize: "14px",
+              fontSize: screens.xs ? "13px" : "14px",
             }}
           >
             Record Rent Payment
@@ -607,7 +660,7 @@ const BillPaymentForm: React.FC<{
           <Select
             placeholder="Select bill type"
             onChange={(value: DepositCategory) => setSelectedCategory(value)}
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             style={{ borderRadius: "8px" }}
           >
             {DEPOSIT_CATEGORIES.filter((cat) => cat.value !== "rent").map(
@@ -615,7 +668,9 @@ const BillPaymentForm: React.FC<{
                 <Option key={category.value} value={category.value}>
                   <Space>
                     {category.icon}
-                    {category.label}
+                    <Text style={{ fontSize: screens.xs ? "12px" : "14px" }}>
+                      {category.label}
+                    </Text>
                   </Space>
                 </Option>
               )
@@ -626,29 +681,41 @@ const BillPaymentForm: React.FC<{
         {totalDue > 0 && (
           <div
             style={{
-              padding: "16px",
+              padding: screens.xs ? "12px" : "16px",
               background: THEME_COLOR_LIGHT,
-              borderRadius: "12px",
+              borderRadius: "8px",
               marginBottom: "16px",
               border: `1px solid ${THEME_COLOR}33`,
             }}
           >
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
-              <Text strong style={{ fontSize: "14px", color: THEME_COLOR }}>
+              <Text
+                strong
+                style={{
+                  fontSize: screens.xs ? "12px" : "14px",
+                  color: THEME_COLOR,
+                }}
+              >
                 📊 Total Bill Information
               </Text>
-              <Row gutter={16} style={{ marginTop: 8 }}>
+              <Row gutter={screens.xs ? 8 : 16} style={{ marginTop: 8 }}>
                 <Col span={8}>
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Total Bill
                     </Text>
                     <Text
                       strong
-                      style={{ fontSize: "14px", color: THEME_COLOR }}
+                      style={{
+                        fontSize: screens.xs ? "11px" : "14px",
+                        color: THEME_COLOR,
+                      }}
                     >
                       ৳{totalDue.toFixed(0)}
                     </Text>
@@ -658,11 +725,20 @@ const BillPaymentForm: React.FC<{
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Collected
                     </Text>
-                    <Text strong style={{ fontSize: "14px", color: "#10b981" }}>
+                    <Text
+                      strong
+                      style={{
+                        fontSize: screens.xs ? "11px" : "14px",
+                        color: "#10b981",
+                      }}
+                    >
                       ৳{totalPaid.toFixed(0)}
                     </Text>
                   </div>
@@ -671,14 +747,17 @@ const BillPaymentForm: React.FC<{
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Remaining
                     </Text>
                     <Text
                       strong
                       style={{
-                        fontSize: "14px",
+                        fontSize: screens.xs ? "11px" : "14px",
                         color: totalRemaining > 0 ? "#ef4444" : "#10b981",
                       }}
                     >
@@ -707,7 +786,7 @@ const BillPaymentForm: React.FC<{
               <Text
                 type="secondary"
                 style={{
-                  fontSize: "11px",
+                  fontSize: screens.xs ? "9px" : "11px",
                   textAlign: "center",
                   display: "block",
                 }}
@@ -732,12 +811,14 @@ const BillPaymentForm: React.FC<{
             placeholder="Select paying member"
             onChange={setSelectedMember}
             value={selectedMember}
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             style={{ borderRadius: "8px" }}
           >
             {members.map((member) => (
               <Option key={member.uid} value={member.uid}>
-                {member.displayName}
+                <Text style={{ fontSize: screens.xs ? "12px" : "14px" }}>
+                  {member.displayName}
+                </Text>
               </Option>
             ))}
           </Select>
@@ -746,27 +827,33 @@ const BillPaymentForm: React.FC<{
         {selectedMember && memberDue > 0 && (
           <div
             style={{
-              padding: "16px",
+              padding: screens.xs ? "12px" : "16px",
               background: "#fff3e0",
-              borderRadius: "12px",
+              borderRadius: "8px",
               marginBottom: "16px",
               border: "1px solid #ffb74d",
             }}
           >
             <Space direction="vertical" size="small" style={{ width: "100%" }}>
-              <Text strong style={{ fontSize: "14px" }}>
+              <Text strong style={{ fontSize: screens.xs ? "12px" : "14px" }}>
                 👤 Individual Share
               </Text>
-              <Row gutter={16} style={{ marginTop: 8 }}>
+              <Row gutter={screens.xs ? 8 : 16} style={{ marginTop: 8 }}>
                 <Col span={8}>
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Share
                     </Text>
-                    <Text strong style={{ fontSize: "14px" }}>
+                    <Text
+                      strong
+                      style={{ fontSize: screens.xs ? "11px" : "14px" }}
+                    >
                       ৳{memberDue.toFixed(0)}
                     </Text>
                   </div>
@@ -775,11 +862,17 @@ const BillPaymentForm: React.FC<{
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Paid
                     </Text>
-                    <Text strong style={{ fontSize: "14px" }}>
+                    <Text
+                      strong
+                      style={{ fontSize: screens.xs ? "11px" : "14px" }}
+                    >
                       ৳{memberPaid.toFixed(0)}
                     </Text>
                   </div>
@@ -788,14 +881,17 @@ const BillPaymentForm: React.FC<{
                   <div style={{ textAlign: "center" }}>
                     <Text
                       type="secondary"
-                      style={{ fontSize: "11px", display: "block" }}
+                      style={{
+                        fontSize: screens.xs ? "9px" : "11px",
+                        display: "block",
+                      }}
                     >
                       Remaining
                     </Text>
                     <Text
                       strong
                       style={{
-                        fontSize: "14px",
+                        fontSize: screens.xs ? "11px" : "14px",
                         color: memberRemaining > 0 ? "#ef4444" : "#10b981",
                       }}
                     >
@@ -808,7 +904,7 @@ const BillPaymentForm: React.FC<{
                 <Text
                   type="secondary"
                   style={{
-                    fontSize: "11px",
+                    fontSize: screens.xs ? "9px" : "11px",
                     textAlign: "center",
                     display: "block",
                   }}
@@ -820,8 +916,8 @@ const BillPaymentForm: React.FC<{
           </div>
         )}
 
-        <Row gutter={12}>
-          <Col span={12}>
+        <Row gutter={screens.xs ? 8 : 12}>
+          <Col span={screens.xs ? 24 : 12}>
             <Form.Item
               name="amount"
               label="Amount (৳)"
@@ -831,17 +927,17 @@ const BillPaymentForm: React.FC<{
                 min={1}
                 style={{ width: "100%", borderRadius: "8px" }}
                 placeholder="Payment amount"
-                size="large"
+                size={screens.xs ? "middle" : "large"}
                 prefix="৳"
                 controls={false}
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col span={screens.xs ? 24 : 12}>
             <Form.Item name="description" label="Details">
               <Input
                 placeholder="e.g., November Gas Bill, Partial Payment"
-                size="large"
+                size={screens.xs ? "middle" : "large"}
                 style={{ borderRadius: "8px" }}
               />
             </Form.Item>
@@ -855,14 +951,14 @@ const BillPaymentForm: React.FC<{
             loading={submitting}
             icon={<CreditCardOutlined />}
             block
-            size="large"
+            size={screens.xs ? "middle" : "large"}
             style={{
-              height: "48px",
+              height: screens.xs ? "40px" : "48px",
               borderRadius: "8px",
               background: `linear-gradient(135deg, ${THEME_COLOR}, ${THEME_COLOR_DARK})`,
               border: "none",
               fontWeight: 600,
-              fontSize: "14px",
+              fontSize: screens.xs ? "13px" : "14px",
             }}
           >
             Record Bill Payment
@@ -902,10 +998,10 @@ const RentStatusTable: React.FC<{
       <Table
         dataSource={rentData}
         pagination={false}
-        scroll={{ x: screens.xs ? 400 : 600 }}
+        scroll={{ x: screens.xs ? 400 : screens.sm ? 500 : 600 }}
         size={screens.xs ? "small" : "middle"}
         style={{
-          borderRadius: "12px",
+          borderRadius: "8px",
           overflow: "hidden",
         }}
       >
@@ -913,17 +1009,27 @@ const RentStatusTable: React.FC<{
           title="Member"
           dataIndex="name"
           key="name"
-          width={screens.xs ? 100 : 120}
-          render={(name) => <Text strong>{name}</Text>}
+          width={screens.xs ? 80 : screens.sm ? 100 : 120}
+          render={(name) => (
+            <Text strong style={{ fontSize: screens.xs ? "12px" : "14px" }}>
+              {name}
+            </Text>
+          )}
         />
         <Column
           title="Total Rent"
           dataIndex="totalRent"
           key="totalRent"
           align="right"
-          width={screens.xs ? 80 : 100}
+          width={screens.xs ? 70 : screens.sm ? 80 : 100}
           render={(amount) => (
-            <Text strong style={{ color: THEME_COLOR }}>
+            <Text
+              strong
+              style={{
+                color: THEME_COLOR,
+                fontSize: screens.xs ? "11px" : "14px",
+              }}
+            >
               ৳{amount}
             </Text>
           )}
@@ -933,9 +1039,16 @@ const RentStatusTable: React.FC<{
           dataIndex="paid"
           key="paid"
           align="right"
-          width={screens.xs ? 80 : 100}
+          width={screens.xs ? 70 : screens.sm ? 80 : 100}
           render={(amount) => (
-            <Text style={{ color: "#10b981" }}>৳{amount}</Text>
+            <Text
+              style={{
+                color: "#10b981",
+                fontSize: screens.xs ? "11px" : "14px",
+              }}
+            >
+              ৳{amount}
+            </Text>
           )}
         />
         <Column
@@ -943,9 +1056,15 @@ const RentStatusTable: React.FC<{
           dataIndex="remaining"
           key="remaining"
           align="right"
-          width={screens.xs ? 80 : 100}
+          width={screens.xs ? 70 : screens.sm ? 80 : 100}
           render={(amount, record: any) => (
-            <Text strong style={{ color: amount > 0 ? "#ef4444" : "#10b981" }}>
+            <Text
+              strong
+              style={{
+                color: amount > 0 ? "#ef4444" : "#10b981",
+                fontSize: screens.xs ? "11px" : "14px",
+              }}
+            >
               ৳{amount}
             </Text>
           )}
@@ -954,7 +1073,7 @@ const RentStatusTable: React.FC<{
           title="Progress"
           dataIndex="progress"
           key="progress"
-          width={screens.xs ? 120 : 150}
+          width={screens.xs ? 100 : screens.sm ? 120 : 150}
           render={(percent, record: any) => (
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Progress
@@ -968,7 +1087,13 @@ const RentStatusTable: React.FC<{
                 }}
                 style={{ margin: 0, flex: 1 }}
               />
-              <Text type="secondary" style={{ fontSize: "12px", minWidth: 35 }}>
+              <Text
+                type="secondary"
+                style={{
+                  fontSize: screens.xs ? "10px" : "12px",
+                  minWidth: screens.xs ? 30 : 35,
+                }}
+              >
                 {Math.round(percent)}%
               </Text>
             </div>
@@ -978,7 +1103,7 @@ const RentStatusTable: React.FC<{
           title="Status"
           dataIndex="isFullyPaid"
           key="isFullyPaid"
-          width={screens.xs ? 80 : 100}
+          width={screens.xs ? 70 : screens.sm ? 80 : 100}
           align="center"
           render={(isFullyPaid) => (
             <Badge
@@ -987,7 +1112,7 @@ const RentStatusTable: React.FC<{
                 <Text
                   style={{
                     color: isFullyPaid ? "#10b981" : "#f59e0b",
-                    fontSize: screens.xs ? "11px" : "12px",
+                    fontSize: screens.xs ? "10px" : "12px",
                   }}
                 >
                   {isFullyPaid ? "Paid" : "Pending"}
@@ -1046,10 +1171,12 @@ const BillDueStatusTable: React.FC<{
       <Table
         dataSource={billData}
         pagination={false}
-        scroll={{ x: screens.xs ? 800 : 1000 }}
+        scroll={{
+          x: screens.xs ? 600 : screens.sm ? 800 : 1000,
+        }}
         size={screens.xs ? "small" : "middle"}
         style={{
-          borderRadius: "12px",
+          borderRadius: "8px",
           overflow: "hidden",
         }}
       >
@@ -1057,13 +1184,13 @@ const BillDueStatusTable: React.FC<{
           title="Member"
           dataIndex="name"
           key="name"
-          width={screens.xs ? 100 : 120}
+          width={screens.xs ? 80 : screens.sm ? 100 : 120}
           fixed="left"
           render={(name) => (
             <Text
               strong
               style={{
-                fontSize: screens.xs ? "13px" : "14px",
+                fontSize: screens.xs ? "11px" : screens.sm ? "13px" : "14px",
                 color: THEME_COLOR,
               }}
             >
@@ -1079,12 +1206,16 @@ const BillDueStatusTable: React.FC<{
               <div
                 style={{
                   textAlign: "center",
-                  minWidth: screens.xs ? 70 : 80,
+                  minWidth: screens.xs ? 60 : screens.sm ? 70 : 80,
                 }}
               >
                 <div
                   style={{
-                    fontSize: screens.xs ? "14px" : "16px",
+                    fontSize: screens.xs
+                      ? "12px"
+                      : screens.sm
+                      ? "14px"
+                      : "16px",
                     marginBottom: 4,
                     color: "white",
                   }}
@@ -1094,35 +1225,39 @@ const BillDueStatusTable: React.FC<{
                 <Text
                   strong
                   style={{
-                    fontSize: screens.xs ? "11px" : "12px",
+                    fontSize: screens.xs ? "9px" : screens.sm ? "11px" : "12px",
                     fontWeight: 600,
                     color: "white",
                   }}
                 >
-                  {category.label.split(" ")[0]}
+                  {screens.xs
+                    ? category.label.split(" ")[0]
+                    : screens.sm
+                    ? category.label.split(" ")[0]
+                    : category.label.split(" ")[0]}
                 </Text>
               </div>
             }
-            width={screens.xs ? 90 : 110}
+            width={screens.xs ? 80 : screens.sm ? 90 : 110}
             align="center"
             render={(_, record: any) => {
               const bill = record[category.value];
               if (!bill || bill.due === 0) {
                 return (
-                  <div style={{ padding: screens.xs ? "6px 2px" : "8px 4px" }}>
+                  <div style={{ padding: screens.xs ? "4px 2px" : "6px 4px" }}>
                     <div
                       style={{
-                        background: bill.isPaid ? "#d4edda" : "#fff3cd", // ✅ Original background
-                        padding: screens.xs ? "8px" : "10px",
-                        borderRadius: "8px",
+                        background: bill?.isPaid ? "#d4edda" : "#fff3cd",
+                        padding: screens.xs ? "6px" : "8px",
+                        borderRadius: "6px",
                         border: `2px solid ${
-                          bill.isPaid ? "#28a745" : "#ffc107"
+                          bill?.isPaid ? "#28a745" : "#ffc107"
                         }`,
                       }}
                     >
                       <Text
                         style={{
-                          fontSize: screens.xs ? "11px" : "12px",
+                          fontSize: screens.xs ? "9px" : "11px",
                           color: "#495057",
                           fontWeight: 500,
                         }}
@@ -1135,12 +1270,12 @@ const BillDueStatusTable: React.FC<{
               }
 
               return (
-                <div style={{ padding: screens.xs ? "6px 2px" : "8px 4px" }}>
+                <div style={{ padding: screens.xs ? "4px 2px" : "6px 4px" }}>
                   <div
                     style={{
-                      background: bill.isPaid ? "#d4edda" : "#fff3cd", // ✅ Original background
-                      padding: screens.xs ? "8px" : "12px",
-                      borderRadius: "8px",
+                      background: bill.isPaid ? "#d4edda" : "#fff3cd",
+                      padding: screens.xs ? "6px" : "10px",
+                      borderRadius: "6px",
                       border: `2px solid ${
                         bill.isPaid ? "#28a745" : "#ffc107"
                       }`,
@@ -1150,7 +1285,7 @@ const BillDueStatusTable: React.FC<{
                       style={{
                         display: "flex",
                         flexDirection: "column",
-                        gap: screens.xs ? 4 : 6,
+                        gap: screens.xs ? 3 : 4,
                       }}
                     >
                       <div
@@ -1162,7 +1297,7 @@ const BillDueStatusTable: React.FC<{
                       >
                         <Text
                           style={{
-                            fontSize: screens.xs ? "10px" : "11px",
+                            fontSize: screens.xs ? "8px" : "10px",
                             color: "#495057",
                             fontWeight: 500,
                           }}
@@ -1172,7 +1307,7 @@ const BillDueStatusTable: React.FC<{
                         <Text
                           strong
                           style={{
-                            fontSize: screens.xs ? "10px" : "11px",
+                            fontSize: screens.xs ? "8px" : "10px",
                             color: THEME_COLOR,
                           }}
                         >
@@ -1189,7 +1324,7 @@ const BillDueStatusTable: React.FC<{
                       >
                         <Text
                           style={{
-                            fontSize: screens.xs ? "10px" : "11px",
+                            fontSize: screens.xs ? "8px" : "10px",
                             color: "#495057",
                             fontWeight: 500,
                           }}
@@ -1199,7 +1334,7 @@ const BillDueStatusTable: React.FC<{
                         <Text
                           strong
                           style={{
-                            fontSize: screens.xs ? "10px" : "11px",
+                            fontSize: screens.xs ? "8px" : "10px",
                             color: "#28a745",
                           }}
                         >
@@ -1211,21 +1346,21 @@ const BillDueStatusTable: React.FC<{
                         style={{
                           background: bill.isPaid ? "#28a745" : THEME_COLOR,
                           color: "white",
-                          borderRadius: "6px",
-                          padding: screens.xs ? "3px 6px" : "4px 8px",
+                          borderRadius: "4px",
+                          padding: screens.xs ? "2px 4px" : "3px 6px",
                           textAlign: "center",
-                          marginTop: screens.xs ? 2 : 4,
+                          marginTop: screens.xs ? 1 : 2,
                         }}
                       >
                         <Text
                           strong
                           style={{
-                            fontSize: screens.xs ? "10px" : "11px",
+                            fontSize: screens.xs ? "8px" : "10px",
                             lineHeight: 1.2,
                           }}
                         >
                           {bill.isPaid
-                            ? "Fully Paid"
+                            ? "Paid"
                             : `Due: ৳${bill.remaining.toFixed(0)}`}
                         </Text>
                       </div>
@@ -1297,17 +1432,33 @@ export default function Deposit({ messId }: DepositProps) {
       };
     }, [filteredDeposits, user?.uid, getRentSummary]);
 
+  const getGridLayout = () => {
+    if (screens.xxl) return { form: 6, stats: 18 };
+    if (screens.xl) return { form: 7, stats: 17 };
+    if (screens.lg) return { form: 8, stats: 16 };
+    if (screens.md) return { form: 10, stats: 14 };
+    if (screens.sm) return { form: 24, stats: 24 };
+    return { form: 24, stats: 24 };
+  };
+
+  const gridLayout = getGridLayout();
+
   const tabItems = [
     {
       key: "contributions",
       label: (
-        <Space style={{ whiteSpace: "nowrap", padding: "8px 16px" }}>
+        <Space
+          style={{
+            whiteSpace: "nowrap",
+            padding: screens.xs ? "4px 8px" : "8px 16px",
+          }}
+        >
           <DashboardOutlined />
           <Text
             strong
             style={{
-              fontSize: screens.xs ? "14px" : "18px", // ✅ Increased font size
-              color: activeTab === "contributions" ? "white" : THEME_COLOR, // ✅ White when active
+              fontSize: screens.xs ? "12px" : screens.sm ? "14px" : "16px",
+              color: activeTab === "contributions" ? "white" : THEME_COLOR,
             }}
           >
             Dashboard
@@ -1315,9 +1466,9 @@ export default function Deposit({ messId }: DepositProps) {
         </Space>
       ),
       children: (
-        <Row gutter={[24, 24]}>
-          <Col xs={24} lg={8}>
-            <Row gutter={[16, 16]}>
+        <Row gutter={[screens.xs ? 16 : 24, screens.xs ? 16 : 24]}>
+          <Col xs={24} md={gridLayout.form}>
+            <Row gutter={[screens.xs ? 12 : 16, screens.xs ? 12 : 16]}>
               <Col span={24}>
                 {isManager ? (
                   <RentPaymentForm
@@ -1333,7 +1484,7 @@ export default function Deposit({ messId }: DepositProps) {
                     showIcon
                     style={{
                       marginBottom: 20,
-                      borderRadius: "12px",
+                      borderRadius: "8px",
                     }}
                   />
                 )}
@@ -1364,7 +1515,11 @@ export default function Deposit({ messId }: DepositProps) {
                       />
                       <Text
                         type="secondary"
-                        style={{ textAlign: "center", display: "block" }}
+                        style={{
+                          textAlign: "center",
+                          display: "block",
+                          fontSize: screens.xs ? "12px" : "14px",
+                        }}
                       >
                         Contact manager for payment queries
                       </Text>
@@ -1375,16 +1530,20 @@ export default function Deposit({ messId }: DepositProps) {
             </Row>
           </Col>
 
-          <Col xs={24} lg={16}>
-            <Row gutter={[16, 16]}>
+          <Col xs={24} md={gridLayout.stats}>
+            <Row gutter={[screens.xs ? 12 : 16, screens.xs ? 12 : 16]}>
               <Col span={24}>
                 <div
                   style={{
                     display: "grid",
                     gridTemplateColumns: screens.xs
                       ? "1fr"
+                      : screens.sm
+                      ? "repeat(2, 1fr)"
+                      : screens.lg
+                      ? "repeat(2, 1fr)"
                       : "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: 16,
+                    gap: screens.xs ? 12 : 16,
                   }}
                 >
                   <StatCard
@@ -1447,11 +1606,11 @@ export default function Deposit({ messId }: DepositProps) {
                         display: "flex",
                         alignItems: "center",
                         background: THEME_COLOR_LIGHT,
-                        padding: "12px 16px",
+                        padding: screens.xs ? "8px 12px" : "12px 16px",
                         borderRadius: "8px",
                         border: `1px solid ${THEME_COLOR}33`,
                         flexDirection: screens.xs ? "column" : "row",
-                        gap: screens.xs ? "12px" : "0",
+                        gap: screens.xs ? "8px" : "0",
                       }}
                     >
                       <div
@@ -1469,6 +1628,7 @@ export default function Deposit({ messId }: DepositProps) {
                           style={{
                             marginRight: 12,
                             minWidth: screens.xs ? "auto" : 100,
+                            fontSize: screens.xs ? "12px" : "14px",
                           }}
                         >
                           Filter by Member:
@@ -1479,14 +1639,18 @@ export default function Deposit({ messId }: DepositProps) {
                         style={{ width: screens.xs ? "100%" : 250 }}
                         value={selectedMemberId}
                         onChange={setSelectedMemberId}
-                        size="middle"
+                        size={screens.xs ? "middle" : "middle"}
                       >
                         <Option value="all" key="all">
                           <TeamOutlined /> View All Members
                         </Option>
                         {members.map((member) => (
                           <Option key={member.uid} value={member.uid}>
-                            {member.displayName}
+                            <Text
+                              style={{ fontSize: screens.xs ? "12px" : "14px" }}
+                            >
+                              {member.displayName}
+                            </Text>
                           </Option>
                         ))}
                       </Select>
@@ -1513,8 +1677,17 @@ export default function Deposit({ messId }: DepositProps) {
                       pageSize: 10,
                       showSizeChanger: true,
                       showQuickJumper: true,
+                      size: screens.xs ? "small" : "default",
                     }}
-                    scroll={{ x: screens.xs ? 600 : 800 }}
+                    scroll={{
+                      x: screens.xs
+                        ? 600
+                        : screens.sm
+                        ? 700
+                        : screens.md
+                        ? 800
+                        : 900,
+                    }}
                     size={screens.xs ? "small" : "middle"}
                     style={{
                       borderRadius: "8px",
@@ -1525,12 +1698,18 @@ export default function Deposit({ messId }: DepositProps) {
                         <div style={{ padding: "40px 0", textAlign: "center" }}>
                           <TransactionOutlined
                             style={{
-                              fontSize: "48px",
+                              fontSize: screens.xs ? "32px" : "48px",
                               color: "#d1d5db",
                               marginBottom: 16,
                             }}
                           />
-                          <Text type="secondary" style={{ display: "block" }}>
+                          <Text
+                            type="secondary"
+                            style={{
+                              display: "block",
+                              fontSize: screens.xs ? "12px" : "14px",
+                            }}
+                          >
                             {isManager
                               ? "No payments recorded yet."
                               : "You haven't made any payments yet."}
@@ -1543,11 +1722,15 @@ export default function Deposit({ messId }: DepositProps) {
                       title="Date & Time"
                       dataIndex="date"
                       key="date"
-                      width={screens.xs ? 120 : 160}
+                      width={screens.xs ? 100 : screens.sm ? 120 : 160}
                       render={(date: any) =>
                         date && date.toDate
                           ? moment(date.toDate()).format(
-                              screens.xs ? "MMM DD" : "MMM DD, YYYY h:mm a"
+                              screens.xs
+                                ? "MMM DD"
+                                : screens.sm
+                                ? "MMM DD, YYYY"
+                                : "MMM DD, YYYY h:mm a"
                             )
                           : "N/A"
                       }
@@ -1557,7 +1740,7 @@ export default function Deposit({ messId }: DepositProps) {
                       title="Payment Type"
                       dataIndex="category"
                       key="category"
-                      width={screens.xs ? 120 : 160}
+                      width={screens.xs ? 100 : screens.sm ? 120 : 160}
                       render={(category: DepositCategory) => {
                         const categoryInfo = DEPOSIT_CATEGORIES.find(
                           (c) => c.value === category
@@ -1567,9 +1750,13 @@ export default function Deposit({ messId }: DepositProps) {
                             style={{
                               background: categoryInfo?.gradient || THEME_COLOR,
                               color: "white",
-                              padding: "4px 8px",
-                              borderRadius: "6px",
-                              fontSize: screens.xs ? "10px" : "11px",
+                              padding: screens.xs ? "2px 4px" : "4px 8px",
+                              borderRadius: "4px",
+                              fontSize: screens.xs
+                                ? "9px"
+                                : screens.sm
+                                ? "10px"
+                                : "11px",
                               fontWeight: 600,
                               display: "flex",
                               alignItems: "center",
@@ -1579,6 +1766,8 @@ export default function Deposit({ messId }: DepositProps) {
                           >
                             {categoryInfo?.icon}
                             {screens.xs
+                              ? categoryInfo?.label.split(" ")[0]
+                              : screens.sm
                               ? categoryInfo?.label.split(" ")[0]
                               : categoryInfo?.label}
                           </div>
@@ -1594,14 +1783,18 @@ export default function Deposit({ messId }: DepositProps) {
                       title="Amount"
                       dataIndex="amount"
                       key="amount"
-                      width={screens.xs ? 80 : 120}
+                      width={screens.xs ? 70 : screens.sm ? 80 : 120}
                       align="right"
                       render={(amount: number) => (
                         <Text
                           strong
                           style={{
                             color: THEME_COLOR,
-                            fontSize: screens.xs ? "12px" : "14px",
+                            fontSize: screens.xs
+                              ? "11px"
+                              : screens.sm
+                              ? "12px"
+                              : "14px",
                           }}
                         >
                           ৳{amount ? amount.toFixed(2) : "0.00"}
@@ -1613,19 +1806,19 @@ export default function Deposit({ messId }: DepositProps) {
                       title="Member"
                       dataIndex="userName"
                       key="userName"
-                      width={screens.xs ? 100 : 140}
+                      width={screens.xs ? 80 : screens.sm ? 100 : 140}
                       render={(name: string, record: any) => (
                         <div
                           style={{
                             display: "flex",
                             alignItems: "center",
-                            gap: 8,
-                            padding: "4px 8px",
+                            gap: 6,
+                            padding: screens.xs ? "2px 4px" : "4px 8px",
                             background:
                               record.userId === user?.uid
                                 ? `${THEME_COLOR}15`
                                 : "transparent",
-                            borderRadius: "6px",
+                            borderRadius: "4px",
                             border:
                               record.userId === user?.uid
                                 ? `1px solid ${THEME_COLOR}30`
@@ -1638,12 +1831,16 @@ export default function Deposit({ messId }: DepositProps) {
                                 record.userId === user?.uid
                                   ? THEME_COLOR
                                   : "#6b7280",
-                              fontSize: "12px",
+                              fontSize: screens.xs ? "10px" : "12px",
                             }}
                           />
                           <Text
                             style={{
-                              fontSize: screens.xs ? "11px" : "12px",
+                              fontSize: screens.xs
+                                ? "10px"
+                                : screens.sm
+                                ? "11px"
+                                : "12px",
                               color:
                                 record.userId === user?.uid
                                   ? THEME_COLOR
@@ -1652,7 +1849,11 @@ export default function Deposit({ messId }: DepositProps) {
                                 record.userId === user?.uid ? 600 : 400,
                             }}
                           >
-                            {screens.xs ? name.split(" ")[0] : name}{" "}
+                            {screens.xs
+                              ? name.split(" ")[0]
+                              : screens.sm
+                              ? name.split(" ")[0]
+                              : name}{" "}
                             {record.userId === user?.uid && "(You)"}
                           </Text>
                         </div>
@@ -1663,14 +1864,14 @@ export default function Deposit({ messId }: DepositProps) {
                       dataIndex="description"
                       key="description"
                       ellipsis
-                      width={screens.xs ? 120 : 200}
+                      width={screens.xs ? 100 : screens.sm ? 150 : 200}
                     />
                     {isManager && (
                       <Column
                         title="Rent Month"
                         dataIndex="rentMonth"
                         key="rentMonth"
-                        width={screens.xs ? 80 : 120}
+                        width={screens.xs ? 70 : screens.sm ? 80 : 120}
                         render={(month: string) =>
                           month && (
                             <div
@@ -1679,23 +1880,34 @@ export default function Deposit({ messId }: DepositProps) {
                                 alignItems: "center",
                                 gap: 4,
                                 background: "#fff3e0",
-                                padding: "4px 8px",
-                                borderRadius: "6px",
+                                padding: screens.xs ? "2px 4px" : "4px 8px",
+                                borderRadius: "4px",
                                 border: "1px solid #ffb74d30",
                               }}
                             >
                               <CalendarOutlined
-                                style={{ color: "#f59e0b", fontSize: "12px" }}
+                                style={{
+                                  color: "#f59e0b",
+                                  fontSize: screens.xs ? "10px" : "12px",
+                                }}
                               />
                               <Text
                                 style={{
-                                  fontSize: screens.xs ? "10px" : "11px",
+                                  fontSize: screens.xs
+                                    ? "9px"
+                                    : screens.sm
+                                    ? "10px"
+                                    : "11px",
                                   color: "#f59e0b",
                                   fontWeight: 500,
                                 }}
                               >
                                 {moment(month).format(
-                                  screens.xs ? "MMM YY" : "MMM YYYY"
+                                  screens.xs
+                                    ? "MMM YY"
+                                    : screens.sm
+                                    ? "MMM YY"
+                                    : "MMM YYYY"
                                 )}
                               </Text>
                             </div>
@@ -1717,12 +1929,17 @@ export default function Deposit({ messId }: DepositProps) {
     tabItems.push({
       key: "status",
       label: (
-        <Space style={{ whiteSpace: "nowrap", padding: "8px 16px" }}>
+        <Space
+          style={{
+            whiteSpace: "nowrap",
+            padding: screens.xs ? "4px 8px" : "8px 16px",
+          }}
+        >
           <TeamOutlined />
           <Text
             strong
             style={{
-              fontSize: screens.xs ? "14px" : "18px",
+              fontSize: screens.xs ? "12px" : screens.sm ? "14px" : "16px",
               color: activeTab === "status" ? "white" : THEME_COLOR,
             }}
           >
@@ -1732,7 +1949,7 @@ export default function Deposit({ messId }: DepositProps) {
       ),
       children: (
         <>
-          <Row gutter={[24, 24]}>
+          <Row gutter={[screens.xs ? 16 : 24, screens.xs ? 16 : 24]}>
             <Col xs={24} lg={12}>
               <RentStatusTable
                 members={members}
@@ -1755,8 +1972,10 @@ export default function Deposit({ messId }: DepositProps) {
                       display: "grid",
                       gridTemplateColumns: screens.xs
                         ? "1fr"
+                        : screens.sm
+                        ? "repeat(2, 1fr)"
                         : "repeat(2, 1fr)",
-                      gap: 16,
+                      gap: screens.xs ? 12 : 16,
                     }}
                   >
                     <StatCard
@@ -1810,7 +2029,7 @@ export default function Deposit({ messId }: DepositProps) {
                       }}
                       style={{
                         borderRadius: "8px",
-                        height: "12px",
+                        height: screens.xs ? "8px" : "12px",
                       }}
                     />
                     <div
@@ -1820,12 +2039,18 @@ export default function Deposit({ messId }: DepositProps) {
                         marginTop: 8,
                       }}
                     >
-                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                      <Text
+                        type="secondary"
+                        style={{ fontSize: screens.xs ? "11px" : "12px" }}
+                      >
                         Collection Progress
                       </Text>
                       <Text
                         strong
-                        style={{ fontSize: "12px", color: THEME_COLOR }}
+                        style={{
+                          fontSize: screens.xs ? "11px" : "12px",
+                          color: THEME_COLOR,
+                        }}
                       >
                         {rentSummary.collectionRate.toFixed(1)}%
                       </Text>
@@ -1836,7 +2061,7 @@ export default function Deposit({ messId }: DepositProps) {
             </Col>
           </Row>
 
-          <Divider />
+          <Divider style={{ margin: screens.xs ? "20px 0" : "24px 0" }} />
 
           <BillDueStatusTable
             members={members}
@@ -1857,7 +2082,7 @@ export default function Deposit({ messId }: DepositProps) {
           alignItems: "center",
           minHeight: "400px",
           background: `linear-gradient(135deg, ${THEME_COLOR}, ${THEME_COLOR_DARK})`,
-          borderRadius: "16px",
+          borderRadius: screens.xs ? "12px" : "16px",
         }}
       >
         <Spin
@@ -1876,22 +2101,22 @@ export default function Deposit({ messId }: DepositProps) {
       style={{
         background: "linear-gradient(135deg, #f8fdfc 0%, #e0f2f1 100%)",
         minHeight: "100vh",
-        padding: screens.xs ? "16px" : "24px",
+        padding: screens.xs ? "12px" : screens.sm ? "16px" : "24px",
       }}
     >
       <Card
         className="shadow-2xl"
         style={{
           background: "#fff",
-          borderRadius: "20px",
+          borderRadius: screens.xs ? "12px" : "20px",
           border: "none",
           boxShadow: "0 20px 60px rgba(0, 77, 64, 0.15)",
           overflow: "hidden",
-          minHeight: "calc(100vh - 32px)",
+          minHeight: screens.xs ? "auto" : "calc(100vh - 32px)",
         }}
         styles={{
           body: {
-            padding: screens.xs ? "20px" : "32px",
+            padding: screens.xs ? "16px" : screens.sm ? "20px" : "32px",
           },
         }}
       >
@@ -1900,11 +2125,11 @@ export default function Deposit({ messId }: DepositProps) {
             display: "flex",
             alignItems: "center",
             justifyContent: screens.xs ? "center" : "space-between",
-            marginBottom: screens.xs ? "24px" : "32px",
-            paddingBottom: "24px",
+            marginBottom: screens.xs ? "20px" : screens.sm ? "24px" : "32px",
+            paddingBottom: screens.xs ? "16px" : "24px",
             borderBottom: `2px solid ${THEME_COLOR_LIGHT}`,
             flexDirection: screens.xs ? "column" : "row",
-            gap: screens.xs ? "16px" : "0",
+            gap: screens.xs ? "12px" : "0",
             textAlign: screens.xs ? "center" : "left",
           }}
         >
@@ -1912,16 +2137,16 @@ export default function Deposit({ messId }: DepositProps) {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "16px",
+              gap: screens.xs ? "12px" : "16px",
               flexDirection: screens.xs ? "column" : "row",
             }}
           >
             <div
               style={{
                 background: `linear-gradient(135deg, ${THEME_COLOR}, ${THEME_COLOR_DARK})`,
-                padding: screens.xs ? "10px" : "12px",
-                borderRadius: "12px",
-                fontSize: screens.xs ? "20px" : "24px",
+                padding: screens.xs ? "8px" : screens.sm ? "10px" : "12px",
+                borderRadius: screens.xs ? "8px" : "12px",
+                fontSize: screens.xs ? "16px" : screens.sm ? "20px" : "24px",
                 color: "white",
               }}
             >
@@ -1929,12 +2154,13 @@ export default function Deposit({ messId }: DepositProps) {
             </div>
             <div>
               <Typography.Title
-                level={screens.xs ? 3 : 2}
+                level={screens.xs ? 4 : screens.sm ? 3 : 2}
                 style={{
                   margin: 0,
                   color: THEME_COLOR,
                   fontWeight: 700,
-                  fontSize: screens.xs ? "24px" : "32px",
+                  fontSize: screens.xs ? "18px" : screens.sm ? "24px" : "32px",
+                  textAlign: screens.xs ? "center" : "left",
                 }}
               >
                 Member Contribution & Bill Management
@@ -1942,9 +2168,9 @@ export default function Deposit({ messId }: DepositProps) {
               <Text
                 type="secondary"
                 style={{
-                  fontSize: screens.xs ? "14px" : "16px",
+                  fontSize: screens.xs ? "12px" : screens.sm ? "14px" : "16px",
                   display: "block",
-                  marginTop: screens.xs ? "8px" : "4px",
+                  marginTop: screens.xs ? "4px" : screens.sm ? "6px" : "8px",
                 }}
               >
                 Manage rent, bills, and track payments in one place
@@ -1957,11 +2183,16 @@ export default function Deposit({ messId }: DepositProps) {
               color={THEME_COLOR}
               icon={<TeamOutlined />}
               style={{
-                padding: screens.xs ? "6px 12px" : "8px 16px",
+                padding: screens.xs
+                  ? "4px 8px"
+                  : screens.sm
+                  ? "6px 12px"
+                  : "8px 16px",
                 borderRadius: "20px",
-                fontSize: screens.xs ? "12px" : "14px",
+                fontSize: screens.xs ? "10px" : screens.sm ? "12px" : "14px",
                 fontWeight: 600,
                 border: "none",
+                marginTop: screens.xs ? "8px" : "0",
               }}
             >
               Manager View
@@ -1975,7 +2206,7 @@ export default function Deposit({ messId }: DepositProps) {
               display: "grid",
               gridTemplateColumns: isManager ? "1fr 1fr" : "1fr",
               gap: "8px",
-              marginBottom: "24px",
+              marginBottom: "20px",
             }}
           >
             <Button
@@ -1983,7 +2214,7 @@ export default function Deposit({ messId }: DepositProps) {
               icon={<DashboardOutlined />}
               onClick={() => setActiveTab("contributions")}
               style={{
-                height: "48px",
+                height: "40px",
                 borderRadius: "8px",
                 background:
                   activeTab === "contributions"
@@ -1997,7 +2228,7 @@ export default function Deposit({ messId }: DepositProps) {
             >
               <Text
                 style={{
-                  fontSize: "12px",
+                  fontSize: "11px",
                   color: activeTab === "contributions" ? "#fff" : THEME_COLOR,
                 }}
               >
@@ -2011,7 +2242,7 @@ export default function Deposit({ messId }: DepositProps) {
                 icon={<TeamOutlined />}
                 onClick={() => setActiveTab("status")}
                 style={{
-                  height: "48px",
+                  height: "40px",
                   borderRadius: "8px",
                   background:
                     activeTab === "status"
@@ -2025,7 +2256,7 @@ export default function Deposit({ messId }: DepositProps) {
               >
                 <Text
                   style={{
-                    fontSize: "12px",
+                    fontSize: "11px",
                     color: activeTab === "status" ? "#fff" : THEME_COLOR,
                   }}
                 >
@@ -2044,16 +2275,16 @@ export default function Deposit({ messId }: DepositProps) {
             }}
             tabBarStyle={{
               background: "linear-gradient(90deg, #f8fafc 0%, #fff 100%)",
-              padding: "8px 16px",
-              borderRadius: "12px",
-              marginBottom: "24px",
+              padding: screens.sm ? "6px 12px" : "8px 16px",
+              borderRadius: screens.xs ? "8px" : "12px",
+              marginBottom: screens.xs ? "16px" : "24px",
               border: `1px solid ${THEME_COLOR_LIGHT}`,
             }}
           />
         )}
 
         {screens.xs && (
-          <div style={{ marginTop: "24px" }}>
+          <div style={{ marginTop: "20px" }}>
             {activeTab === "contributions" && tabItems[0].children}
             {activeTab === "status" && isManager && tabItems[1].children}
           </div>
@@ -2128,6 +2359,57 @@ export default function Deposit({ messId }: DepositProps) {
         .ant-select-focused .ant-select-selector {
           border-color: ${THEME_COLOR} !important;
           box-shadow: 0 0 0 2px ${THEME_COLOR}33 !important;
+        }
+
+        /* Responsive table styles */
+        @media (max-width: 768px) {
+          .ant-table {
+            font-size: 12px;
+          }
+
+          .ant-table-thead > tr > th {
+            padding: 8px 4px !important;
+            font-size: 11px;
+          }
+
+          .ant-table-tbody > tr > td {
+            padding: 8px 4px !important;
+          }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .ant-table {
+            font-size: 13px;
+          }
+
+          .ant-table-thead > tr > th {
+            padding: 12px 8px !important;
+            font-size: 12px;
+          }
+
+          .ant-table-tbody > tr > td {
+            padding: 12px 8px !important;
+          }
+        }
+
+        @media (min-width: 1025px) and (max-width: 1440px) {
+          .ant-table {
+            font-size: 14px;
+          }
+        }
+
+        @media (min-width: 1441px) {
+          .ant-table {
+            font-size: 14px;
+          }
+
+          .ant-table-thead > tr > th {
+            padding: 16px 12px !important;
+          }
+
+          .ant-table-tbody > tr > td {
+            padding: 16px 12px !important;
+          }
         }
       `}</style>
     </div>

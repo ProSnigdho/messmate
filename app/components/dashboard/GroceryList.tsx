@@ -339,14 +339,14 @@ export default function GroceryList({ messId }: GroceryListProps) {
       </Title>
 
       <Row gutter={[32, 32]}>
-        <Col xs={24} lg={8}>
+        <Col xs={24} md={12} lg={8}>
           {showRecordForm && (
             <RecordPurchaseForm recordNewPurchase={recordNewPurchase} />
           )}
           <MemberTotalSpentSummary summary={memberSpentSummary} />
         </Col>
 
-        <Col xs={24} lg={showRecordForm ? 16 : 24}>
+        <Col xs={24} md={12} lg={showRecordForm ? 16 : 24}>
           <Card
             className="shadow-xl"
             style={{ borderRadius: "10px" }}
@@ -370,6 +370,7 @@ export default function GroceryList({ messId }: GroceryListProps) {
                     View Purchases By:
                   </Text>
                 </Col>
+
                 <Col xs={24} sm={17}>
                   <Select
                     defaultValue="all"

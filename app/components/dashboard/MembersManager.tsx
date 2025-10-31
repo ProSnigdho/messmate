@@ -148,7 +148,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           margin: "20px 0 10px 0",
           color: PRIMARY_COLOR,
           fontWeight: "bold",
-          fontSize: "2rem",
+          fontSize: "1.5rem",
         }}
       >
         <TeamOutlined style={{ marginRight: 10 }} /> Mess Member Management
@@ -156,16 +156,16 @@ export default function MembersManager({ messId }: MembersManagerProps) {
 
       <Text
         type="secondary"
-        style={{ marginBottom: 20, display: "block", fontSize: "1.1rem" }}
+        style={{ marginBottom: 20, display: "block", fontSize: "0.9rem" }} // Optimized font size
       >
         Mess ID:{" "}
-        <Text code copyable style={{ fontSize: "1rem" }}>
+        <Text code copyable style={{ fontSize: "0.9rem" }}>
           {messId}
         </Text>
       </Text>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} md={6}>
+        <Col xs={12} sm={6} lg={6}>
           <Card
             size="small"
             className="shadow-md"
@@ -175,11 +175,15 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               title="Total Members"
               value={totalMembers}
               prefix={<TeamOutlined style={{ color: PRIMARY_COLOR }} />}
-              valueStyle={{ color: PRIMARY_COLOR, fontWeight: "bold" }}
+              valueStyle={{
+                color: PRIMARY_COLOR,
+                fontWeight: "bold",
+                fontSize: 20,
+              }}
             />
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} sm={6} lg={6}>
           <Card
             size="small"
             className="shadow-md"
@@ -189,11 +193,15 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               title="Managers"
               value={managerCount}
               prefix={<CrownOutlined style={{ color: "#cf1322" }} />}
-              valueStyle={{ color: "#cf1322", fontWeight: "bold" }}
+              valueStyle={{
+                color: "#cf1322",
+                fontWeight: "bold",
+                fontSize: 20,
+              }}
             />
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} sm={6} lg={6}>
           <Card
             size="small"
             className="shadow-md"
@@ -203,11 +211,15 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               title="Basic Members"
               value={memberCount}
               prefix={<UserOutlined style={{ color: "#389e0d" }} />}
-              valueStyle={{ color: "#389e0d", fontWeight: "bold" }}
+              valueStyle={{
+                color: "#389e0d",
+                fontWeight: "bold",
+                fontSize: 20,
+              }}
             />
           </Card>
         </Col>
-        <Col xs={12} md={6}>
+        <Col xs={12} sm={6} lg={6}>
           <Card
             size="small"
             className="shadow-md"
@@ -217,7 +229,11 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               title="Total Monthly Rent"
               value={totalRent}
               prefix="৳"
-              valueStyle={{ color: "#fa8c16", fontWeight: "bold" }}
+              valueStyle={{
+                color: "#fa8c16",
+                fontWeight: "bold",
+                fontSize: 20,
+              }}
               precision={0}
             />
           </Card>
@@ -262,7 +278,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                     style={{ color: SECONDARY_COLOR, fontSize: "16px" }}
                   />
                 )}
-                <Text strong style={{ color: PRIMARY_COLOR }}>
+                <Text strong style={{ color: PRIMARY_COLOR, fontSize: 13 }}>
                   {name}
                 </Text>
                 {user && record.uid === user.uid && (
@@ -270,8 +286,8 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                     color="blue"
                     style={{
                       margin: 0,
-                      fontSize: "11px",
-                      padding: "2px 6px",
+                      fontSize: "10px",
+                      padding: "1px 5px",
                     }}
                   >
                     You
@@ -301,7 +317,10 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               const total =
                 (record.monthlyRent || 0) + (record.customRent || 0);
               return (
-                <Tag color="green" style={{ margin: 0, fontWeight: "bold" }}>
+                <Tag
+                  color="green"
+                  style={{ margin: 0, fontWeight: "bold", fontSize: "11px" }}
+                >
                   ৳{total}
                 </Tag>
               );
@@ -320,7 +339,9 @@ export default function MembersManager({ messId }: MembersManagerProps) {
             responsive={["lg"]}
             width={100}
             render={(rent: number) => (
-              <Text type="secondary">৳{rent || 0}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                ৳{rent || 0}
+              </Text>
             )}
             sorter={(a: Member, b: Member) =>
               (a.monthlyRent || 0) - (b.monthlyRent || 0)
@@ -334,7 +355,9 @@ export default function MembersManager({ messId }: MembersManagerProps) {
             responsive={["lg"]}
             width={100}
             render={(customRent: number) => (
-              <Text type="secondary">৳{customRent || 0}</Text>
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                ৳{customRent || 0}
+              </Text>
             )}
             sorter={(a: Member, b: Member) =>
               (a.customRent || 0) - (b.customRent || 0)
@@ -350,7 +373,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               <Tag
                 color={role === "manager" ? "volcano" : PRIMARY_COLOR}
                 icon={role === "manager" ? <CrownOutlined /> : <UserOutlined />}
-                style={{ fontSize: "11px", padding: "4px 6px" }}
+                style={{ fontSize: "11px", padding: "3px 5px" }}
               >
                 {role.toUpperCase()}
               </Tag>
@@ -375,7 +398,8 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                 record.role === "manager" && managerMembers.length === 1;
 
               return (
-                <Space size="small">
+                <Space size={4}>
+                  {" "}
                   <Tooltip
                     title={
                       isCurrentUser
@@ -394,19 +418,18 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                       disabled={isCurrentUser || isOnlyManager}
                       size="small"
                     >
-                      <Option value="manager">
+                      <Option value="manager" style={{ fontSize: 12 }}>
                         <Space size={4}>
                           <CrownOutlined /> Manager
                         </Space>
                       </Option>
-                      <Option value="member">
+                      <Option value="member" style={{ fontSize: 12 }}>
                         <Space size={4}>
                           <UserOutlined /> Member
                         </Space>
                       </Option>
                     </Select>
                   </Tooltip>
-
                   <Tooltip title="Edit Rent Contribution">
                     <Button
                       type="default"
@@ -416,6 +439,8 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                       style={{
                         color: PRIMARY_COLOR,
                         borderColor: PRIMARY_COLOR,
+                        fontSize: 12,
+                        padding: "0 8px",
                       }}
                     >
                       Rent
@@ -430,7 +455,10 @@ export default function MembersManager({ messId }: MembersManagerProps) {
 
       <Modal
         title={
-          <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
+          <Title
+            level={4}
+            style={{ margin: 0, color: PRIMARY_COLOR, fontSize: "1.2rem" }}
+          >
             <HomeOutlined /> Edit Rent for {selectedMember?.displayName}
           </Title>
         }
@@ -440,13 +468,13 @@ export default function MembersManager({ messId }: MembersManagerProps) {
           form.resetFields();
         }}
         footer={null}
-        width={400}
+        width={350}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleRentUpdate}
-          style={{ paddingTop: 20 }}
+          style={{ paddingTop: 15 }}
         >
           <Form.Item
             name="monthlyRent"
@@ -459,6 +487,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               placeholder="Enter monthly rent"
               prefix="৳"
               step={10}
+              size="middle"
             />
           </Form.Item>
 
@@ -473,15 +502,17 @@ export default function MembersManager({ messId }: MembersManagerProps) {
               placeholder="Enter additional rent (e.g., utilities, service charges)"
               prefix="৳"
               step={10}
+              size="middle"
             />
           </Form.Item>
 
-          <Form.Item style={{ marginTop: 24, marginBottom: 0 }}>
+          <Form.Item style={{ marginTop: 20, marginBottom: 0 }}>
             <Space>
               <Button
                 type="primary"
                 htmlType="submit"
                 style={{ backgroundColor: PRIMARY_COLOR }}
+                size="middle"
               >
                 <CalculatorOutlined /> Update Rent
               </Button>
@@ -490,6 +521,7 @@ export default function MembersManager({ messId }: MembersManagerProps) {
                   setRentModalVisible(false);
                   form.resetFields();
                 }}
+                size="middle"
               >
                 Cancel
               </Button>

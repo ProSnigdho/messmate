@@ -651,7 +651,7 @@ export default function DashboardPage() {
           .dashboard-header
             .ant-btn:not(.mobile-menu-button)
             > span:last-child {
-            display: none;
+            display: none; /* Hide 'Logout' text, show icon only */
           }
 
           .user-info-display {
@@ -668,6 +668,12 @@ export default function DashboardPage() {
             display: none !important;
           }
 
+          .main-layout {
+            margin-left: ${collapsed
+              ? COLLAPSED_SIDER_WIDTH
+              : DESKTOP_SIDER_WIDTH}px !important;
+          }
+
           .desktop-sider.ant-layout-sider-has-trigger:not(
               .ant-layout-sider-collapsed
             ) {
@@ -676,26 +682,6 @@ export default function DashboardPage() {
             max-width: ${DESKTOP_SIDER_WIDTH}px !important;
             min-width: ${DESKTOP_SIDER_WIDTH}px !important;
           }
-
-          .main-layout {
-            margin-left: ${collapsed
-              ? COLLAPSED_SIDER_WIDTH
-              : DESKTOP_SIDER_WIDTH}px !important;
-          }
-
-          /* 🛠️ FIX APPLIED HERE: Reduced menu item size */
-          .desktop-sider .ant-menu-item {
-            height: 48px !important; /* Reduced from 56px */
-            line-height: 48px !important; /* Reduced from 56px */
-            padding: 0 24px !important; /* Reduced from 32px */
-            font-size: 16px; /* Reduced from 18px */
-          }
-
-          .desktop-sider .ant-menu-item > span.anticon {
-            font-size: 18px !important; /* Reduced from 20px */
-            margin-right: 10px !important; /* Reduced from 12px */
-          }
-          /* ------------------------------------------- */
 
           .desktop-sider .ant-layout-sider-children .ant-typography {
             font-size: 16px !important;
@@ -706,6 +692,79 @@ export default function DashboardPage() {
 
           .desktop-sider h3.ant-typography {
             font-size: 30px !important;
+          }
+        }
+
+        @media (min-width: 769px) and (max-width: 1600px) {
+          .desktop-sider .ant-menu-item {
+            height: 40px !important;
+            line-height: 40px !important;
+            padding: 0 20px !important;
+            font-size: 14px;
+          }
+
+          .desktop-sider .ant-menu-item > span.anticon {
+            font-size: 16px !important;
+            margin-right: 8px !important;
+          }
+
+          .dashboard-content {
+            margin: 24px !important;
+            padding: 24px !important;
+          }
+
+          .dashboard-header h4.ant-typography {
+            font-size: 20px !important;
+          }
+
+          .dashboard-header {
+            height: 56px !important;
+            padding: 0 20px !important;
+          }
+
+          .dashboard-header .user-info-display {
+            padding: 8px 12px !important;
+            gap: 12px !important;
+          }
+          .dashboard-header .ant-avatar-small {
+            width: 30px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+          }
+          .dashboard-header .ant-avatar-small > .anticon {
+            font-size: 16px !important;
+          }
+          .dashboard-header
+            .user-info-display
+            .user-text-info
+            > div:first-child {
+            font-size: 14px !important;
+          }
+          .dashboard-header
+            .user-info-display
+            .user-text-info
+            > div:last-child {
+            font-size: 12px !important;
+          }
+          .dashboard-header .ant-btn.ant-btn-primary {
+            height: 36px !important;
+            padding: 8px 16px !important;
+            font-size: 14px;
+          }
+        }
+
+        /* This range applies the spacious design for huge desktop screens. */
+        @media (min-width: 1601px) {
+          .desktop-sider .ant-menu-item {
+            height: 48px !important;
+            line-height: 48px !important;
+            padding: 0 24px !important;
+            font-size: 16px;
+          }
+
+          .desktop-sider .ant-menu-item > span.anticon {
+            font-size: 18px !important;
+            margin-right: 10px !important;
           }
 
           .dashboard-content {

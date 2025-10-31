@@ -23,6 +23,7 @@ import {
   EditOutlined,
   ClockCircleOutlined,
 } from "@ant-design/icons";
+
 import { useNotices, Notice } from "../../lib/hooks/useNotices";
 import moment from "moment";
 
@@ -61,6 +62,7 @@ const getRelativeTimeDisplay = (date: any) => {
   if (now.diff(noticeDate, "hours") < 24) {
     return noticeDate.fromNow();
   }
+
   return noticeDate.format("MMM DD, YYYY | h:mm A");
 };
 
@@ -262,9 +264,13 @@ export default function NoticeBoard({ messId }: NoticeBoardProps) {
         Important announcements and information for all mess members.
       </Text>
 
-      <Row gutter={[isMobile ? 16 : 32, isMobile ? 16 : 32]}>
-        <Col xs={24} lg={9}>
-          {" "}
+      <Row
+        gutter={[
+          { xs: 16, sm: 24, lg: 32 },
+          { xs: 16, sm: 24, lg: 32 },
+        ]}
+      >
+        <Col xs={24} sm={24} md={10} lg={9} xl={8}>
           {isManager ? (
             <AddNoticeForm addNotice={addNotice} />
           ) : (
@@ -287,8 +293,7 @@ export default function NoticeBoard({ messId }: NoticeBoardProps) {
           )}
         </Col>
 
-        <Col xs={24} lg={15}>
-          {" "}
+        <Col xs={24} sm={24} md={14} lg={15} xl={16}>
           <Card
             title={
               <Title

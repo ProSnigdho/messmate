@@ -65,12 +65,30 @@ interface BillingSummaryProps {
 const PRIMARY_COLOR = "#00695C";
 const ACCENT_COLOR_WARNING = "#ff8f00";
 
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    if (typeof window !== "undefined") {
+      handleResize();
+      window.addEventListener("resize", handleResize);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("resize", handleResize);
+      }
+    };
+  }, []);
+  return isMobile;
+};
+
 const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
   userMealData,
   billingSummary,
   loading,
 }) => {
   const { totalMeals, totalGroceryCost, mealRate } = billingSummary;
+  const isMobile = useIsMobile();
 
   const dataSource = userMealData.map((data: any) => {
     const totalMealsValue = data.monthlyTotalMeals || 0;
@@ -231,48 +249,71 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
     },
   ];
 
-  const columns = window.innerWidth < 768 ? mobileColumns : desktopColumns;
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
   return (
     <Card
       title={
         <Title
-          level={4}
-          style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+          level={isMobile ? 5 : 4}
+          style={{
+            margin: 0,
+            fontSize: isMobile ? "16px" : "18px",
+            color: PRIMARY_COLOR,
+          }}
         >
           💰 Monthly Billing Summary
         </Title>
       }
       style={{ marginTop: 16 }}
       loading={loading}
+      size={isMobile ? "small" : "default"}
     >
       <div
         style={{
           marginBottom: 12,
           border: `1px solid ${PRIMARY_COLOR}33`,
-          padding: "8px",
+          padding: isMobile ? "6px" : "8px",
           borderRadius: "4px",
           backgroundColor: "#f7fcfc",
         }}
       >
-        <Row gutter={[8, 4]} justify="space-between">
+        <Row
+          gutter={[isMobile ? 4 : 8, isMobile ? 4 : 4]}
+          justify="space-between"
+        >
           <Col xs={24} sm={8}>
-            <Text style={{ fontSize: "14px" }}>Total Meals: </Text>
-            <Text strong style={{ fontSize: "14px", color: PRIMARY_COLOR }}>
+            <Text style={{ fontSize: isMobile ? "12px" : "14px" }}>
+              Total Meals:{" "}
+            </Text>
+            <Text
+              strong
+              style={{
+                fontSize: isMobile ? "12px" : "14px",
+                color: PRIMARY_COLOR,
+              }}
+            >
               {totalMeals}
             </Text>
           </Col>
           <Col xs={24} sm={8}>
-            <Text style={{ fontSize: "14px" }}>Total Cost: </Text>
-            <Text strong style={{ fontSize: "14px" }}>
+            <Text style={{ fontSize: isMobile ? "12px" : "14px" }}>
+              Total Cost:{" "}
+            </Text>
+            <Text strong style={{ fontSize: isMobile ? "12px" : "14px" }}>
               {totalGroceryCost.toFixed(2)}৳
             </Text>
           </Col>
           <Col xs={24} sm={8}>
-            <Text style={{ fontSize: "14px" }}>Meal Rate: </Text>
+            <Text style={{ fontSize: isMobile ? "12px" : "14px" }}>
+              Meal Rate:{" "}
+            </Text>
             <Text
               strong
-              style={{ fontSize: "14px", color: ACCENT_COLOR_WARNING }}
+              style={{
+                fontSize: isMobile ? "12px" : "14px",
+                color: ACCENT_COLOR_WARNING,
+              }}
             >
               {mealRate.toFixed(2)}৳
             </Text>
@@ -286,8 +327,8 @@ const MonthlyBillingSummary: React.FC<BillingSummaryProps> = ({
         rowKey="key"
         pagination={false}
         bordered
-        size={window.innerWidth < 768 ? "small" : "middle"}
-        scroll={window.innerWidth < 768 ? { x: 300 } : { x: "max-content" }}
+        size={isMobile ? "small" : "middle"}
+        scroll={isMobile ? { x: 300 } : { x: "max-content" }}
         style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
       />
     </Card>
@@ -344,6 +385,8 @@ const MonthlyMealHistory: React.FC<{
   isManager: boolean;
 }> = ({ messId, allMembers, isManager }) => {
   if (!isManager) return null;
+
+  const isMobile = useIsMobile();
 
   const [selectedMemberId, setSelectedMemberId] = useState<string | undefined>(
     undefined
@@ -420,6 +463,7 @@ const MonthlyMealHistory: React.FC<{
             total,
           };
         });
+
         setHistoryData(data.sort((a, b) => (a.date < b.date ? 1 : -1)));
       } catch (error) {
         console.error("Error fetching meal history:", error);
@@ -460,7 +504,7 @@ const MonthlyMealHistory: React.FC<{
       key: "date",
       width: 80,
       render: (text: string) => {
-        const parts = text.split("-"); // YYYY-MM-DD
+        const parts = text.split("-");
         const date = parts[2];
         const month = parts[1];
         return <div style={{ fontSize: "11px" }}>{`${date}/${month}`}</div>;
@@ -558,15 +602,18 @@ const MonthlyMealHistory: React.FC<{
     },
   ];
 
-  const columns =
-    window.innerWidth < 768 ? mobileHistoryColumns : desktopHistoryColumns;
+  const columns = isMobile ? mobileHistoryColumns : desktopHistoryColumns;
 
   return (
     <Card
       title={
         <Title
-          level={4}
-          style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+          level={isMobile ? 5 : 4}
+          style={{
+            margin: 0,
+            fontSize: isMobile ? "16px" : "18px",
+            color: PRIMARY_COLOR,
+          }}
         >
           🗓️ Monthly Meal History
         </Title>
@@ -577,16 +624,21 @@ const MonthlyMealHistory: React.FC<{
           icon={<DownloadOutlined />}
           onClick={handleDownloadCSV}
           disabled={historyLoading || historyData.length === 0}
-          size={window.innerWidth < 768 ? "small" : "middle"}
+          size={isMobile ? "small" : "middle"}
           style={{ backgroundColor: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}
         >
-          {window.innerWidth < 768 ? "" : "Download CSV"}
+          {isMobile ? "" : "Download CSV"}
         </Button>
       }
       style={{ marginTop: 16 }}
+      size={isMobile ? "small" : "default"}
     >
-      <Row gutter={[8, 8]} style={{ marginBottom: 16 }}>
+      <Row
+        gutter={[isMobile ? 8 : 16, isMobile ? 8 : 16]}
+        style={{ marginBottom: 16 }}
+      >
         <Col xs={24} md={12}>
+          {" "}
           <Text
             strong
             style={{ display: "block", marginBottom: 4, color: PRIMARY_COLOR }}
@@ -600,7 +652,7 @@ const MonthlyMealHistory: React.FC<{
             value={selectedMemberId}
             onChange={setSelectedMemberId}
             disabled={historyLoading}
-            size={window.innerWidth < 768 ? "small" : "middle"}
+            size={isMobile ? "small" : "middle"}
           />
         </Col>
         <Col xs={24} md={12}>
@@ -616,7 +668,7 @@ const MonthlyMealHistory: React.FC<{
             onChange={(dates) => setDateRange(dates as RangeValue)}
             format="DD-MM-YY"
             disabled={historyLoading}
-            size={window.innerWidth < 768 ? "small" : "middle"}
+            size={isMobile ? "small" : "middle"}
           />
         </Col>
       </Row>
@@ -628,22 +680,19 @@ const MonthlyMealHistory: React.FC<{
         loading={historyLoading}
         pagination={{ pageSize: 7, size: "small" }}
         bordered
-        size={window.innerWidth < 768 ? "small" : "middle"}
-        scroll={window.innerWidth < 768 ? { x: 300 } : { x: "max-content" }}
+        size={isMobile ? "small" : "middle"}
+        scroll={isMobile ? { x: 300 } : { x: "max-content" }}
         style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
       />
 
       <div style={{ marginTop: 12, textAlign: "right" }}>
-        <Text
-          strong
-          style={{ fontSize: window.innerWidth < 768 ? "12px" : "14px" }}
-        >
+        <Text strong style={{ fontSize: isMobile ? "12px" : "14px" }}>
           Selected Range Total Meals:{" "}
         </Text>
         <Text
           strong
           style={{
-            fontSize: window.innerWidth < 768 ? "12px" : "14px",
+            fontSize: isMobile ? "12px" : "14px",
             color: PRIMARY_COLOR,
           }}
         >
@@ -659,6 +708,7 @@ const MealTracker: React.FC = () => {
   const { userMealData, loading, currentDate, messId, billingSummary } =
     useMealTracking();
   const [isUpdating, setIsUpdating] = useState(false);
+  const isMobile = useIsMobile(); // ব্যবহার করা হচ্ছে
 
   const currentUser = user as UserProfile | null;
 
@@ -1036,20 +1086,28 @@ const MealTracker: React.FC = () => {
     },
   ];
 
-  const columns = window.innerWidth < 768 ? mobileColumns : desktopColumns;
+  const columns = isMobile ? mobileColumns : desktopColumns;
 
-  const allMembersList = userMealData.map((data) => ({
-    uid: data.user.uid,
-    displayName: data.user.displayName,
-  }));
+  const allMembersList = useMemo(
+    () =>
+      userMealData.map((data) => ({
+        uid: data.user.uid,
+        displayName: data.user.displayName,
+      })),
+    [userMealData]
+  );
 
   return (
-    <div style={{ padding: window.innerWidth < 768 ? "8px" : "20px" }}>
+    <div style={{ padding: isMobile ? "8px" : "20px" }}>
       <Card
         title={
           <Title
-            level={4}
-            style={{ margin: 0, fontSize: "18px", color: PRIMARY_COLOR }}
+            level={isMobile ? 5 : 4}
+            style={{
+              margin: 0,
+              fontSize: isMobile ? "16px" : "18px",
+              color: PRIMARY_COLOR,
+            }}
           >
             🍚 Daily Meal Tracker
           </Title>
@@ -1057,12 +1115,13 @@ const MealTracker: React.FC = () => {
         extra={
           <Text
             type="secondary"
-            style={{ fontSize: window.innerWidth < 768 ? "12px" : "14px" }}
+            style={{ fontSize: isMobile ? "12px" : "14px" }}
           >
             Date: {formattedDate}
           </Text>
         }
         style={{ marginBottom: 16 }}
+        size={isMobile ? "small" : "default"}
       >
         <Table
           dataSource={userMealData}
@@ -1071,8 +1130,8 @@ const MealTracker: React.FC = () => {
           loading={loading || isUpdating}
           pagination={false}
           bordered
-          size={window.innerWidth < 768 ? "small" : "middle"}
-          scroll={window.innerWidth < 768 ? { x: 400 } : { x: "max-content" }}
+          size={isMobile ? "small" : "middle"}
+          scroll={isMobile ? { x: 400 } : { x: "max-content" }}
           style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
         />
         {(loading || isUpdating) && (
@@ -1120,20 +1179,22 @@ const MealTracker: React.FC = () => {
         }
 
         @media (min-width: 769px) {
-          .ant-table-wrapper .ant-table-thead > tr > th,
-          .ant-table-wrapper .ant-table-tbody > tr > td {
+          .ant-table-wrapper .ant-table-thead > tr > th {
             padding: 14px 12px !important;
             font-size: 16px !important;
-          }
-
-          .ant-table-wrapper .ant-table-thead > tr > th {
-            font-size: 18px !important;
             color: #fff;
-            background-color: ${PRIMARY_COLOR};
+            background-color: ${PRIMARY_COLOR} !important;
+            border-right-color: #00000033 !important;
           }
 
           .ant-table-wrapper .ant-table-thead > tr > th .ant-typography {
             color: #fff !important;
+            font-size: 16px !important;
+          }
+
+          .ant-table-wrapper .ant-table-tbody > tr > td {
+            padding: 14px 12px !important;
+            font-size: 16px !important;
           }
 
           .ant-typography,

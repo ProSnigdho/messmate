@@ -133,13 +133,6 @@ const CHART_COLORS = {
   FinalBalance: PRIMARY_COLOR,
 };
 
-const getStatisticFontSize = (pcSize: string, mobileSize: string) => {
-  if (typeof window !== "undefined" && window.innerWidth < 768) {
-    return mobileSize;
-  }
-  return pcSize;
-};
-
 const MemberBalanceChart: React.FC<{
   stats: OverviewStats;
   currentUserId: string | null;
@@ -185,7 +178,27 @@ const MemberBalanceChart: React.FC<{
     ],
   };
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
+  const [chartWidth, setChartWidth] = useState("100%");
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobileCheck = window.innerWidth < 768;
+      setIsMobile(mobileCheck);
+
+      if (!mobileCheck) {
+        setChartWidth(Math.max(stats.members.length * 150, 900) + "px");
+      } else {
+        setChartWidth("100%");
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [stats.members.length]);
+
+  const chartHeight = isMobile ? 350 : 400;
 
   const options: any = {
     responsive: true,
@@ -194,9 +207,7 @@ const MemberBalanceChart: React.FC<{
       legend: {
         position: "top" as const,
         labels: {
-          font: {
-            size: isMobile ? 10 : 14,
-          },
+          font: { size: isMobile ? 10 : 12 },
         },
       },
       tooltip: {
@@ -220,13 +231,11 @@ const MemberBalanceChart: React.FC<{
     scales: {
       x: {
         stacked: false,
-        title: {
-          display: false,
-        },
+        title: { display: false },
         ticks: {
           display: isMobile ? false : true,
-          maxRotation: isMobile ? 0 : 30,
-          minRotation: isMobile ? 0 : 30,
+          maxRotation: 30,
+          minRotation: 30,
           font: { size: isMobile ? 10 : 12 },
         },
       },
@@ -235,7 +244,7 @@ const MemberBalanceChart: React.FC<{
         title: {
           display: true,
           text: "Amount (৳)",
-          font: { size: 14 },
+          font: { size: 12 },
         },
         ticks: {
           callback: function (value: any) {
@@ -246,46 +255,35 @@ const MemberBalanceChart: React.FC<{
     },
   };
 
-  const dynamicWidth = Math.max(stats.members.length * 150, 900);
-  const chartHeight = isMobile ? 350 : 400;
-  const containerWidth = isMobile ? "100%" : dynamicWidth;
-
   return (
     <Card
       title={
-        <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+        <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
           📊 Member Financial Comparison
-        </Text>
+        </Title>
       }
       style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
+      styles={{ body: { padding: 16 } }}
     >
       <div
         style={{
           width: "100%",
-          minWidth: isMobile ? "100%" : "900px",
           height: chartHeight,
-          overflowX: isMobile ? "hidden" : "auto",
+
+          overflowX: "auto",
           textAlign: "center",
         }}
       >
         <div
           style={{
-            width: containerWidth,
+            width: isMobile ? "100%" : chartWidth,
+            minWidth: isMobile ? "100%" : "auto",
             height: chartHeight,
             margin: "0 auto",
           }}
         >
           <Bar data={data} options={options} />
         </div>
-
-        {isMobile && (
-          <Text
-            type="secondary"
-            style={{ marginTop: 8, display: "block", fontSize: 12 }}
-          >
-            (Tap on a bar to see member details)
-          </Text>
-        )}
       </div>
     </Card>
   );
@@ -297,32 +295,33 @@ const MemberDetailsTable: React.FC<{
   return (
     <Card
       title={
-        <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+        <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
           📋 Member Financial Details
-        </Text>
+        </Title>
       }
       style={{ marginTop: 16, border: `1px solid ${PRIMARY_COLOR}33` }}
+      styles={{ body: { padding: "0" } }}
     >
       <div style={{ width: "100%", overflowX: "auto" }}>
         <Table
           dataSource={tableData}
           pagination={false}
-          scroll={{ x: 800 }}
-          size="large"
+          scroll={{ x: 650 }}
+          size="middle"
           style={{ border: `1px solid ${PRIMARY_COLOR}33` }}
         >
           <Column
             title={
-              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+              <Text style={{ fontSize: 14, color: "#fff" }} strong>
                 Member
               </Text>
             }
             dataIndex="name"
             key="name"
             fixed="left"
-            width={150}
+            width={120}
             render={(name) => (
-              <Text strong style={{ fontSize: 16, color: PRIMARY_COLOR }}>
+              <Text strong style={{ fontSize: 14, color: PRIMARY_COLOR }}>
                 {name}
               </Text>
             )}
@@ -330,29 +329,29 @@ const MemberDetailsTable: React.FC<{
           />
           <Column
             title={
-              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+              <Text style={{ fontSize: 14, color: "#fff" }} strong>
                 Meals
               </Text>
             }
             dataIndex="mealsTaken"
             key="mealsTaken"
             align="center"
-            width={100}
-            render={(value) => <Text style={{ fontSize: 14 }}>{value}</Text>}
+            width={80}
+            render={(value) => <Text style={{ fontSize: 13 }}>{value}</Text>}
             onHeaderCell={() => ({ style: { backgroundColor: PRIMARY_COLOR } })}
           />
           <Column
             title={
-              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+              <Text style={{ fontSize: 14, color: "#fff" }} strong>
                 Meal Cost
               </Text>
             }
             dataIndex="mealCost"
             key="mealCost"
             align="right"
-            width={120}
+            width={100}
             render={(value) => (
-              <Text style={{ fontSize: 14, color: CHART_COLORS.MealCost }}>
+              <Text style={{ fontSize: 13, color: CHART_COLORS.MealCost }}>
                 ৳{value}
               </Text>
             )}
@@ -360,18 +359,18 @@ const MemberDetailsTable: React.FC<{
           />
           <Column
             title={
-              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+              <Text style={{ fontSize: 14, color: "#fff" }} strong>
                 Grocery Paid
               </Text>
             }
             dataIndex="groceryPaid"
             key="groceryPaid"
             align="right"
-            width={120}
+            width={100}
             render={(value) => (
               <Text
                 strong
-                style={{ color: CHART_COLORS.GroceryPaid, fontSize: 14 }}
+                style={{ color: CHART_COLORS.GroceryPaid, fontSize: 13 }}
               >
                 ৳{value}
               </Text>
@@ -380,7 +379,7 @@ const MemberDetailsTable: React.FC<{
           />
           <Column
             title={
-              <Text style={{ fontSize: 16, color: "#fff" }} strong>
+              <Text style={{ fontSize: 14, color: "#fff" }} strong>
                 Final Balance
               </Text>
             }
@@ -388,13 +387,13 @@ const MemberDetailsTable: React.FC<{
             key="finalBalance"
             align="right"
             fixed="right"
-            width={140}
+            width={120}
             render={(value) => (
               <Text
                 strong
                 style={{
                   color: value >= 0 ? "#389e0d" : "#cf1322",
-                  fontSize: 16,
+                  fontSize: 14,
                 }}
               >
                 ৳{value}
@@ -414,11 +413,12 @@ const MemberDetailsList: React.FC<{
   return (
     <Card
       title={
-        <Text style={{ fontSize: 18, color: PRIMARY_COLOR }} strong>
+        <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
           📋 Member Financial Details
-        </Text>
+        </Title>
       }
       style={{ marginTop: 16 }}
+      styles={{ body: { padding: "0px 12px" } }}
     >
       <List
         dataSource={tableData}
@@ -658,6 +658,16 @@ export default function Overview({ messId, userRole }: OverviewProps) {
   const allNoticeIds = notices.map((notice) => notice.id);
   const unreadCount = getUnreadCount(allNoticeIds);
 
+  const [isLargeScreen, setIsLargeScreen] = useState(true);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1200);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   if (loading || !stats) {
     return (
       <div style={{ textAlign: "center", padding: "50px" }}>
@@ -702,7 +712,6 @@ export default function Overview({ messId, userRole }: OverviewProps) {
 
   return (
     <div style={{ padding: 20, position: "relative" }}>
-      {" "}
       <div
         style={{
           display: "flex",
@@ -719,19 +728,20 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             flexWrap: "wrap",
             alignItems: "center",
             gap: 16,
-            marginRight: window.innerWidth > 600 ? 60 : 0,
           }}
         >
           <Title
-            level={2}
+            level={isLargeScreen ? 2 : 3}
             style={{
               color: PRIMARY_COLOR,
               margin: 0,
-              fontSize: "clamp(20px, 5vw, 40px)",
             }}
           >
             🏠 Mess Financial Overview
-            <Text type="secondary" style={{ fontSize: 18, marginLeft: 10 }}>
+            <Text
+              type="secondary"
+              style={{ fontSize: isLargeScreen ? 18 : 14, marginLeft: 10 }}
+            >
               ({stats.currentMonth})
             </Text>
           </Title>
@@ -748,7 +758,8 @@ export default function Overview({ messId, userRole }: OverviewProps) {
             position: "absolute",
             top: 0,
             right: 0,
-            transform: window.innerWidth < 600 ? "scale(0.8)" : "scale(1)",
+
+            marginRight: isLargeScreen ? 20 : 10,
           }}
         >
           <Badge count={unreadCount} size="small" offset={[-5, 5]}>
@@ -757,15 +768,15 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               icon={
                 <BellOutlined
                   style={{
-                    fontSize: 24,
+                    fontSize: isLargeScreen ? 24 : 20,
                     color: unreadCount > 0 ? ACCENT_COLOR_PROFILE : "#666",
                   }}
                 />
               }
               onClick={() => setNoticesPopupVisible(true)}
               style={{
-                width: 48,
-                height: 48,
+                width: isLargeScreen ? 48 : 40,
+                height: isLargeScreen ? 48 : 40,
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
@@ -780,6 +791,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Badge>
         </div>
       </div>
+
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={12} md={6}>
           <Card style={{ borderLeft: `4px solid ${PRIMARY_COLOR}` }}>
@@ -787,10 +799,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               title="Total Members"
               value={totalMembers}
               prefix={<UserOutlined style={{ color: PRIMARY_COLOR }} />}
-              valueStyle={{
-                color: PRIMARY_COLOR,
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: PRIMARY_COLOR }}
             />
           </Card>
         </Col>
@@ -800,10 +809,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               title="Total Meals"
               value={totalMonthlyMeals}
               prefix={<FireOutlined style={{ color: ACCENT_COLOR_PROFILE }} />}
-              valueStyle={{
-                color: ACCENT_COLOR_PROFILE,
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: ACCENT_COLOR_PROFILE }}
             />
           </Card>
         </Col>
@@ -814,10 +820,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={totalGroceryCost}
               prefix="৳"
               precision={0}
-              valueStyle={{
-                color: "#cf1322",
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: "#cf1322" }}
               suffix={<ShoppingOutlined style={{ color: "#cf1322" }} />}
             />
           </Card>
@@ -829,10 +832,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={currentMealRate}
               prefix="৳"
               precision={2}
-              valueStyle={{
-                color: ACCENT_COLOR_WARNING,
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: ACCENT_COLOR_WARNING }}
               suffix={
                 <CalculatorOutlined style={{ color: ACCENT_COLOR_WARNING }} />
               }
@@ -840,6 +840,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Card>
         </Col>
       </Row>
+
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={12} sm={12} md={8}>
           <Card style={{ borderLeft: `4px solid #389e0d` }}>
@@ -848,10 +849,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={stats.totalDeposits}
               prefix="৳"
               precision={0}
-              valueStyle={{
-                color: "#389e0d",
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: "#389e0d" }}
               suffix={<BankOutlined style={{ color: "#389e0d" }} />}
             />
           </Card>
@@ -863,10 +861,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={stats.totalUtilityCost}
               prefix="৳"
               precision={0}
-              valueStyle={{
-                color: "#faad14",
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: "#faad14" }}
               suffix={<SwapOutlined style={{ color: "#faad14" }} />}
             />
           </Card>
@@ -878,21 +873,20 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               value={stats.utilityCostPerMember}
               prefix="৳"
               precision={0}
-              valueStyle={{
-                color: "#722ed1",
-                fontSize: getStatisticFontSize("36px", "20px"),
-              }}
+              valueStyle={{ color: "#722ed1" }}
               suffix={<TeamOutlined style={{ color: "#722ed1" }} />}
             />
           </Card>
         </Col>
       </Row>
+
       <Divider
         orientation="left"
         style={{ color: PRIMARY_COLOR, borderColor: PRIMARY_COLOR }}
       >
         Financial Analysis
       </Divider>
+
       <Row gutter={[24, 24]}>
         <Col xs={24} style={{ minWidth: 0 }}>
           <MemberBalanceChart
@@ -901,6 +895,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           />
         </Col>
       </Row>
+
       {isManager && (
         <Row gutter={[24, 24]}>
           <Col xs={0} sm={0} md={24}>
@@ -912,39 +907,35 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </Col>
         </Row>
       )}
+
       {!isManager && (
         <Card
           title={
-            <Text style={{ fontSize: 24, color: PRIMARY_COLOR }} strong>
+            <Title level={4} style={{ margin: 0, color: PRIMARY_COLOR }}>
               📊 Your Financial Summary
-            </Text>
+            </Title>
           }
           style={{ marginTop: 24, border: `1px solid ${PRIMARY_COLOR}33` }}
+          styles={{ body: { padding: 16 } }}
         >
           <Row gutter={[16, 16]}>
-            <Col xs={12} sm={6}>
+            <Col xs={12} sm={6} lg={4}>
               <Statistic
                 title="Your Meals"
                 value={stats.memberMealCounts[currentUserId || ""] || 0}
                 prefix={<FireOutlined />}
-                valueStyle={{
-                  fontSize: getStatisticFontSize("30px", "22px"),
-                  color: ACCENT_COLOR_PROFILE,
-                }}
+                valueStyle={{ color: ACCENT_COLOR_PROFILE }}
               />
             </Col>
-            <Col xs={12} sm={6}>
+            <Col xs={12} sm={6} lg={4}>
               <Statistic
                 title="Your Grocery Paid"
                 value={stats.memberGroceryPaid[currentUserId || ""] || 0}
                 prefix="৳"
-                valueStyle={{
-                  color: CHART_COLORS.GroceryPaid,
-                  fontSize: getStatisticFontSize("30px", "22px"),
-                }}
+                valueStyle={{ color: CHART_COLORS.GroceryPaid }}
               />
             </Col>
-            <Col xs={12} sm={6}>
+            <Col xs={12} sm={6} lg={4}>
               <Statistic
                 title="Your Meal Cost"
                 value={
@@ -953,22 +944,16 @@ export default function Overview({ messId, userRole }: OverviewProps) {
                 }
                 prefix="৳"
                 precision={0}
-                valueStyle={{
-                  color: CHART_COLORS.MealCost,
-                  fontSize: getStatisticFontSize("30px", "22px"),
-                }}
+                valueStyle={{ color: CHART_COLORS.MealCost }}
               />
             </Col>
-            <Col xs={12} sm={6}>
+            <Col xs={12} sm={6} lg={4}>
               <Statistic
                 title="Your Utility Share"
                 value={stats.utilityCostPerMember}
                 prefix="৳"
                 precision={0}
-                valueStyle={{
-                  color: "#722ed1",
-                  fontSize: getStatisticFontSize("30px", "22px"),
-                }}
+                valueStyle={{ color: "#722ed1" }}
               />
             </Col>
           </Row>
@@ -998,15 +983,16 @@ export default function Overview({ messId, userRole }: OverviewProps) {
               ) : (
                 <ArrowDownOutlined style={{ color: "#cf1322", fontSize: 36 }} />
               )}
-              <Text
-                strong
+
+              <Title
+                level={isLargeScreen ? 1 : 2}
                 style={{
-                  fontSize: getStatisticFontSize("48px", "36px"),
+                  margin: 0,
                   color: currentUserFinalBalance >= 0 ? "#389e0d" : "#cf1322",
                 }}
               >
                 ৳{Math.abs(currentUserFinalBalance).toFixed(2)}
-              </Text>
+              </Title>
             </div>
             <Text
               type="secondary"
@@ -1019,6 +1005,7 @@ export default function Overview({ messId, userRole }: OverviewProps) {
           </div>
         </Card>
       )}
+
       <NoticesPopup
         visible={noticesPopupVisible}
         onClose={() => setNoticesPopupVisible(false)}
@@ -1026,16 +1013,37 @@ export default function Overview({ messId, userRole }: OverviewProps) {
         unreadCount={unreadCount}
         onMarkAllAsRead={() => markAllAsRead(allNoticeIds)}
       />
+
       <style jsx global>{`
+        /* General Table Header Styling */
         .ant-table-wrapper .ant-table-thead > tr > th {
           background-color: ${PRIMARY_COLOR} !important;
           color: #fff !important;
-          font-size: 16px !important;
+          font-size: 14px !important; /* Smaller default for better laptop fit */
+          padding: 10px 10px !important;
+        }
+
+        /* Responsive Table Header Font Size */
+        @media (min-width: 1600px) {
+          .ant-table-wrapper .ant-table-thead > tr > th {
+            font-size: 16px !important; /* Slightly larger for very large monitors */
+          }
+        }
+        @media (max-width: 768px) {
+          .ant-table-wrapper .ant-table-thead > tr > th {
+            font-size: 12px !important; /* Smaller on mobile */
+            padding: 8px 8px !important;
+          }
+        }
+
+        /* Remove the problematic fixed font size utility */
+        .ant-statistic-content {
+          font-size: 30px;
         }
 
         @media (max-width: 768px) {
-          .ant-table-wrapper .ant-table-thead > tr > th {
-            font-size: 14px !important;
+          .ant-statistic-content {
+            font-size: 20px;
           }
         }
       `}</style>

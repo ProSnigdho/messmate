@@ -77,7 +77,7 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
     <Table
       dataSource={deposits}
       rowKey="id"
-      pagination={{ pageSize: 5 }}
+      pagination={{ pageSize: 5, size: "small" }}
       size="middle"
       locale={{ emptyText: "No deposits this month." }}
       scroll={{ x: 450 }}
@@ -91,13 +91,21 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
       <Table.Column
         title="Type"
         dataIndex="category"
-        render={(category) => <Tag color={PRIMARY_COLOR}>{category}</Tag>}
+        render={(category) => (
+          <Tag color={PRIMARY_COLOR} style={{ fontSize: 12 }}>
+            {category}
+          </Tag>
+        )}
         width={120}
       />
       <Table.Column
         title="User Name"
         dataIndex="userName"
-        render={(name) => <Tag color={PRIMARY_COLOR}>{name || "N/A"}</Tag>}
+        render={(name) => (
+          <Tag color={PRIMARY_COLOR} style={{ fontSize: 12 }}>
+            {name || "N/A"}
+          </Tag>
+        )}
         width={120}
       />
       <Table.Column
@@ -105,7 +113,7 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
         dataIndex="amount"
         align="right"
         render={(amount: number) => (
-          <Text strong style={{ color: SUCCESS_COLOR }}>
+          <Text strong style={{ color: SUCCESS_COLOR, fontSize: 14 }}>
             ৳{amount.toFixed(2)}
           </Text>
         )}
@@ -125,7 +133,7 @@ const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
     <Table
       dataSource={expenses}
       rowKey="id"
-      pagination={{ pageSize: 5 }}
+      pagination={{ pageSize: 5, size: "small" }}
       size="middle"
       locale={{ emptyText: "No grocery expenses paid this month." }}
       scroll={{ x: 450 }}
@@ -136,13 +144,18 @@ const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
         render={(date) => moment(date.toDate()).format("MMM DD")}
         width={100}
       />
-      <Table.Column title="Title" dataIndex="title" width={150} />
+      <Table.Column
+        title="Title"
+        dataIndex="title"
+        width={150}
+        render={(text) => <Text style={{ fontSize: 14 }}>{text}</Text>}
+      />
       <Table.Column
         title="Amount (৳)"
         dataIndex="amount"
         align="right"
         render={(amount: number) => (
-          <Text strong style={{ color: ERROR_COLOR }}>
+          <Text strong style={{ color: ERROR_COLOR, fontSize: 14 }}>
             ৳{amount.toFixed(2)}
           </Text>
         )}
@@ -159,7 +172,7 @@ const UtilityDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
     <Table
       dataSource={expenses}
       rowKey="id"
-      pagination={{ pageSize: 5 }}
+      pagination={{ pageSize: 5, size: "small" }}
       size="middle"
       locale={{ emptyText: "No utility expenses paid this month." }}
       scroll={{ x: 450 }}
@@ -170,13 +183,18 @@ const UtilityDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
         render={(date) => moment(date.toDate()).format("MMM DD")}
         width={100}
       />
-      <Table.Column title="Title" dataIndex="title" width={150} />
+      <Table.Column
+        title="Title"
+        dataIndex="title"
+        width={150}
+        render={(text) => <Text style={{ fontSize: 14 }}>{text}</Text>}
+      />
       <Table.Column
         title="Amount (৳)"
         dataIndex="amount"
         align="right"
         render={(amount: number) => (
-          <Text strong style={{ color: ERROR_COLOR }}>
+          <Text strong style={{ color: ERROR_COLOR, fontSize: 14 }}>
             ৳{amount.toFixed(2)}
           </Text>
         )}
@@ -228,27 +246,32 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
   const selectedMemberData: MemberDetailedData | undefined =
     stats.allMembersData.find((d) => d.member.uid === selectedMemberId);
 
-  const baseFontSize = "1.1rem";
-  const headerFontSize = "2.5rem";
+  const baseFontSize = "0.95rem";
+  const headerFontSize = "1.8rem";
 
   return (
     <div className="balance-sheet-container" style={{ padding: "0 16px" }}>
       <Title
         level={2}
-        style={{ margin: 0, fontSize: headerFontSize, color: PRIMARY_COLOR }}
+        style={{
+          margin: 0,
+          fontSize: headerFontSize,
+          color: PRIMARY_COLOR,
+          fontWeight: "800",
+        }}
       >
         <TeamOutlined />{" "}
         <strong style={{ fontWeight: "800" }}>Member Financial Summary</strong>
       </Title>
-      <p style={{ marginBottom: 20, fontSize: baseFontSize }}>
+      <p style={{ marginBottom: 15, fontSize: baseFontSize }}>
         Select a member to view their detailed financial breakdown for{" "}
         <Text strong style={{ color: PRIMARY_COLOR }}>
           {stats.currentMonth}
         </Text>
         .
       </p>
-
-      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 20 }}>
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 15 }}>
+        {" "}
         <Col xs={24} sm={8} lg={6}>
           <Text strong style={{ fontSize: baseFontSize }}>
             <UserOutlined /> Select Member:
@@ -260,17 +283,22 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
             style={{ width: "100%" }}
             placeholder="Select a member to view details"
             onChange={setSelectedMemberId}
-            size="large"
+            size="middle"
           >
             {stats.allMembersData.map((data) => (
               <Option key={data.member.uid} value={data.member.uid}>
-                <span style={{ fontSize: "1rem" }}>
+                <span style={{ fontSize: "0.9rem" }}>
+                  {" "}
                   {data.member.displayName}{" "}
                   {data.member.role === "manager" && (
-                    <Tag color="red">(Manager)</Tag>
+                    <Tag color="red" style={{ fontSize: 11 }}>
+                      (Manager)
+                    </Tag>
                   )}
                   {data.member.role === "pending" && (
-                    <Tag color="orange">(Pending)</Tag>
+                    <Tag color="orange" style={{ fontSize: 11 }}>
+                      (Pending)
+                    </Tag>
                   )}
                 </span>
               </Option>
@@ -278,9 +306,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
           </Select>
         </Col>
       </Row>
-
-      <Divider />
-
+      <Divider style={{ margin: "15px 0" }} />
       {selectedMemberData ? (
         <Card
           className="shadow-xl"
@@ -291,7 +317,11 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
           title={
             <Title
               level={4}
-              style={{ margin: 0, color: PRIMARY_COLOR, fontSize: "1.5rem" }}
+              style={{
+                margin: 0,
+                color: PRIMARY_COLOR,
+                fontSize: "1.2rem",
+              }}
             >
               <FileTextOutlined style={{ marginRight: 8 }} />
               {selectedMemberData.member.displayName}'s Monthly Report
@@ -303,23 +333,28 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     ? "orange"
                     : PRIMARY_COLOR
                 }
-                style={{ marginLeft: 10, fontSize: "1rem", padding: "4px 8px" }}
+                style={{
+                  marginLeft: 10,
+                  fontSize: "0.9rem",
+                  padding: "3px 7px",
+                }}
               >
                 {selectedMemberData.member.role.toUpperCase()}
               </Tag>
             </Title>
           }
           styles={{
-            body: { padding: 30 },
+            body: { padding: 20 },
           }}
         >
-          <Row gutter={[16, 16]} style={{ marginBottom: 30 }}>
+          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+            {" "}
             <Col xs={12} lg={6}>
               <Statistic
                 title="Total Meals Consumed"
                 value={selectedMemberData.totalMeals}
                 suffix={<ForkOutlined />}
-                valueStyle={{ fontSize: 32, color: PRIMARY_COLOR }}
+                valueStyle={{ fontSize: 24, color: PRIMARY_COLOR }}
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -328,7 +363,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 value={selectedMemberData.totalPaidAmount}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: SUCCESS_COLOR }}
+                valueStyle={{ fontSize: 24, color: SUCCESS_COLOR }}
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -337,7 +372,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 value={stats.globalMealRate}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: "#fa8c16" }}
+                valueStyle={{ fontSize: 24, color: "#fa8c16" }}
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -346,21 +381,20 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 value={selectedMemberData.utilityShare}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: "#722ed1" }}
+                valueStyle={{ fontSize: 24, color: "#722ed1" }}
               />
             </Col>
           </Row>
-
-          <Divider dashed />
-
-          <Row gutter={[16, 16]} style={{ marginBottom: 30 }}>
+          <Divider dashed style={{ margin: "15px 0" }} />
+          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+            {" "}
             <Col xs={12} lg={6}>
               <Statistic
                 title="Actual Meal Cost"
                 value={selectedMemberData.totalMealCost}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: ERROR_COLOR }}
+                valueStyle={{ fontSize: 24, color: ERROR_COLOR }}
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -369,7 +403,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 value={selectedMemberData.monthlyTotalPaid}
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: SUCCESS_COLOR }}
+                valueStyle={{ fontSize: 24, color: SUCCESS_COLOR }}
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -381,10 +415,9 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 }
                 prefix="৳"
                 precision={2}
-                valueStyle={{ fontSize: 32, color: ERROR_COLOR }}
+                valueStyle={{ fontSize: 24, color: ERROR_COLOR }}
               />
             </Col>
-
             <Col xs={12} lg={6}>
               <Card
                 styles={{
@@ -413,17 +446,18 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                         ? SUCCESS_COLOR
                         : ERROR_COLOR,
                     fontWeight: "bold",
-                    fontSize: 20,
+                    fontSize: 18,
                   }}
                 />
                 <div style={{ textAlign: "center", marginTop: 4 }}>
+                  {" "}
                   {selectedMemberData.finalBalance >= 0 ? (
                     <ArrowUpOutlined
-                      style={{ color: SUCCESS_COLOR, fontSize: 18 }}
+                      style={{ color: SUCCESS_COLOR, fontSize: 16 }}
                     />
                   ) : (
                     <ArrowDownOutlined
-                      style={{ color: ERROR_COLOR, fontSize: 18 }}
+                      style={{ color: ERROR_COLOR, fontSize: 16 }}
                     />
                   )}
                 </div>
@@ -441,8 +475,8 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
               </Card>
             </Col>
           </Row>
-
-          <Row gutter={[16, 16]} style={{ marginBottom: 30 }}>
+          <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+            {" "}
             <Col span={24}>
               <Card
                 size="small"
@@ -451,14 +485,14 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                   borderLeft: `5px solid ${PRIMARY_COLOR}`,
                 }}
               >
-                <div style={{ textAlign: "center", padding: "8px 0" }}>
+                <div style={{ textAlign: "center", padding: "6px 0" }}>
                   {" "}
                   {selectedMemberData.finalBalance > 0.01 ? (
                     <Tag
                       color={SUCCESS_COLOR}
                       style={{
-                        fontSize: 16,
-                        padding: "8px 12px",
+                        fontSize: 14,
+                        padding: "6px 10px",
                         borderRadius: 6,
                         fontWeight: "bold",
                       }}
@@ -470,8 +504,8 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     <Tag
                       color={ERROR_COLOR}
                       style={{
-                        fontSize: 16,
-                        padding: "8px 12px",
+                        fontSize: 14,
+                        padding: "6px 10px",
                         borderRadius: 6,
                         fontWeight: "bold",
                       }}
@@ -483,8 +517,8 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     <Tag
                       color={PRIMARY_COLOR}
                       style={{
-                        fontSize: 16,
-                        padding: "8px 12px",
+                        fontSize: 14,
+                        padding: "6px 10px",
                         borderRadius: 6,
                         fontWeight: "bold",
                       }}
@@ -496,18 +530,17 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
               </Card>
             </Col>
           </Row>
-
           <Divider
             orientation="left"
             style={{
-              fontSize: "1.2rem",
+              fontSize: "1rem",
               fontWeight: "bold",
               color: PRIMARY_COLOR,
+              margin: "20px 0 15px 0",
             }}
           >
             <WalletOutlined /> Transaction Details
           </Divider>
-
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
               <DepositDetailsTable deposits={selectedMemberData.deposits} />
