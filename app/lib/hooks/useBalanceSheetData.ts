@@ -94,6 +94,16 @@ const getCurrentMonthRange = () => {
   };
 };
 
+const DIVIDED_EXPENSE_CATEGORIES = [
+  "gas",
+  "internet",
+  "electricity",
+  "water",
+  "cleaner",
+  "other_bills",
+  "utility",
+];
+
 export const useBalanceSheetData = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -249,7 +259,10 @@ export const useBalanceSheetData = () => {
 
     monthlyMeals.forEach((meal) => {
       const mealCount =
-        (meal.breakfast ? 1 : 0) + (meal.lunch ? 1 : 0) + (meal.dinner ? 1 : 0);
+        (meal.breakfast ? 1 : 0) +
+        (meal.lunch ? 1 : 0) +
+        (meal.dinner ? 1 : 0) +
+        (meal.guestMeals || 0);
       totalMeals += mealCount;
       memberMealCounts[meal.userId] =
         (memberMealCounts[meal.userId] || 0) + mealCount;
@@ -262,15 +275,18 @@ export const useBalanceSheetData = () => {
 
     const globalMealRate = totalMeals > 0 ? totalGroceryCost / totalMeals : 0;
 
-    const utilityExpenses = monthlyExpenses.filter(
-      (exp) => exp.category === "utility"
+    const utilityExpenses = monthlyExpenses.filter((exp) =>
+      DIVIDED_EXPENSE_CATEGORIES.includes(exp.category)
     );
+
     const totalUtilityCost = utilityExpenses.reduce(
       (sum, exp) => sum + exp.amount,
       0
     );
+
+    const activeMembers = members.filter((m) => m.role !== "pending");
     const utilityCostPerMember =
-      members.length > 0 ? totalUtilityCost / members.length : 0;
+      activeMembers.length > 0 ? totalUtilityCost / activeMembers.length : 0;
 
     const memberGroceryPaid: Record<string, number> = {};
     monthlyGroceryPurchases.forEach((grocery) => {
@@ -306,7 +322,7 @@ export const useBalanceSheetData = () => {
 
       const totalMealCost = memberTotalMeals * globalMealRate;
 
-      const utilityShare = utilityCostPerMember;
+      const utilityShare = member.role !== "pending" ? utilityCostPerMember : 0;
 
       const finalBalance = monthlyTotalPaid - totalMealCost;
 

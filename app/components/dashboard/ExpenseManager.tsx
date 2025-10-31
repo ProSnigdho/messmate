@@ -551,7 +551,7 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                 render={(amount: number) => (
                   <Text strong style={{ color: ERROR_COLOR, fontSize: 15 }}>
                     {" "}
-                    // Reduced font size ৳{amount.toFixed(2)}
+                    ৳{amount.toFixed(2)}
                   </Text>
                 )}
                 sorter={(a, b) => a.amount - b.amount}
@@ -566,12 +566,12 @@ export default function ExpenseManager({ messId }: ExpenseManagerProps) {
                   dividedAmount ? (
                     <Text type="secondary" style={{ fontSize: 14 }}>
                       {" "}
-                      // Reduced font size ৳{dividedAmount.toFixed(2)}
+                      ৳{dividedAmount.toFixed(2)}
                     </Text>
                   ) : (
                     <Tag color="default" style={{ fontSize: 12 }}>
                       {" "}
-                      // Reduced font size Not Divided
+                      Not Divided
                     </Tag>
                   )
                 }

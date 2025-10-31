@@ -25,7 +25,6 @@ import {
   ForkOutlined,
   WalletOutlined,
   MoneyCollectOutlined,
-  HomeOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
   FileTextOutlined,
@@ -54,8 +53,11 @@ const CustomTableCard: React.FC<
   <Card
     title={
       <Title level={5} style={{ margin: 0, color: PRIMARY_COLOR }}>
-        <span style={{ marginRight: 8, color: PRIMARY_COLOR }}>{icon}</span>
-        {title}
+        {" "}
+        <span style={{ marginRight: 8, color: PRIMARY_COLOR }}>
+          {icon}
+        </span>{" "}
+        {title}{" "}
       </Title>
     }
     size="small"
@@ -66,6 +68,7 @@ const CustomTableCard: React.FC<
       borderLeft: `3px solid ${PRIMARY_COLOR}`,
     }}
   >
+    {" "}
     {children}
   </Card>
 );
@@ -74,6 +77,7 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
   deposits,
 }) => (
   <CustomTableCard title="Deposits Received (Credit)" icon={<WalletOutlined />}>
+    {" "}
     <Table
       dataSource={deposits}
       rowKey="id"
@@ -82,44 +86,48 @@ const DepositDetailsTable: React.FC<{ deposits: DepositType[] }> = ({
       locale={{ emptyText: "No deposits this month." }}
       scroll={{ x: 450 }}
     >
+      {" "}
       <Table.Column
         title="Date"
         dataIndex="date"
         render={(date) => moment(date.toDate()).format("MMM DD")}
         width={100}
-      />
+      />{" "}
       <Table.Column
         title="Type"
         dataIndex="category"
         render={(category) => (
           <Tag color={PRIMARY_COLOR} style={{ fontSize: 12 }}>
-            {category}
+            {" "}
+            {category}{" "}
           </Tag>
         )}
         width={120}
-      />
+      />{" "}
       <Table.Column
         title="User Name"
         dataIndex="userName"
         render={(name) => (
           <Tag color={PRIMARY_COLOR} style={{ fontSize: 12 }}>
-            {name || "N/A"}
+            {" "}
+            {name || "N/A"}{" "}
           </Tag>
         )}
         width={120}
-      />
+      />{" "}
       <Table.Column
         title="Amount (৳)"
         dataIndex="amount"
         align="right"
         render={(amount: number) => (
           <Text strong style={{ color: SUCCESS_COLOR, fontSize: 14 }}>
-            ৳{amount.toFixed(2)}
+            {" "}
+            ৳{amount.toFixed(2)}{" "}
           </Text>
         )}
         width={100}
-      />
-    </Table>
+      />{" "}
+    </Table>{" "}
   </CustomTableCard>
 );
 
@@ -130,6 +138,7 @@ const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
     title="Grocery Expenses Paid"
     icon={<MoneyCollectOutlined />}
   >
+    {" "}
     <Table
       dataSource={expenses}
       rowKey="id"
@@ -138,69 +147,32 @@ const GroceryDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
       locale={{ emptyText: "No grocery expenses paid this month." }}
       scroll={{ x: 450 }}
     >
+      {" "}
       <Table.Column
         title="Date"
         dataIndex="date"
         render={(date) => moment(date.toDate()).format("MMM DD")}
         width={100}
-      />
+      />{" "}
       <Table.Column
         title="Title"
         dataIndex="title"
         width={150}
         render={(text) => <Text style={{ fontSize: 14 }}>{text}</Text>}
-      />
+      />{" "}
       <Table.Column
         title="Amount (৳)"
         dataIndex="amount"
         align="right"
         render={(amount: number) => (
           <Text strong style={{ color: ERROR_COLOR, fontSize: 14 }}>
-            ৳{amount.toFixed(2)}
+            {" "}
+            ৳{amount.toFixed(2)}{" "}
           </Text>
         )}
         width={100}
-      />
-    </Table>
-  </CustomTableCard>
-);
-
-const UtilityDetailsTable: React.FC<{ expenses: ExpenseType[] }> = ({
-  expenses,
-}) => (
-  <CustomTableCard title="Utility Expenses Paid" icon={<HomeOutlined />}>
-    <Table
-      dataSource={expenses}
-      rowKey="id"
-      pagination={{ pageSize: 5, size: "small" }}
-      size="middle"
-      locale={{ emptyText: "No utility expenses paid this month." }}
-      scroll={{ x: 450 }}
-    >
-      <Table.Column
-        title="Date"
-        dataIndex="date"
-        render={(date) => moment(date.toDate()).format("MMM DD")}
-        width={100}
-      />
-      <Table.Column
-        title="Title"
-        dataIndex="title"
-        width={150}
-        render={(text) => <Text style={{ fontSize: 14 }}>{text}</Text>}
-      />
-      <Table.Column
-        title="Amount (৳)"
-        dataIndex="amount"
-        align="right"
-        render={(amount: number) => (
-          <Text strong style={{ color: ERROR_COLOR, fontSize: 14 }}>
-            ৳{amount.toFixed(2)}
-          </Text>
-        )}
-        width={100}
-      />
-    </Table>
+      />{" "}
+    </Table>{" "}
   </CustomTableCard>
 );
 
@@ -238,7 +210,8 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
   if (loading || !stats) {
     return (
       <Row justify="center" style={{ minHeight: "80vh", alignItems: "center" }}>
-        <Spin tip="Calculating member data..." size="large" />
+        {" "}
+        <Spin tip="Calculating member data..." size="large" />{" "}
       </Row>
     );
   }
@@ -251,6 +224,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
 
   return (
     <div className="balance-sheet-container" style={{ padding: "0 16px" }}>
+      {" "}
       <Title
         level={2}
         style={{
@@ -260,24 +234,32 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
           fontWeight: "800",
         }}
       >
+        {" "}
         <TeamOutlined />{" "}
-        <strong style={{ fontWeight: "800" }}>Member Financial Summary</strong>
-      </Title>
+        <strong style={{ fontWeight: "800" }}>
+          Member Financial Summary
+        </strong>{" "}
+      </Title>{" "}
       <p style={{ marginBottom: 15, fontSize: baseFontSize }}>
+        {" "}
         Select a member to view their detailed financial breakdown for{" "}
         <Text strong style={{ color: PRIMARY_COLOR }}>
-          {stats.currentMonth}
+          {" "}
+          {stats.currentMonth}{" "}
         </Text>
-        .
-      </p>
+        .{" "}
+      </p>{" "}
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: 15 }}>
         {" "}
         <Col xs={24} sm={8} lg={6}>
+          {" "}
           <Text strong style={{ fontSize: baseFontSize }}>
-            <UserOutlined /> Select Member:
-          </Text>
-        </Col>
+            {" "}
+            <UserOutlined /> Select Member:{" "}
+          </Text>{" "}
+        </Col>{" "}
         <Col xs={24} sm={16} lg={18}>
+          {" "}
           <Select
             value={selectedMemberId}
             style={{ width: "100%" }}
@@ -285,28 +267,32 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
             onChange={setSelectedMemberId}
             size="middle"
           >
+            {" "}
             {stats.allMembersData.map((data) => (
               <Option key={data.member.uid} value={data.member.uid}>
+                {" "}
                 <span style={{ fontSize: "0.9rem" }}>
                   {" "}
                   {data.member.displayName}{" "}
                   {data.member.role === "manager" && (
                     <Tag color="red" style={{ fontSize: 11 }}>
-                      (Manager)
+                      {" "}
+                      (Manager){" "}
                     </Tag>
-                  )}
+                  )}{" "}
                   {data.member.role === "pending" && (
                     <Tag color="orange" style={{ fontSize: 11 }}>
-                      (Pending)
+                      {" "}
+                      (Pending){" "}
                     </Tag>
-                  )}
-                </span>
+                  )}{" "}
+                </span>{" "}
               </Option>
-            ))}
-          </Select>
-        </Col>
+            ))}{" "}
+          </Select>{" "}
+        </Col>{" "}
       </Row>
-      <Divider style={{ margin: "15px 0" }} />
+      <Divider style={{ margin: "15px 0" }} />{" "}
       {selectedMemberData ? (
         <Card
           className="shadow-xl"
@@ -323,8 +309,9 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                 fontSize: "1.2rem",
               }}
             >
+              {" "}
               <FileTextOutlined style={{ marginRight: 8 }} />
-              {selectedMemberData.member.displayName}'s Monthly Report
+              {selectedMemberData.member.displayName}'s Monthly Report{" "}
               <Tag
                 color={
                   selectedMemberData.member.role === "manager"
@@ -339,86 +326,83 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                   padding: "3px 7px",
                 }}
               >
-                {selectedMemberData.member.role.toUpperCase()}
-              </Tag>
+                {" "}
+                {selectedMemberData.member.role.toUpperCase()}{" "}
+              </Tag>{" "}
             </Title>
           }
           styles={{
             body: { padding: 20 },
           }}
         >
+          {" "}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             {" "}
             <Col xs={12} lg={6}>
+              {" "}
               <Statistic
                 title="Total Meals Consumed"
                 value={selectedMemberData.totalMeals}
                 suffix={<ForkOutlined />}
                 valueStyle={{ fontSize: 24, color: PRIMARY_COLOR }}
-              />
-            </Col>
+              />{" "}
+            </Col>{" "}
             <Col xs={12} lg={6}>
+              {" "}
               <Statistic
                 title="Total Deposits (Credit)"
                 value={selectedMemberData.totalPaidAmount}
                 prefix="৳"
                 precision={2}
                 valueStyle={{ fontSize: 24, color: SUCCESS_COLOR }}
-              />
-            </Col>
+              />{" "}
+            </Col>{" "}
             <Col xs={12} lg={6}>
+              {" "}
               <Statistic
                 title="Current Meal Rate"
                 value={stats.globalMealRate}
                 prefix="৳"
                 precision={2}
                 valueStyle={{ fontSize: 24, color: "#fa8c16" }}
-              />
-            </Col>
+              />{" "}
+            </Col>{" "}
             <Col xs={12} lg={6}>
+              {" "}
               <Statistic
                 title="Utility Share"
                 value={selectedMemberData.utilityShare}
                 prefix="৳"
                 precision={2}
                 valueStyle={{ fontSize: 24, color: "#722ed1" }}
-              />
-            </Col>
+              />{" "}
+            </Col>{" "}
           </Row>
-          <Divider dashed style={{ margin: "15px 0" }} />
+          <Divider dashed style={{ margin: "15px 0" }} />{" "}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             {" "}
-            <Col xs={12} lg={6}>
+            <Col xs={12} lg={8}>
+              {" "}
               <Statistic
                 title="Actual Meal Cost"
                 value={selectedMemberData.totalMealCost}
                 prefix="৳"
                 precision={2}
                 valueStyle={{ fontSize: 24, color: ERROR_COLOR }}
-              />
-            </Col>
-            <Col xs={12} lg={6}>
+              />{" "}
+            </Col>{" "}
+            <Col xs={12} lg={8}>
+              {" "}
               <Statistic
                 title="Total Paid (Grocery)"
                 value={selectedMemberData.monthlyTotalPaid}
                 prefix="৳"
                 precision={2}
                 valueStyle={{ fontSize: 24, color: SUCCESS_COLOR }}
-              />
-            </Col>
-            <Col xs={12} lg={6}>
-              <Statistic
-                title="Total Debit (Cost)"
-                value={
-                  selectedMemberData.totalMealCost +
-                  selectedMemberData.utilityShare
-                }
-                prefix="৳"
-                precision={2}
-                valueStyle={{ fontSize: 24, color: ERROR_COLOR }}
-              />
-            </Col>
-            <Col xs={12} lg={6}>
+              />{" "}
+            </Col>{" "}
+            <Col xs={12} lg={8}>
+              {" "}
               <Card
                 styles={{
                   body: { padding: "8px 4px" },
@@ -435,6 +419,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                   }`,
                 }}
               >
+                {" "}
                 <Statistic
                   title="FINAL BALANCE (Settlement)"
                   value={selectedMemberData.finalBalance}
@@ -448,7 +433,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     fontWeight: "bold",
                     fontSize: 18,
                   }}
-                />
+                />{" "}
                 <div style={{ textAlign: "center", marginTop: 4 }}>
                   {" "}
                   {selectedMemberData.finalBalance >= 0 ? (
@@ -459,8 +444,8 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     <ArrowDownOutlined
                       style={{ color: ERROR_COLOR, fontSize: 16 }}
                     />
-                  )}
-                </div>
+                  )}{" "}
+                </div>{" "}
                 <Text
                   type="secondary"
                   style={{
@@ -470,14 +455,18 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                     marginTop: 2,
                   }}
                 >
-                  {selectedMemberData.finalBalance >= 0 ? "RECEIVE" : "PAY"}
-                </Text>
-              </Card>
-            </Col>
-          </Row>
+                  {" "}
+                  {selectedMemberData.finalBalance >= 0
+                    ? "RECEIVE"
+                    : "PAY"}{" "}
+                </Text>{" "}
+              </Card>{" "}
+            </Col>{" "}
+          </Row>{" "}
           <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
             {" "}
             <Col span={24}>
+              {" "}
               <Card
                 size="small"
                 style={{
@@ -485,6 +474,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                   borderLeft: `5px solid ${PRIMARY_COLOR}`,
                 }}
               >
+                {" "}
                 <div style={{ textAlign: "center", padding: "6px 0" }}>
                   {" "}
                   {selectedMemberData.finalBalance > 0.01 ? (
@@ -497,8 +487,9 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                         fontWeight: "bold",
                       }}
                     >
-                      📥 {selectedMemberData.member.displayName} will receive: ৳
-                      {Math.abs(selectedMemberData.finalBalance).toFixed(2)}
+                      {" "}
+                      📥 {selectedMemberData.member.displayName} will receive: ৳{" "}
+                      {Math.abs(selectedMemberData.finalBalance).toFixed(2)}{" "}
                     </Tag>
                   ) : selectedMemberData.finalBalance < -0.01 ? (
                     <Tag
@@ -510,8 +501,9 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                         fontWeight: "bold",
                       }}
                     >
-                      📤 {selectedMemberData.member.displayName} needs to pay: ৳
-                      {Math.abs(selectedMemberData.finalBalance).toFixed(2)}
+                      {" "}
+                      📤 {selectedMemberData.member.displayName} needs to pay: ৳{" "}
+                      {Math.abs(selectedMemberData.finalBalance).toFixed(2)}{" "}
                     </Tag>
                   ) : (
                     <Tag
@@ -523,13 +515,14 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
                         fontWeight: "bold",
                       }}
                     >
-                      ✅ Perfectly Settled (0.00 ৳)
+                      {" "}
+                      ✅ Perfectly Settled (0.00 ৳){" "}
                     </Tag>
-                  )}
-                </div>
-              </Card>
-            </Col>
-          </Row>
+                  )}{" "}
+                </div>{" "}
+              </Card>{" "}
+            </Col>{" "}
+          </Row>{" "}
           <Divider
             orientation="left"
             style={{
@@ -539,25 +532,24 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
               margin: "20px 0 15px 0",
             }}
           >
-            <WalletOutlined /> Transaction Details
-          </Divider>
+            {" "}
+            <WalletOutlined /> Transaction Details{" "}
+          </Divider>{" "}
           <Row gutter={[16, 16]}>
+            {" "}
             <Col xs={24} lg={12}>
-              <DepositDetailsTable deposits={selectedMemberData.deposits} />
-            </Col>
+              {" "}
+              <DepositDetailsTable
+                deposits={selectedMemberData.deposits}
+              />{" "}
+            </Col>{" "}
             <Col xs={24} lg={12}>
+              {" "}
               <GroceryDetailsTable
                 expenses={selectedMemberData.groceryExpensesPaid}
-              />
-            </Col>
-            {selectedMemberData.member.role === "manager" && (
-              <Col xs={24} lg={12}>
-                <UtilityDetailsTable
-                  expenses={selectedMemberData.utilityExpensesPaid}
-                />
-              </Col>
-            )}
-          </Row>
+              />{" "}
+            </Col>{" "}
+          </Row>{" "}
         </Card>
       ) : (
         <Alert
@@ -566,7 +558,7 @@ export default function BalanceSheet({ messId }: BalanceSheetProps) {
           type="info"
           showIcon
         />
-      )}
+      )}{" "}
     </div>
   );
 }
